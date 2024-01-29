@@ -42,12 +42,15 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
 
     //使用在线依赖
-//    implementation 'com.eqgis:eq-renderer:1.0.1'
-//    implementation 'com.eqgis:eq-slam:1.0.1'
+    implementation 'com.eqgis:eq-renderer:1.0.2'
+    implementation 'com.eqgis:eq-slam:1.0.2'
+
+    //引入opencv
+    implementation 'org.opencv:opencv-v8a:4.5.5'
 
     //使用ARCore 和 AREngine （按需添加）
     implementation 'com.google.ar:core:1.39.0'
     //使用AREngine则额外添加下面依赖
     //华为仓库        maven {url "https://developer.huawei.com/repo/" }
-    //implementation 'com.huawei.hms:arenginesdk:3.7.0.3'
+    implementation 'com.huawei.hms:arenginesdk:3.7.0.3'
 }
