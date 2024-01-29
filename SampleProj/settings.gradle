@@ -1,0 +1,27 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            allowInsecureProtocol = true
+            url "http://repo.eqgis.cn"
+        }
+        maven {url "https://developer.huawei.com/repo/" }
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            allowInsecureProtocol = true
+            url "http://repo.eqgis.cn"
+        }
+        maven {url "https://developer.huawei.com/repo/" }
+    }
+}
+
+rootProject.name = "EQ-Renderer Sample"
+include ':app'
