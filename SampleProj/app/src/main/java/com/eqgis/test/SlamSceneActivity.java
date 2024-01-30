@@ -3,6 +3,7 @@ package com.eqgis.test;
 import android.os.Bundle;
 
 import com.eqgis.eqr.layout.EqSlamSceneLayout;
+import com.eqgis.test.scene.GltfSampleScene;
 
 
 public class SlamSceneActivity extends BaseActivity {
@@ -19,6 +20,7 @@ public class SlamSceneActivity extends BaseActivity {
         //关闭特征点绘制
         eqSlamSceneLayout.setDrawPoints(false);*/
         //加载GLTF模型
-        GltfUtils.addGltf(this,sceneLayout.getRootNode());
+        sampleScene = new GltfSampleScene();
+        sampleScene.create(this,sceneLayout.getRootNode());
     }
 }

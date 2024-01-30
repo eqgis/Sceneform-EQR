@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.eqgis.eqr.layout.SceneLayout;
+import com.eqgis.test.scene.ISampleScene;
 
 /**
  * 基础场景
@@ -16,6 +17,11 @@ import com.eqgis.eqr.layout.SceneLayout;
 public class BaseActivity extends AppCompatActivity {
 
     protected SceneLayout sceneLayout;
+
+    /**
+     * 示例场景
+     */
+    protected ISampleScene sampleScene;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,6 +47,8 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         sceneLayout.destroy();
+        if (sampleScene != null)
+            sampleScene.destroy(this);
         super.onDestroy();
     }
 }

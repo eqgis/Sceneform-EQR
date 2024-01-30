@@ -2,6 +2,8 @@ package com.eqgis.test;
 
 import android.os.Bundle;
 
+import com.eqgis.test.scene.GltfSampleScene;
+
 /**
  * AR三维场景
  */
@@ -15,6 +17,7 @@ public class ARSceneActivity extends BaseActivity {
 
         sceneLayout = findViewById(R.id.ar_scene_layout);
         //加载GLTF模型
-        GltfUtils.addGltf(this,sceneLayout.getRootNode());
+        sampleScene = new GltfSampleScene();
+        sampleScene.create(this,sceneLayout.getRootNode());
     }
 }
