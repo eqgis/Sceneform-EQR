@@ -64,4 +64,11 @@ public class MainActivity extends AppCompatActivity {
     public void toSlamSceneActivity(View view) {
         startActivity(new Intent(this, SlamSceneActivity.class));
     }
+
+    /**
+     * 转至手势交互示例
+     */
+    public void toInteractiveActivity(View view) {
+        startActivity(new Intent(this,InteractiveActivity.class));
+    }
 }

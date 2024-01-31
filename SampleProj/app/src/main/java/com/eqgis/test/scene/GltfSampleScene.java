@@ -37,15 +37,7 @@ public class GltfSampleScene implements ISampleScene{
         addGltf(context, rootNode);
 
         //添加光源
-        lightNode = new Node();
-        lightNode.setParent(rootNode);
-        Light.Builder builder = Light.builder(Light.Type.DIRECTIONAL);
-        Light light = builder.setColor(new Color(1, 1, 1, 1))
-                .setIntensity(/*光强：2000lm*/1200)
-                .build();
-        lightNode.setLight(light);
-        //平行光默认方向为(-Z)方向,此处旋转适当的角度，模拟室内日光灯角度
-        lightNode.setWorldRotation(/*欧拉角转四元数*/PoseUtils.toQuaternion(-45,0,-30));
+        addLight(rootNode);
     }
 
     @Override
@@ -83,4 +75,15 @@ public class GltfSampleScene implements ISampleScene{
                 });
     }
 
+    private void addLight(RootNode rootNode) {
+        lightNode = new Node();
+        lightNode.setParent(rootNode);
+        Light.Builder builder = Light.builder(Light.Type.DIRECTIONAL);
+        Light light = builder.setColor(new Color(1, 1, 1, 1))
+                .setIntensity(/*光强：2000lm*/1200)
+                .build();
+        lightNode.setLight(light);
+        //平行光默认方向为(-Z)方向,此处旋转适当的角度，模拟室内日光灯角度
+        lightNode.setWorldRotation(/*欧拉角转四元数*/PoseUtils.toQuaternion(-45,0,-30));
+    }
 }
