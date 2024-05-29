@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.eqgis.eqr">
+    <uses-sdk
+        android:minSdkVersion="24"
+        android:targetSdkVersion="31" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <queries>
+        <package android:name="com.huawei.arengine.service" />
+    </queries>
+    <queries>
+        <package android:name="com.google.ar.core" />
+    </queries>
+
+    <application>
+        <meta-data
+            android:name="com.huawei.hms.client.service.name:arenginesdk"
+            android:value="arenginesdk:4.0.0.5" />
+<!--        <meta-data-->
+<!--            android:name="com.google.ar.core.min_apk_version"-->
+<!--            android:value="213210000" />-->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="required" />
+
+        <activity
+            android:name="com.google.ar.core.InstallActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="false"
+            android:launchMode="singleTop"/>
+    </application>
+
+</manifest>

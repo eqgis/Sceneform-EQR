@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+android {
+    namespace 'com.eqgis.eqr'
+    compileSdk 28
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 28
+        versionCode 4
+        versionName "1.0.3"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk{
+            abiFilters 'armeabi-v7a','arm64-v8a'
+        }
+
+    }
+
+    buildTypes {
+        release {
+            //混淆 proguard-rules.pro
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+
+    //AR相关采用在线依赖
+    compileOnly 'com.google.ar:core:1.39.0'
+    compileOnly 'com.huawei.hms:arenginesdk:4.0.0.5'
+
+    //离线依赖，注：需要相应so库
+    implementation files("libs/filament-v1.12.0-android.jar")
+    implementation files("libs/gltfio-v1.12.0-android.jar")
+    implementation files("libs/filament-utils-v1.12.0.jar")
+
+    //slam库
+    compileOnly files("libs/eq-slam.jar")//若要使用”eq-slam“的功能，需单独引用”eq-slam-1.x.x.aar“,这里仅在编译时使用
+    //opencv 的java部分代码库，注意：这里要剔除opencv.so和libc++_shared.so，用户使用时单独引用opencv，不合并在这个模块中
+    compileOnly files('libs\\opencv-4.5.5-java.jar')
+}

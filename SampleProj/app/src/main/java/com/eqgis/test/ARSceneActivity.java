@@ -1,8 +1,13 @@
 package com.eqgis.test;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
+import com.eqgis.ar.ARCamera;
+import com.eqgis.ar.ARPlugin;
 import com.eqgis.test.scene.GltfSampleScene;
+import com.google.ar.sceneform.ARPlatForm;
+import com.huawei.hiar.AREnginesApk;
 
 /**
  * AR三维场景

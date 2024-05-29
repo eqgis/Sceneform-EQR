@@ -7,7 +7,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.eqgis.test"
+        applicationId "com.eqgis.eqr.sample"
         minSdk 24
         targetSdk 33
         versionCode 1
@@ -41,10 +41,6 @@ dependencies {
     //使用离线依赖
     implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
 
-    //使用在线依赖
-    implementation 'com.eqgis:eq-renderer:1.0.2'
-    implementation 'com.eqgis:eq-slam:1.0.2'
-
     //引入opencv
     implementation 'org.opencv:opencv-v8a:4.5.5'
 
@@ -52,5 +48,8 @@ dependencies {
     implementation 'com.google.ar:core:1.39.0'
     //使用AREngine则额外添加下面依赖
     //华为仓库        maven {url "https://developer.huawei.com/repo/" }
+//    implementation 'com.huawei.hms:arenginesdk:4.0.0.5'
     implementation 'com.huawei.hms:arenginesdk:3.7.0.3'
+
+    implementation project(path: ':eq-renderer')//注意，若使用EQ-SLAM，则需要在libs下添加‘eq-slam-x.x.x.aar’
 }
