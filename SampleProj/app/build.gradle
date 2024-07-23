@@ -48,8 +48,8 @@ dependencies {
     implementation 'com.google.ar:core:1.39.0'
     //使用AREngine则额外添加下面依赖
     //华为仓库        maven {url "https://developer.huawei.com/repo/" }
-//    implementation 'com.huawei.hms:arenginesdk:4.0.0.5'
-    implementation 'com.huawei.hms:arenginesdk:3.7.0.3'
+    implementation 'com.huawei.hms:arenginesdk:4.0.0.5'
+//    implementation 'com.huawei.hms:arenginesdk:3.7.0.3'
 
     implementation project(path: ':eq-renderer')//注意，若使用EQ-SLAM，则需要在libs下添加‘eq-slam-x.x.x.aar’
 }
