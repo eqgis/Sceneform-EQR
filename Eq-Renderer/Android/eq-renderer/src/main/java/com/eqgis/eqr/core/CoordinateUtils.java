@@ -5,9 +5,10 @@ import com.eqgis.eqr.Location;
 import com.google.ar.sceneform.math.Vector3;
 
 /**
- * 坐标工具
+ * 坐标计算工具类
+ * @author tanyx
  */
-class CoordinateUtils {
+public class CoordinateUtils {
 
     /**
      * 计算地理坐标的夹角

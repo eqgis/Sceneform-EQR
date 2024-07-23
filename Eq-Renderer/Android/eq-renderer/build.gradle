@@ -18,7 +18,12 @@ android {
         ndk{
             abiFilters 'armeabi-v7a','arm64-v8a'
         }
-
+        
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++11'
+            }
+        }
     }
 
     buildTypes {
@@ -38,7 +43,13 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
-
+    externalNativeBuild {
+        cmake {
+//            path file('src/main/cpp/CMakeLists.txt')
+            path file('CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
 }
 
 dependencies {
@@ -59,4 +70,42 @@ dependencies {
     compileOnly files("libs/eq-slam.jar")//若要使用”eq-slam“的功能，需单独引用”eq-slam-1.x.x.aar“,这里仅在编译时使用
     //opencv 的java部分代码库，注意：这里要剔除opencv.so和libc++_shared.so，用户使用时单独引用opencv，不合并在这个模块中
     compileOnly files('libs\\opencv-4.5.5-java.jar')
+}
+
+ext {
+    GITHUB_REPO_PATH = "D:\\AndroidDev\\GIT_DEV\\repo\\repo"//本地储存路径
+//    GITHUB_REPO_PATH = "F:\\0WorkRepo\\repo"//本地储存路径
+
+    PUBLISH_GROUP_ID = 'com.eqgis'//包名
+
+    PUBLISH_ARTIFACT_ID = 'eq-renderer'//自定义名
+
+    PUBLISH_VERSION = '1.0.3'//版本号，每一次更新迭代升级版本
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                artifact bundleReleaseAar
+
+                groupId project.PUBLISH_GROUP_ID
+                artifactId project.PUBLISH_ARTIFACT_ID
+                version project.PUBLISH_VERSION
+
+            }
+        }
+
+        repositories {
+            maven {
+//            url = layout.buildDirectory.dir('repo')
+                def deployPath = file(project.GITHUB_REPO_PATH)
+                url = layout.buildDirectory.dir("file://${deployPath.absolutePath}")
+            }
+        }
+    }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }

@@ -5,6 +5,7 @@ import androidx.annotation.Keep;
 import com.eqgis.eqr.Location;
 
 /**
+ * 坐标转换工具类
  * @author tanyx 2023/6/19
  * @version 1.0
  * <br/>SampleCode:<br/>
