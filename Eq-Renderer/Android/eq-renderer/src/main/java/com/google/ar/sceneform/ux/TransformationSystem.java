@@ -29,8 +29,9 @@ import java.util.ArrayList;
  * gestures used by the transformation controls of {@link BaseTransformableNode}.
  *
  * <p>{@link #onTouch(HitTestResult, MotionEvent)} must be called for gestures to be detected. By
- * default, this is done automatically by {@link ArFragment}.
+ * default, this is done automatically by ArFragment.
  */
+@Deprecated
 public class TransformationSystem {
   private final GesturePointersUtility gesturePointersUtility;
 

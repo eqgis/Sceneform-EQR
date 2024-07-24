@@ -19,6 +19,7 @@ package com.google.ar.sceneform.ux;
  * Node that can be selected, translated, rotated, and scaled using gestures from {@link
  * TransformationSystem}.
  */
+@Deprecated
 public class TransformableNode extends BaseTransformableNode {
   private  TranslationController translationController = null;
   private  ScaleController scaleController=null;
