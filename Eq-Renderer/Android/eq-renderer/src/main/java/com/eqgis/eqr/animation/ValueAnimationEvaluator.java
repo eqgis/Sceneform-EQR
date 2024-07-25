@@ -1,6 +1,7 @@
 package com.eqgis.eqr.animation;
 
 import android.animation.TypeEvaluator;
+import android.util.Log;
 
 /**
  * 动画估值器
@@ -38,6 +39,7 @@ public class ValueAnimationEvaluator implements TypeEvaluator<Float> {
             default:
                 break;
         }
+        Log.d("IKKYU E", "evaluate: "+factor + " ori:"+fraction);
         return (end - start) * factor + start;
     }
 }
