@@ -34,8 +34,7 @@
             android:screenOrientation="landscape" />
         <activity
             android:name=".BaseSceneActivity"
-            android:exported="false"
-            android:screenOrientation="landscape" />
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

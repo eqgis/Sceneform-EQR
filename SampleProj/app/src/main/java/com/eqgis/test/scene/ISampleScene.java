@@ -9,7 +9,7 @@ import com.eqgis.eqr.node.RootNode;
  * @author tanyx 2024/1/30
  * @version 1.0
  **/
-public interface ISampleScene {
+public interface ISampleScene{
     /**
      * 创建场景
      * @param context 上下文
