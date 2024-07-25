@@ -39,6 +39,39 @@
 #    public boolean *;
 #    public static *;
 #}
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn kotlin.Metadata
+-dontwarn kotlin.NoWhenBranchMatchedException
+-dontwarn kotlin.ResultKt
+-dontwarn kotlin.Unit
+-dontwarn kotlin.collections.ArraysKt
+-dontwarn kotlin.collections.CollectionsKt
+-dontwarn kotlin.coroutines.Continuation
+-dontwarn kotlin.coroutines.CoroutineContext
+-dontwarn kotlin.coroutines.intrinsics.IntrinsicsKt
+-dontwarn kotlin.coroutines.jvm.internal.DebugMetadata
+-dontwarn kotlin.coroutines.jvm.internal.SuspendLambda
+-dontwarn kotlin.jvm.functions.Function0
+-dontwarn kotlin.jvm.functions.Function1
+-dontwarn kotlin.jvm.functions.Function2
+-dontwarn kotlin.jvm.internal.DefaultConstructorMarker
+-dontwarn kotlin.jvm.internal.Intrinsics
+-dontwarn kotlin.jvm.internal.Lambda
+-dontwarn kotlin.jvm.internal.Ref$IntRef
+-dontwarn kotlin.text.StringsKt
+-dontwarn kotlinx.coroutines.BuildersKt
+-dontwarn kotlinx.coroutines.CoroutineDispatcher
+-dontwarn kotlinx.coroutines.CoroutineScope
+-dontwarn kotlinx.coroutines.CoroutineScopeKt
+-dontwarn kotlinx.coroutines.CoroutineStart
+-dontwarn kotlinx.coroutines.Dispatchers
+-dontwarn kotlinx.coroutines.Job$DefaultImpls
+-dontwarn kotlinx.coroutines.Job
+-dontwarn kotlinx.coroutines.MainCoroutineDispatcher
+-dontwarn org.jetbrains.annotations.NotNull
+-dontwarn org.jetbrains.annotations.Nullable
+
 -keep class com.eqgis.eqr.**{
     public *;
     protected *;
