@@ -26,10 +26,9 @@ import java.util.function.Function;
  * @version 1.0
  **/
 public class GltfSampleScene implements ISampleScene{
-    private String modelPath = "gltf/bee.glb";
-    private float distance = 3.6f;
+    private String modelPath = "gltf/test.glb";
+    public float distance = 3.6f;
 
-    private VelocityTracker mVelocityTracker;
 
     /**
      * 模型节点
@@ -63,13 +62,12 @@ public class GltfSampleScene implements ISampleScene{
     /**
      * 加载模型
      */
-    private void addGltf(Context context, RootNode rootNode) {
+    public void addGltf(Context context, RootNode rootNode) {
         modelNode = new Node();
         ModelRenderable
                 .builder()
                 .setSource(context, Uri.parse(modelPath))
                 .setIsFilamentGltf(true)
-                .setAsyncLoadEnabled(true)
                 .build()
                 .thenApply(new Function<ModelRenderable, Object>() {
                     @Override

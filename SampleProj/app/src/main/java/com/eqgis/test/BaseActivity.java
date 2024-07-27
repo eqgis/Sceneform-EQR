@@ -46,9 +46,9 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        sceneLayout.destroy();
         if (sampleScene != null)
             sampleScene.destroy(this);
+        sceneLayout.destroy();
         super.onDestroy();
     }
 }
