@@ -279,7 +279,7 @@ public class Node extends NodeParent implements TransformProvider {
         if (parent != null) {
             // If this node already has a parent, addChild automatically removes it from its old parent.
             parent.addChild(this);
-        } else if (this.parent != null) {
+        } else {
             this.parent.removeChild(this);
         }
         allowDispatchTransformChangedListeners = true;
@@ -1662,13 +1662,31 @@ public class Node extends NodeParent implements TransformProvider {
         Horizontal_Vertical;
     }
 
-    public void destroyRenderableInstance(){
-        if (renderableInstance != null) {
-            renderableInstance.destroy();
+    public void destroy(){
+//        if (renderableInstance != null) {
+//            renderableInstance.destroy();
+//        }
+//        List<Node> children =  getChildren();
+//        for (Node child : children){
+//            child.destroyRenderableInstance();
+//        }
+        setEnabled(false);
+        setParent(null);
+        destroyRenderInstance(this);
+    }
+
+    private void destroyRenderInstance(Node node){
+        List<Node> children = node.getChildren();
+        if (children.size() == 0){
+            if(node.getRenderableInstance() != null){
+                node.getRenderableInstance().destroy();
+            }
+//            node.setParent(null);
+//            node.setEnabled(false);
+            return;
         }
-        List<Node> children =  getChildren();
-        for (Node child : children){
-            child.destroyRenderableInstance();
+        while (children.size()!=0){
+            destroyRenderInstance(children.get(0));
         }
     }
 }

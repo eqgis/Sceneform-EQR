@@ -65,7 +65,7 @@ public class Renderer implements UiHelper.RendererCallback {
   private com.google.android.filament.View emptyView;
   private com.google.android.filament.Renderer renderer;
   private Camera camera;
-  private Scene scene;
+  public Scene scene;
   private IndirectLight indirectLight;
   private boolean recreateSwapChain;
 
@@ -358,10 +358,14 @@ public class Renderer implements UiHelper.RendererCallback {
     if (indirectLight != null) {
       engine.destroyIndirectLight(indirectLight);
     }
+
     engine.destroyRenderer(renderer);
     engine.destroyView(view);
     engine.destroyView(emptyView);
     engine.destroyCamera(camera);
+    if (scene.getSkybox()!=null){
+      engine.destroySkybox(scene.getSkybox());
+    }
     engine.destroyScene(scene);
     if (swapChain != null){
 
@@ -560,7 +564,8 @@ public class Renderer implements UiHelper.RendererCallback {
   /** @hide */
   public void removeInstance(RenderableInstance instance) {
     removeModelInstanceInternal(instance);
-    scene.remove(instance.getRenderedEntity());
+    scene.removeEntity(instance.getRenderedEntity());
+//    scene.remove(instance.getRenderedEntity());
     renderableInstances.remove(instance);
   }
 

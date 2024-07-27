@@ -14,9 +14,13 @@ import android.view.SurfaceView;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.filament.gltfio.MaterialProvider;
+import com.google.android.filament.gltfio.UbershaderLoader;
 import com.google.ar.sceneform.rendering.Color;
 import com.google.ar.sceneform.rendering.EngineInstance;
+import com.google.ar.sceneform.rendering.RenderableInternalFilamentAssetData;
 import com.google.ar.sceneform.rendering.Renderer;
+import com.google.ar.sceneform.rendering.ResourceManager;
 import com.google.ar.sceneform.utilities.AndroidPreconditions;
 import com.google.ar.sceneform.utilities.MovingAverageMillisecondsTracker;
 import com.google.ar.sceneform.utilities.Preconditions;
@@ -25,6 +29,7 @@ import com.google.android.filament.View;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -176,18 +181,25 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      * <p>Typically called from onDestroy().
      */
     public void destroy() {
+        pause();
+
         if (renderer != null) {
 
             //todo check_free memory_: add this method to release memory
             try {
 //                reclaimReleasedResources();//'renderer.dispose()' has call this method.
-                renderer.dispose();
+
+                renderer.dispose2();//包含renderer和filamentView、indirectLight
             }catch (IllegalStateException e){
                 Log.w(TAG, "destroy: ", e);
             }finally {
                 renderer = null;
             }
         }
+
+        ResourceManager.getInstance().destroyAllResources();
+//        EngineInstance.destroyEngine();
+//        destroyAllResources();
     }
 
     /**

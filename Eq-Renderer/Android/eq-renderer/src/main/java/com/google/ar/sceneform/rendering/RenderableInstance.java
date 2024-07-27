@@ -8,6 +8,8 @@ import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import com.google.android.filament.gltfio.MaterialProvider;
+import com.google.android.filament.gltfio.UbershaderLoader;
 import com.google.ar.sceneform.animation.AnimatableModel;
 import com.google.ar.sceneform.animation.ModelAnimation;
 import com.google.ar.sceneform.collision.Box;
@@ -141,7 +143,7 @@ public class RenderableInstance implements AnimatableModel {
             loader =
                     new AssetLoader(
                             engine,
-                            RenderableInternalFilamentAssetData.getMaterialProvider(),
+                            RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
                             EntityManager.get());
 
 //            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
@@ -558,9 +560,11 @@ public class RenderableInstance implements AnimatableModel {
                 FilamentAsset currentFilamentAsset = filamentAsset;
                 if (currentFilamentAsset != null) {
                     int[] entities = currentFilamentAsset.getEntities();
+                    rendererToDetach.scene.removeEntities(entities);
                     entityManager.destroy(entities);
 
                     int root = currentFilamentAsset.getRoot();
+                    rendererToDetach.scene.removeEntity(root);
                     entityManager.destroy(root);
                 }
             }
@@ -573,6 +577,7 @@ public class RenderableInstance implements AnimatableModel {
             RenderableInternalFilamentAssetData renderableData =
                     (RenderableInternalFilamentAssetData) renderable.getRenderableData();
             renderableData.resourceLoader.evictResourceData();
+//            renderableData.resourceLoader.destroy();
         }
         renderable.getRenderableData().dispose();//Other RenderableData dispose
 
@@ -599,10 +604,17 @@ public class RenderableInstance implements AnimatableModel {
     public void destroyGltfAsset(){
         //desc- ikkyu loader源于gltfio.jar，AssetLoader主要用于加载gltf模型，在场景生成filamentAsset对象
         if (loader == null)return;
+
         if (filamentAsset != null){
             loader.destroyAsset(filamentAsset);
             filamentAsset = null;
         }
+
+//        if (materialProvider != null){
+//            materialProvider.destroyMaterials();
+//            materialProvider = null;
+//        }
+
         //desc- ikkyu，通过destroy释放loader的native内存和材质缓存
 //        loader.destroy();
 
@@ -619,6 +631,8 @@ public class RenderableInstance implements AnimatableModel {
         Renderer rendererToDetach = attachedRenderer;
         if (rendererToDetach != null) {
             detachFilamentAssetFromRenderer();
+            //todo
+            destroyGltfAsset();
             rendererToDetach.removeInstance(this);
             renderable.detatchFromRenderer();
         }
