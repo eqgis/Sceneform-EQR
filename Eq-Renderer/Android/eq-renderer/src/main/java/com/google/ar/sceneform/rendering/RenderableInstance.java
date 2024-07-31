@@ -8,8 +8,6 @@ import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
-import com.google.android.filament.gltfio.MaterialProvider;
-import com.google.android.filament.gltfio.UbershaderLoader;
 import com.google.ar.sceneform.animation.AnimatableModel;
 import com.google.ar.sceneform.animation.ModelAnimation;
 import com.google.ar.sceneform.collision.Box;
@@ -132,6 +130,18 @@ public class RenderableInstance implements AnimatableModel {
                 .register(this, new CleanupCallback(entity, childEntity));
     }
 
+    /**
+     * Gets the status of an asynchronous resource load as a percentage in [0,1].
+     */
+    public float getResourceLoadProgress(){
+        if (renderable.getRenderableData() instanceof  RenderableInternalFilamentAssetData){
+            RenderableInternalFilamentAssetData renderableData =
+                    (RenderableInternalFilamentAssetData) renderable.getRenderableData();
+            return renderableData.resourceLoader.asyncGetLoadProgress();
+        }
+        return 1.0f;
+    }
+
     void createFilamentAssetModelInstance() {
         if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
             RenderableInternalFilamentAssetData renderableData =
@@ -140,8 +150,7 @@ public class RenderableInstance implements AnimatableModel {
             Engine engine = EngineInstance.getEngine().getFilamentEngine();
 
             //updated by ikkyu
-            loader =
-                    new AssetLoader(
+            loader = new AssetLoader(
                             engine,
                             RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
                             EntityManager.get());
@@ -226,6 +235,7 @@ public class RenderableInstance implements AnimatableModel {
                         filamentAnimator.getAnimationDuration(i),
                         getRenderable().getAnimationFrameRate()));
             }
+            createdAsset.releaseSourceData();//added by ikkyu 2024/07/30
         }
     }
 
@@ -576,6 +586,7 @@ public class RenderableInstance implements AnimatableModel {
         if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
             RenderableInternalFilamentAssetData renderableData =
                     (RenderableInternalFilamentAssetData) renderable.getRenderableData();
+            renderableData.resourceLoader.asyncCancelLoad();
             renderableData.resourceLoader.evictResourceData();
 //            renderableData.resourceLoader.destroy();
         }
