@@ -39,7 +39,7 @@ public class ValueAnimationEvaluator implements TypeEvaluator<Float> {
             default:
                 break;
         }
-        Log.d("IKKYU E", "evaluate: "+factor + " ori:"+fraction);
+//        Log.d("IKKYU E", "evaluate: "+factor + " ori:"+fraction);
         return (end - start) * factor + start;
     }
 }
