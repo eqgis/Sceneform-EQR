@@ -3,13 +3,14 @@ package com.google.ar.sceneform.rendering;
 import android.content.Context;
 import android.os.Build;
 import android.view.Surface;
-import android.view.SurfaceView;
+import android.view.TextureView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
+import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.utilities.AndroidPreconditions;
 import com.google.ar.sceneform.utilities.EnvironmentalHdrParameters;
 import com.google.ar.sceneform.utilities.Preconditions;
@@ -21,7 +22,7 @@ import com.google.android.filament.SwapChain;
 import com.google.android.filament.TransformManager;
 import com.google.android.filament.View.DynamicResolutionOptions;
 import com.google.android.filament.Viewport;
-import com.google.android.filament.android.UiHelper;
+//import com.google.android.filament.android.UiHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,7 +35,7 @@ import java.util.List;
  *
  * @hide Not a public facing API for version 1.0
  */
-public class Renderer implements UiHelper.RendererCallback {
+public class Renderer implements EqUiHelper.RendererCallback {
   // Default camera settings are used everwhere that ARCore HDR Lighting (Deeplight) is disabled or
   // unavailable.
   private static final float DEFAULT_CAMERA_APERATURE = 4.0f;
@@ -53,7 +54,7 @@ public class Renderer implements UiHelper.RendererCallback {
   private static final int MAXIMUM_RESOLUTION = 1080;
 
   @Nullable private CameraProvider cameraProvider;
-  private final SurfaceView surfaceView;
+  private final TextureView surfaceView;
   private final ViewAttachmentManager viewAttachmentManager;
 
   private final ArrayList<RenderableInstance> renderableInstances = new ArrayList<>();
@@ -73,7 +74,7 @@ public class Renderer implements UiHelper.RendererCallback {
   private float cameraShutterSpeed;
   private float cameraIso;
 
-  private UiHelper filamentHelper;
+  private EqUiHelper filamentHelper;
 
   private final double[] cameraProjectionMatrix = new double[16];
 
@@ -102,7 +103,7 @@ public class Renderer implements UiHelper.RendererCallback {
   /** @hide */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   @RequiresApi(api = Build.VERSION_CODES.N)
-  public Renderer(SurfaceView view) {
+  public Renderer(SceneView view) {
     Preconditions.checkNotNull(view, "Parameter \"view\" was null.");
     // Enforce api level 24
     AndroidPreconditions.checkMinAndroidApiLevel();
@@ -160,7 +161,7 @@ public class Renderer implements UiHelper.RendererCallback {
     return view;
   }
 
-  public SurfaceView getSurfaceView() {
+  public TextureView getSurfaceView() {
     return surfaceView;
   }
 
@@ -215,6 +216,11 @@ public class Renderer implements UiHelper.RendererCallback {
   /** @hide */
   public void onResume() {
     viewAttachmentManager.onResume();
+  }
+
+  /**@hide */
+  public void onDestroy(){
+    viewAttachmentManager.onDestroy();
   }
 
   /**
@@ -526,6 +532,11 @@ public class Renderer implements UiHelper.RendererCallback {
     emptyView.setViewport(new Viewport(0, 0, width, height));
   }
 
+
+  public void onReleaseData() {
+    //do nothing
+  }
+
   /** @hide */
   void addLight(LightInstance instance) {
     @Entity int entity = instance.getEntity();
@@ -580,10 +591,12 @@ public class Renderer implements UiHelper.RendererCallback {
 
   @SuppressWarnings("AndroidApiChecker") // CompletableFuture
   private void initialize() {
-    SurfaceView surfaceView = getSurfaceView();
+    TextureView surfaceView = getSurfaceView();
 
-    filamentHelper = new UiHelper(UiHelper.ContextErrorPolicy.DONT_CHECK);
+    filamentHelper = new EqUiHelper(EqUiHelper.ContextErrorPolicy.DONT_CHECK);
     filamentHelper.setRenderCallback(this);
+    //使用TextureView时，需要实现透明背景
+    filamentHelper.setOpaque(false);
     filamentHelper.attachTo(surfaceView);
 
     IEngine engine = EngineInstance.getEngine();

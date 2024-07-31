@@ -394,7 +394,7 @@ public class ArSceneView extends SceneView {
      */
     @SuppressWarnings("AndroidApiChecker")
     @Override
-    protected boolean onBeginFrame(long frameTimeNanos) {
+    public boolean onBeginFrame(long frameTimeNanos) {
         // No session, no drawing.
         ARSession session = this.session;
         if (session == null) {

@@ -31,10 +31,11 @@ class ViewAttachmentManager {
   private final WindowManager windowManager;
   private final WindowManager.LayoutParams windowLayoutParams;
 
-  private final FrameLayout frameLayout;
+  private FrameLayout frameLayout;
   private final ViewGroup.LayoutParams viewLayoutParams;
 
   private static final String VIEW_RENDERABLE_WINDOW = "ViewRenderableWindow";
+  private boolean isAdded = false;
 
   /**
    * Construct a ViewAttachmentManager.
@@ -58,20 +59,30 @@ class ViewAttachmentManager {
   void onResume() {
     // A ownerView can only be added to the WindowManager after the activity has finished resuming.
     // Therefore, we must use post to ensure that the window is only added after resume is finished.
-    ownerView.post(
-        () -> {
-          if (frameLayout.getParent() == null && ownerView.isAttachedToWindow()) {
-            windowManager.addView(frameLayout, windowLayoutParams);
-          }
-        });
+    if (!isAdded){
+      ownerView.postDelayed(
+              () -> {
+                if (frameLayout.getParent() == null && ownerView.isAttachedToWindow()) {
+                  windowManager.addView(frameLayout, windowLayoutParams);
+                }
+              },100);
+      isAdded = true;
+    }
   }
 
   void onPause() {
     // The ownerView must be removed from the WindowManager before the activity is destroyed, or the
     // window will be leaked. Therefore we add/remove the ownerView in resume/pause.
+//    if (frameLayout.getParent() != null) {
+//      windowManager.removeView(frameLayout);
+//    }
+  }
+
+  void onDestroy(){
     if (frameLayout.getParent() != null) {
       windowManager.removeView(frameLayout);
     }
+    frameLayout = null;
   }
 
   /**

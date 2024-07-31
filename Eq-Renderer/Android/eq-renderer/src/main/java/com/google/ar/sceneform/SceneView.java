@@ -2,7 +2,6 @@ package com.google.ar.sceneform;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
@@ -11,11 +10,10 @@ import android.view.Choreographer;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceView;
+import android.view.TextureView;
 
 import androidx.annotation.Nullable;
 
-import com.google.android.filament.gltfio.MaterialProvider;
-import com.google.android.filament.gltfio.UbershaderLoader;
 import com.google.ar.sceneform.rendering.Color;
 import com.google.ar.sceneform.rendering.EngineInstance;
 import com.google.ar.sceneform.rendering.RenderableInternalFilamentAssetData;
@@ -29,14 +27,13 @@ import com.google.android.filament.View;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 
 /**
  * A Sceneform SurfaceView that manages rendering and interaction with the scene.
  */
-public class SceneView extends SurfaceView implements Choreographer.FrameCallback {
+public class SceneView extends TextureView implements Choreographer.FrameCallback {
     private static final String TAG = SceneView.class.getSimpleName();
 
     @Nullable
@@ -60,6 +57,8 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
             new MovingAverageMillisecondsTracker();
 
     private List<OnTouchListener> mOnTouchListeners;
+    private int width;
+    private int height;
 
     /**
      * Constructs a SceneView object and binds it to an Android Context.
@@ -129,8 +128,8 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      */
     public void setTransparent(boolean transparent) {
         setBackgroundColor(android.graphics.Color.TRANSPARENT);//Add this line.Avoid this method being invalid.--IkkyuTed
-        setZOrderOnTop(transparent);
-        getHolder().setFormat(transparent ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE);
+//        setZOrderOnTop(transparent);
+//        getHolder().setFormat(transparent ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE);
         renderer.getFilamentView().setBlendMode(transparent ? View.BlendMode.TRANSLUCENT : View.BlendMode.OPAQUE);
     }
 
@@ -141,8 +140,9 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
     public void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
 
-        int width = right - left;
-        int height = bottom - top;
+        width = right - left;
+        height = bottom - top;
+
         Preconditions.checkNotNull(renderer).setDesiredSize(width, height);
     }
 
@@ -154,6 +154,7 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      * @throws CameraNotAvailableException if the camera can not be opened
      */
     public void resume() throws Exception {
+//        getSurfaceTexture().setDefaultBufferSize(width, height);//在SceneView继承TextureView时，不适用
         if (renderer != null) {
             renderer.onResume();
         }
@@ -181,7 +182,10 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      * <p>Typically called from onDestroy().
      */
     public void destroy() {
-        pause();
+        Choreographer.getInstance().removeFrameCallback(this);
+        if (renderer != null) {
+            renderer.onDestroy();
+        }
 
         if (renderer != null) {
 

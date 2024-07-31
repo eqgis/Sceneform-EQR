@@ -73,7 +73,7 @@ public class ExSceneView extends SceneView{
      * @hide
      */
     @Override
-    protected boolean onBeginFrame(long frameTimeNanos) {
+    public boolean onBeginFrame(long frameTimeNanos) {
         if (externalTexture == null)return true;
 
         // Setup Camera Stream if needed.

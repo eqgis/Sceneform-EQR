@@ -63,6 +63,7 @@ public class EngineInstance {
     if (result == null) {
       glContext = GLHelper.makeContext();
       result = Engine.create(glContext);
+//      result = Engine.create(Engine.Backend.DEFAULT);
     }
     return result;
   }
@@ -83,6 +84,7 @@ public class EngineInstance {
         Preconditions.checkNotNull(engine).destroy();
       }
       engine = null;
+      filamentInitialized = false;
     }
   }
 

@@ -257,6 +257,12 @@ public class Scene extends NodeParent {
     Preconditions.checkNotNull(onUpdateListener, "Parameter 'onUpdateListener' was null.");
     onUpdateListeners.remove(onUpdateListener);
   }
+  /**
+   * Removes All listener that will be called once per frame immediately before the Scene is updated.
+   */
+  public void clearOnUpdateListener() {
+    onUpdateListeners.clear();
+  }
 
   @Override
   public void onAddChild(Node child) {
@@ -492,7 +498,7 @@ public class Scene extends NodeParent {
     }
   }
 
-  void onTouchEvent(MotionEvent motionEvent) {
+  public void onTouchEvent(MotionEvent motionEvent) {
     Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
 
     // TODO: Investigate API for controlling what node's can be hit by the hitTest.
