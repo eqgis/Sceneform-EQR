@@ -198,7 +198,8 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
         }
 
         ResourceManager.getInstance().destroyAllResources();
-//        EngineInstance.destroyEngine();
+        RenderableInternalFilamentAssetData.destroy();
+        EngineInstance.destroyEngine();
 //        destroyAllResources();
     }
 

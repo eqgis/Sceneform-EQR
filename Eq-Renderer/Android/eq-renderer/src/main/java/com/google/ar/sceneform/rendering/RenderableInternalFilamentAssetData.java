@@ -34,11 +34,19 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
   @Nullable Function<String, Uri> urlResolver;
   static UbershaderLoader ubershaderLoader;
 
-  static UbershaderLoader getMaterialProvider() {
+  public static UbershaderLoader getMaterialProvider() {
     if (ubershaderLoader == null) {
       ubershaderLoader = new UbershaderLoader(EngineInstance.getEngine().getFilamentEngine());
     }
     return ubershaderLoader;
+  }
+
+  public static void destroy(){
+    if (ubershaderLoader != null){
+      ubershaderLoader.destroyMaterials();
+      ubershaderLoader.destroy();
+      ubershaderLoader = null;
+    }
   }
 
   public void addCount(){
