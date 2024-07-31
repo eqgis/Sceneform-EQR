@@ -82,6 +82,7 @@ public class LightInstance {
           .spotLightCone(
               Math.min(light.getInnerConeAngle(), light.getOuterConeAngle()),
               light.getOuterConeAngle())
+          .falloff(light.getFalloffRadius())
           .castShadows(light.isShadowCastingEnabled())
           .build(engine.getFilamentEngine(), entity);
     } else if (light.getType() == Light.Type.FOCUSED_SPOTLIGHT) {
@@ -95,6 +96,7 @@ public class LightInstance {
           .spotLightCone(
               Math.min(light.getInnerConeAngle(), light.getOuterConeAngle()),
               light.getOuterConeAngle())
+          .falloff(light.getFalloffRadius())
           .castShadows(light.isShadowCastingEnabled())
           .build(engine.getFilamentEngine(), entity);
     } else {

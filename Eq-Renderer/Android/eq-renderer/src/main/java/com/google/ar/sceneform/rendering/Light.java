@@ -4,6 +4,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.google.android.filament.LightManager;
 import com.google.ar.sceneform.common.TransformProvider;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.utilities.AndroidPreconditions;
@@ -272,10 +273,27 @@ public class Light {
     }
 
     /**
-     * Sets the range that the light intensity falls off to zero. This has no affect on infinite
-     * light types - the Directional types.
+     * Set the falloff distance for point lights and spot lights.
+     *<p>
+     * At the falloff distance, the light has no more effect on objects.
+     *</p>
      *
-     * @param falloffRadius the light radius in world units, default is 10.0f.
+     *<p>
+     * The falloff distance essentially defines a <b>sphere of influence</b> around the light,
+     * and therefore has an impact on performance. Larger falloffs might reduce performance
+     * significantly, especially when many lights are used.
+     *</p>
+     *
+     *<p>
+     * Try to avoid having a large number of light's spheres of influence overlap.
+     *</p>
+     *
+     * The Light's falloff is ignored for directional lights
+     * ({@link LightManager.Type#DIRECTIONAL} or {@link LightManager.Type#SUN})
+     *
+     * @param falloffRadius Falloff distance in world units. Default is 1 meter.
+     *
+     * @return This Builder, for chaining calls.
      */
     public Builder setFalloffRadius(float falloffRadius) {
       this.falloffRadius = falloffRadius;

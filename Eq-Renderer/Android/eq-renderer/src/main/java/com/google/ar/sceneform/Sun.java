@@ -136,7 +136,7 @@ public class Sun extends Node {
     Light sunlight =
         Light.builder(Light.Type.DIRECTIONAL)
             .setColor(sunlightColor)
-                .setIntensity(420f)
+                .setIntensity(200.0f)
 //            .setShadowCastingEnabled(true)
             .build();
 
