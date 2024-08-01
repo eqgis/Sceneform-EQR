@@ -22,9 +22,9 @@ import com.google.ar.sceneform.rendering.Light;
  * the default directional light.
  */
 public class Sun extends Node {
-  @ColorInt static final int DEFAULT_SUNLIGHT_COLOR = 0xffffff;
+  public static int DEFAULT_SUNLIGHT_COLOR = 0xfff2d3c4;
 //  @ColorInt static final int DEFAULT_SUNLIGHT_COLOR = 0xfff2d3c4;
-  static final Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.0f,0.0f,-1f);
+  public static Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.0f,0.0f,-1f);
 //  static final Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.3f,-0.2f,-1f);
 //  static final Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.7f, -1.0f, -0.8f);
 
@@ -136,7 +136,6 @@ public class Sun extends Node {
     Light sunlight =
         Light.builder(Light.Type.DIRECTIONAL)
             .setColor(sunlightColor)
-                .setIntensity(200.0f)
 //            .setShadowCastingEnabled(true)
             .build();
 

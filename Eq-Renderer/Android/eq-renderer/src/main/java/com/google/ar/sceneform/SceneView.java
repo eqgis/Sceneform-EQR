@@ -2,6 +2,7 @@ package com.google.ar.sceneform;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
@@ -33,7 +34,7 @@ import java.util.List;
 /**
  * A Sceneform SurfaceView that manages rendering and interaction with the scene.
  */
-public class SceneView extends TextureView implements Choreographer.FrameCallback {
+public class SceneView extends SurfaceView implements Choreographer.FrameCallback {
     private static final String TAG = SceneView.class.getSimpleName();
 
     @Nullable
@@ -128,8 +129,8 @@ public class SceneView extends TextureView implements Choreographer.FrameCallbac
      */
     public void setTransparent(boolean transparent) {
         setBackgroundColor(android.graphics.Color.TRANSPARENT);//Add this line.Avoid this method being invalid.--IkkyuTed
-//        setZOrderOnTop(transparent);
-//        getHolder().setFormat(transparent ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE);
+        setZOrderOnTop(transparent);
+        getHolder().setFormat(transparent ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE);
         renderer.getFilamentView().setBlendMode(transparent ? View.BlendMode.TRANSLUCENT : View.BlendMode.OPAQUE);
     }
 

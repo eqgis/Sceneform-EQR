@@ -219,7 +219,7 @@ class EqUiHelper {
         @Override
         public void resize(int width, int height) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
-//                mTextureView.getSurfaceTexture().setDefaultBufferSize(width, height);//在SceneView继承TextureView时，不适用
+                mTextureView.getSurfaceTexture().setDefaultBufferSize(width, height);//在SceneView继承TextureView时，不适用
             }
             // the call above won't cause TextureView.onSurfaceTextureSizeChanged()
             mRenderCallback.onResized(width, height);

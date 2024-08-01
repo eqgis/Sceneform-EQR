@@ -3,6 +3,7 @@ package com.google.ar.sceneform.rendering;
 import android.content.Context;
 import android.os.Build;
 import android.view.Surface;
+import android.view.SurfaceView;
 import android.view.TextureView;
 
 import androidx.annotation.NonNull;
@@ -54,7 +55,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   private static final int MAXIMUM_RESOLUTION = 1080;
 
   @Nullable private CameraProvider cameraProvider;
-  private final TextureView surfaceView;
+  private final SurfaceView surfaceView;
   private final ViewAttachmentManager viewAttachmentManager;
 
   private final ArrayList<RenderableInstance> renderableInstances = new ArrayList<>();
@@ -161,7 +162,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     return view;
   }
 
-  public TextureView getSurfaceView() {
+  public SurfaceView getSurfaceView() {
     return surfaceView;
   }
 
@@ -591,7 +592,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
 
   @SuppressWarnings("AndroidApiChecker") // CompletableFuture
   private void initialize() {
-    TextureView surfaceView = getSurfaceView();
+    SurfaceView surfaceView = getSurfaceView();
 
     filamentHelper = new EqUiHelper(EqUiHelper.ContextErrorPolicy.DONT_CHECK);
     filamentHelper.setRenderCallback(this);

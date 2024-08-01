@@ -199,7 +199,7 @@ public class Light {
   /** Factory class for {@link Light} */
   public static final class Builder {
     // LINT.IfChange
-    private static final float DEFAULT_DIRECTIONAL_INTENSITY = 420.0f;
+    public static float DEFAULT_DIRECTIONAL_INTENSITY = 420.0f;
     // LINT.ThenChange(//depot/google3/third_party/arcore/ar/sceneform/viewer/viewer.cc)
 
     private final Type type;
