@@ -598,6 +598,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     filamentHelper.setRenderCallback(this);
     //使用TextureView时，需要实现透明背景
     filamentHelper.setOpaque(false);
+    filamentHelper.setMediaOverlay(true);//TODO CHECK 影响SurfaceView
     filamentHelper.attachTo(surfaceView);
 
     IEngine engine = EngineInstance.getEngine();
