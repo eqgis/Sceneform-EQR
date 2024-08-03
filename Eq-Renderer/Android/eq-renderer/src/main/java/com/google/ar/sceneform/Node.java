@@ -419,7 +419,7 @@ public class Node extends NodeParent implements TransformProvider {
      *
      * <ul>
      *   <li>Dispatch touch events to the node that was touched as detected by {@link
-     *       Scene#hitTest(MotionEvent)}.
+     *       Scene hitTest(MotionEvent)}.
      *   <li>If the node doesn't consume the event, recurse upwards through the node's parents and
      *       dispatch the touch event until one of the node's consumes the event.
      *   <li>If no nodes consume the event, the gesture is ignored and subsequent events that are part
@@ -1105,7 +1105,7 @@ public class Node extends NodeParent implements TransformProvider {
      *
      * <ul>
      *   <li>Dispatch touch events to the node that was touched as detected by {@link
-     *       Scene#hitTest(MotionEvent)}.
+     *       Scene hitTest(MotionEvent)}.
      *   <li>If the node doesn't consume the event, recurse upwards through the node's parents and
      *       dispatch the touch event until one of the node's consumes the event.
      *   <li>If no nodes consume the event, the gesture is ignored and subsequent events that are part
