@@ -5,8 +5,8 @@ import android.view.ViewConfiguration;
 
 import androidx.annotation.Nullable;
 
-import com.google.ar.sceneform.collision.Collider;
-import com.google.ar.sceneform.collision.CollisionShape;
+//import com.google.ar.sceneform.collision.Collider;
+//import com.google.ar.sceneform.collision.CollisionShape;
 import com.google.ar.sceneform.collision.Ray;
 import com.google.ar.sceneform.common.TransformProvider;
 import com.google.ar.sceneform.math.Matrix;
@@ -209,8 +209,8 @@ public class Node extends NodeParent implements TransformProvider {
     @Nullable private LightInstance lightInstance;
 
     // Collision fields.
-    @Nullable private CollisionShape collisionShape;
-    @Nullable private Collider collider;
+//    @Nullable private CollisionShape collisionShape;
+//    @Nullable private Collider collider;
 
     // Listeners.
     @Nullable private OnTouchListener onTouchListener;
@@ -396,7 +396,7 @@ public class Node extends NodeParent implements TransformProvider {
      * <ul>
      *   <li>The node's {@link #onUpdate(FrameTime)} function will be called every frame.
      *   <li>The node's {@link #getRenderable()} will be rendered.
-     *   <li>The node's {@link #getCollisionShape()} will be checked in calls to Scene.hitTest.
+     *   <li>The node's {getCollisionShape()} will be checked in calls to Scene.hitTest.
      *   <li>The node's {@link #onTouchEvent(HitTestResult, MotionEvent)} function will be called when
      *       the node is touched.
      * </ul>
@@ -517,8 +517,8 @@ public class Node extends NodeParent implements TransformProvider {
             dirtyTransformFlags |= flagsToMark;
 
             if ((dirtyTransformFlags & WORLD_TRANSFORM_DIRTY) == WORLD_TRANSFORM_DIRTY
-                    && collider != null) {
-                collider.markWorldShapeDirty();
+                    /*&& collider != null*/) {
+//                collider.markWorldShapeDirty();
             }
 
             needsRecursion = true;
@@ -840,7 +840,7 @@ public class Node extends NodeParent implements TransformProvider {
 
     /**
      * Sets the {@link Renderable} to display for this node. If {@link
-     * Node#setCollisionShape(CollisionShape)} is not set, then {@link Renderable#getCollisionShape()}
+     * Node setCollisionShape(CollisionShape)} is not set, then {@link Renderable getCollisionShape()}
      * is used to detect collisions for this {@link Node}.
      *
      * @see ModelRenderable
@@ -882,7 +882,7 @@ public class Node extends NodeParent implements TransformProvider {
             renderableId = ChangeId.EMPTY_ID;
         }
 
-        refreshCollider();
+//        refreshCollider();
 
         return renderableInstance;
     }
@@ -901,44 +901,44 @@ public class Node extends NodeParent implements TransformProvider {
         return renderableInstance.getRenderable();
     }
 
-    /**
-     * Sets the shape to used to detect collisions for this {@link Node}. If the shape is not set and
-     * {@link Node#setRenderable(Renderable)} is set, then {@link Renderable#getCollisionShape()} is
-     * used to detect collisions for this {@link Node}.
-     *
-     * @see Scene#hitTest(Ray)
-     * @see Scene#hitTestAll(Ray)
-     * @see Scene#overlapTest(Node)
-     * @see Scene#overlapTestAll(Node)
-     * @param collisionShape represents a geometric shape, i.e. sphere, box, convex hull. If null,
-     *     this node's current collision shape will be removed.
-     */
-    public void setCollisionShape(@Nullable CollisionShape collisionShape) {
-        AndroidPreconditions.checkUiThread();
+//    /**
+//     * Sets the shape to used to detect collisions for this {@link Node}. If the shape is not set and
+//     * {@link Node#setRenderable(Renderable)} is set, then {@link Renderable#getCollisionShape()} is
+//     * used to detect collisions for this {@link Node}.
+//     *
+//     * @see Scene#hitTest(Ray)
+//     * @see Scene#hitTestAll(Ray)
+//     * @see Scene#overlapTest(Node)
+//     * @see Scene#overlapTestAll(Node)
+//     * @param collisionShape represents a geometric shape, i.e. sphere, box, convex hull. If null,
+//     *     this node's current collision shape will be removed.
+//     */
+//    public void setCollisionShape(@Nullable CollisionShape collisionShape) {
+//        AndroidPreconditions.checkUiThread();
+//
+//        this.collisionShape = collisionShape;
+//        refreshCollider();
+//    }
 
-        this.collisionShape = collisionShape;
-        refreshCollider();
-    }
-
-    /**
-     * Gets the shape to use for collisions with this node. If the shape is null and {@link
-     * Node#setRenderable(Renderable)} is set, then {@link Renderable#getCollisionShape()} is used to
-     * detect collisions for this {@link Node}.
-     *
-     * @see Scene#hitTest(Ray)
-     * @see Scene#hitTestAll(Ray)
-     * @see Scene#overlapTest(Node)
-     * @see Scene#overlapTestAll(Node)
-     * @return represents a geometric shape, i.e. sphere, box, convex hull.
-     */
-    @Nullable
-    public CollisionShape getCollisionShape() {
-        if (collider != null) {
-            return collider.getShape();
-        }
-
-        return null;
-    }
+//    /**
+//     * Gets the shape to use for collisions with this node. If the shape is null and {@link
+//     * Node#setRenderable(Renderable)} is set, then {@link Renderable#getCollisionShape()} is used to
+//     * detect collisions for this {@link Node}.
+//     *
+//     * @see Scene#hitTest(Ray)
+//     * @see Scene#hitTestAll(Ray)
+//     * @see Scene#overlapTest(Node)
+//     * @see Scene#overlapTestAll(Node)
+//     * @return represents a geometric shape, i.e. sphere, box, convex hull.
+//     */
+//    @Nullable
+//    public CollisionShape getCollisionShape() {
+//        if (collider != null) {
+//            return collider.getShape();
+//        }
+//
+//        return null;
+//    }
 
     /**
      * Sets the {@link Light} to display. To use, first create a {@link Light} using {@link
@@ -1248,10 +1248,10 @@ public class Node extends NodeParent implements TransformProvider {
         return parent;
     }
 
-    @Nullable
-    final Collider getCollider() {
-        return collider;
-    }
+//    @Nullable
+//    final Collider getCollider() {
+//        return collider;
+//    }
 
     int getNameHash() {
         return nameHash;
@@ -1272,7 +1272,7 @@ public class Node extends NodeParent implements TransformProvider {
         if (renderable != null && renderable.getId().checkChanged(renderableId)) {
             // Refresh the collider to ensure it is using the correct collision shape now that the
             // renderable has changed.
-            refreshCollider();
+//            refreshCollider();
             renderableId = renderable.getId().get();
         }
 
@@ -1439,9 +1439,9 @@ public class Node extends NodeParent implements TransformProvider {
             lightInstance.attachToRenderer(getRendererOrDie());
         }
 
-        if (collider != null && scene != null) {
-            collider.setAttachedCollisionSystem(scene.collisionSystem);
-        }
+//        if (collider != null && scene != null) {
+//            collider.setAttachedCollisionSystem(scene.collisionSystem);
+//        }
 
         onActivate();
 
@@ -1470,9 +1470,9 @@ public class Node extends NodeParent implements TransformProvider {
             lightInstance.detachFromRenderer();
         }
 
-        if (collider != null) {
-            collider.setAttachedCollisionSystem(null);
-        }
+//        if (collider != null) {
+//            collider.setAttachedCollisionSystem(null);
+//        }
 
         onDeactivate();
 
@@ -1489,35 +1489,35 @@ public class Node extends NodeParent implements TransformProvider {
         }
     }
 
-    private void refreshCollider() {
-        CollisionShape finalCollisionShape = collisionShape;
-
-        // If no collision shape has been set, fall back to the collision shape from the renderable, if
-        // there is a renderable.
-        Renderable renderable = getRenderable();
-        if (finalCollisionShape == null && renderable != null) {
-            finalCollisionShape = renderable.getCollisionShape();
-        }
-
-        if (finalCollisionShape != null) {
-            // Create the collider if it doesn't already exist.
-            if (collider == null) {
-                collider = new Collider(this, finalCollisionShape);
-
-                // Attach the collider to the collision system if the node is already active.
-                if (active && scene != null) {
-                    collider.setAttachedCollisionSystem(scene.collisionSystem);
-                }
-            } else if (collider.getShape() != finalCollisionShape) {
-                // Set the collider's shape to the new shape if needed.
-                collider.setShape(finalCollisionShape);
-            }
-        } else if (collider != null) {
-            // Dispose of the old collider.
-            collider.setAttachedCollisionSystem(null);
-            collider = null;
-        }
-    }
+//    private void refreshCollider() {
+//        CollisionShape finalCollisionShape = collisionShape;
+//
+//        // If no collision shape has been set, fall back to the collision shape from the renderable, if
+//        // there is a renderable.
+//        Renderable renderable = getRenderable();
+//        if (finalCollisionShape == null && renderable != null) {
+//            finalCollisionShape = renderable.getCollisionShape();
+//        }
+//
+//        if (finalCollisionShape != null) {
+//            // Create the collider if it doesn't already exist.
+//            if (collider == null) {
+//                collider = new Collider(this, finalCollisionShape);
+//
+//                // Attach the collider to the collision system if the node is already active.
+//                if (active && scene != null) {
+//                    collider.setAttachedCollisionSystem(scene.collisionSystem);
+//                }
+//            } else if (collider.getShape() != finalCollisionShape) {
+//                // Set the collider's shape to the new shape if needed.
+//                collider.setShape(finalCollisionShape);
+//            }
+//        } else if (collider != null) {
+//            // Dispose of the old collider.
+//            collider.setAttachedCollisionSystem(null);
+//            collider = null;
+//        }
+//    }
 
     private int getScaledTouchSlop() {
         Scene scene = getScene();

@@ -10,7 +10,7 @@ import androidx.annotation.Size;
 
 import com.google.ar.sceneform.animation.AnimatableModel;
 import com.google.ar.sceneform.animation.ModelAnimation;
-import com.google.ar.sceneform.collision.Box;
+//import com.google.ar.sceneform.collision.Box;
 import com.google.ar.sceneform.common.TransformProvider;
 import com.google.ar.sceneform.math.Matrix;
 import com.google.ar.sceneform.math.Vector3;
@@ -163,15 +163,15 @@ public class RenderableInstance implements AnimatableModel {
                 throw new IllegalStateException("Failed to load gltf");
             }
 
-            if (renderable.collisionShape == null) {
-                com.google.android.filament.Box box = createdAsset.getBoundingBox();
-                float[] halfExtent = box.getHalfExtent();
-                float[] center = box.getCenter();
-                renderable.collisionShape =
-                        new Box(
-                                new Vector3(halfExtent[0], halfExtent[1], halfExtent[2]).scaled(2.0f),
-                                new Vector3(center[0], center[1], center[2]));
-            }
+//            if (renderable.collisionShape == null) {
+//                com.google.android.filament.Box box = createdAsset.getBoundingBox();
+//                float[] halfExtent = box.getHalfExtent();
+//                float[] center = box.getCenter();
+//                renderable.collisionShape =
+//                        new Box(
+//                                new Vector3(halfExtent[0], halfExtent[1], halfExtent[2]).scaled(2.0f),
+//                                new Vector3(center[0], center[1], center[2]));
+//            }
 
             Function<String, Uri> urlResolver = renderableData.urlResolver;
             for (String uri : createdAsset.getResourceUris()) {

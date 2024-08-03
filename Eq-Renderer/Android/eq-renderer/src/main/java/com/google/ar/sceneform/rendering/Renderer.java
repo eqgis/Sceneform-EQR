@@ -2,9 +2,9 @@ package com.google.ar.sceneform.rendering;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceView;
-import android.view.TextureView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,11 +23,8 @@ import com.google.android.filament.SwapChain;
 import com.google.android.filament.TransformManager;
 import com.google.android.filament.View.DynamicResolutionOptions;
 import com.google.android.filament.Viewport;
-//import com.google.android.filament.android.UiHelper;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * A rendering context.
@@ -52,7 +49,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   private static final Color DEFAULT_CLEAR_COLOR = new Color(0.0f, 0.0f, 0.0f, 1.0f);
 
   // Limit resolution to 1080p for the minor edge. This is enough for Filament.
-  private static final int MAXIMUM_RESOLUTION = 1080;
+  public static int MAXIMUM_RESOLUTION = 720;
 
   @Nullable private CameraProvider cameraProvider;
   private final SurfaceView surfaceView;
@@ -64,7 +61,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
   private Surface surface;
   @Nullable private SwapChain swapChain;
   private com.google.android.filament.View view;
-  private com.google.android.filament.View emptyView;
   private com.google.android.filament.Renderer renderer;
   private Camera camera;
   public Scene scene;
@@ -81,14 +77,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
 
   private EnvironmentalHdrParameters environmentalHdrParameters =
       EnvironmentalHdrParameters.makeDefault();
-
-  private static class Mirror {
-    @Nullable SwapChain swapChain;
-    @Nullable Surface surface;
-    Viewport viewport;
-  }
-
-  private final List<Mirror> mirrors = new ArrayList<>();
 
   /** @hide */
   public interface PreRenderCallback {
@@ -114,35 +102,35 @@ public class Renderer implements EqUiHelper.RendererCallback {
     initialize();
   }
 
-  /**
-   * Starts mirroring to the specified {@link Surface}.
-   *
-   * @hide
-   */
-  public void startMirroring(Surface surface, int left, int bottom, int width, int height) {
-    Mirror mirror = new Mirror();
-    mirror.surface = surface;
-    mirror.viewport = new Viewport(left, bottom, width, height);
-    mirror.swapChain = null;
-    synchronized (mirrors) {
-      mirrors.add(mirror);
-    }
-  }
+//  /**
+//   * Starts mirroring to the specified {@link Surface}.
+//   *
+//   * @hide
+//   */
+//  public void startMirroring(Surface surface, int left, int bottom, int width, int height) {
+//    Mirror mirror = new Mirror();
+//    mirror.surface = surface;
+//    mirror.viewport = new Viewport(left, bottom, width, height);
+//    mirror.swapChain = null;
+//    synchronized (mirrors) {
+//      mirrors.add(mirror);
+//    }
+//  }
 
-  /**
-   * Stops mirroring to the specified {@link Surface}.
-   *
-   * @hide
-   */
-  public void stopMirroring(Surface surface) {
-    synchronized (mirrors) {
-      for (Mirror mirror : mirrors) {
-        if (mirror.surface == surface) {
-          mirror.surface = null;
-        }
-      }
-    }
-  }
+//  /**
+//   * Stops mirroring to the specified {@link Surface}.
+//   *
+//   * @hide
+//   */
+//  public void stopMirroring(Surface surface) {
+//    synchronized (mirrors) {
+//      for (Mirror mirror : mirrors) {
+//        if (mirror.surface == surface) {
+//          mirror.surface = null;
+//        }
+//      }
+//    }
+//  }
 
   /**
    * Access to the underlying Filament renderer.
@@ -253,7 +241,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /** @hide */
-  public void render(long frameTimeNanos, boolean debugEnabled) {
+  public void render(long frameTimeNanos) {
     synchronized (this) {
       if (recreateSwapChain) {
         final IEngine engine = EngineInstance.getEngine();
@@ -262,22 +250,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
         }
         swapChain = engine.createSwapChain(surface);
         recreateSwapChain = false;
-      }
-    }
-    synchronized (mirrors) {
-      Iterator<Mirror> mirrorIterator = mirrors.iterator();
-      while (mirrorIterator.hasNext()) {
-        Mirror mirror = mirrorIterator.next();
-        if (mirror.surface == null) {
-          if (mirror.swapChain != null) {
-            final IEngine engine = EngineInstance.getEngine();
-            engine.destroySwapChain(Preconditions.checkNotNull(mirror.swapChain));
-          }
-          mirrorIterator.remove();
-        } else if (mirror.swapChain == null) {
-          final IEngine engine = EngineInstance.getEngine();
-          mirror.swapChain = engine.createSwapChain(Preconditions.checkNotNull(mirror.surface));
-        }
       }
     }
 
@@ -311,29 +283,8 @@ public class Renderer implements EqUiHelper.RendererCallback {
             preRenderCallback.preRender(renderer, swapChainLocal, camera);
           }
 
-          // Currently, filament does not provide functionality for disabling cameras, and
-          // rendering a view with a null camera doesn't clear the viewport. As a workaround, we
-          // render an empty view when the camera is disabled. this is actually similar to what we
-          // need to do in the future if we want to add multiple camera support anyways. filament
-          // only allows one camera per-view, so for multiple cameras you need to create multiple
-          // views pointing to the same scene.
-          com.google.android.filament.View currentView =
-              cameraProvider.isActive() ? view : emptyView;
-          renderer.render(currentView);
-
-          synchronized (mirrors) {
-            for (Mirror mirror : mirrors) {
-              if (mirror.swapChain != null) {
-                renderer.mirrorFrame(
-                    mirror.swapChain,
-                    getLetterboxViewport(currentView.getViewport(), mirror.viewport),
-                    currentView.getViewport(),
-                    com.google.android.filament.Renderer.MIRROR_FRAME_FLAG_COMMIT
-                        | com.google.android.filament.Renderer
-                            .MIRROR_FRAME_FLAG_SET_PRESENTATION_TIME
-                        | com.google.android.filament.Renderer.MIRROR_FRAME_FLAG_CLEAR);
-              }
-            }
+          if (cameraProvider.isActive()){
+            renderer.render(view);
           }
           if (onFrameRenderDebugCallback != null) {
             onFrameRenderDebugCallback.run();
@@ -341,7 +292,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
           renderer.endFrame();
         }
 
-//        reclaimReleasedResources();
+        reclaimReleasedResources();
       }
     }
   }
@@ -368,7 +319,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
 
     engine.destroyRenderer(renderer);
     engine.destroyView(view);
-    engine.destroyView(emptyView);
+//    engine.destroyView(emptyView);
     engine.destroyCamera(camera);
     if (scene.getSkybox()!=null){
       engine.destroySkybox(scene.getSkybox());
@@ -530,7 +481,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   @Override
   public void onResized(int width, int height) {
     view.setViewport(new Viewport(0, 0, width, height));
-    emptyView.setViewport(new Viewport(0, 0, width, height));
+//    emptyView.setViewport(new Viewport(0, 0, width, height));
   }
 
 
@@ -606,7 +557,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     renderer = engine.createRenderer();
     scene = engine.createScene();
     view = engine.createView();
-    emptyView = engine.createView();
+//    emptyView = engine.createView();
     camera = engine.createCamera();
     setUseHdrLightEstimate(false);
 
@@ -616,8 +567,8 @@ public class Renderer implements EqUiHelper.RendererCallback {
 
     setDynamicResolutionEnabled(true);
 
-    emptyView.setCamera(engine.createCamera());
-    emptyView.setScene(engine.createScene());
+//    emptyView.setCamera(engine.createCamera());
+//    emptyView.setScene(engine.createScene());
   }
 
   public void setUseHdrLightEstimate(boolean useHdrLightEstimate) {

@@ -75,7 +75,7 @@ public class GltfSampleScene implements ISampleScene{
                         modelNode.setRenderable(modelRenderable);
                         //缩放成单位尺寸
                         modelNode.setLocalScale(Vector3.one()
-                                .scaled(ScaleTool.calculateUnitsScale(modelRenderable)));
+                                .scaled(ScaleTool.calculateUnitsScale(modelNode.getRenderableInstance())));
 //                        modelNode.setLocalRotation(new Quaternion(Vector3.up(),30));
                         modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
                         modelNode.setParent(rootNode);

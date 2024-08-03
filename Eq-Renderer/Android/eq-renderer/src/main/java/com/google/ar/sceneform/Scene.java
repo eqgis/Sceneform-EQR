@@ -7,8 +7,8 @@ import android.view.MotionEvent;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.google.ar.sceneform.collision.Collider;
-import com.google.ar.sceneform.collision.CollisionSystem;
+//import com.google.ar.sceneform.collision.Collider;
+//import com.google.ar.sceneform.collision.CollisionSystem;
 import com.google.ar.sceneform.collision.Ray;
 import com.google.ar.sceneform.rendering.Color;
 import com.google.ar.sceneform.rendering.LightProbe;
@@ -40,7 +40,7 @@ public class Scene extends NodeParent {
      * called even if the touch is not over a node, in which case {@link HitTestResult#getNode()}
      * will be null.
      *
-     * @see Scene#setOnTouchListener(OnTouchListener)
+     * @see Scene setOnTouchListener(OnTouchListener)
      * @param hitTestResult represents the node that was touched
      * @param motionEvent the motion event
      * @return true if the listener has consumed the event
@@ -61,7 +61,7 @@ public class Scene extends NodeParent {
      * it possible to observe all motion events dispatched to the scene. This is called even if the
      * touch is not over a node, in which case {@link HitTestResult#getNode()} will be null.
      *
-     * @see Scene#setOnTouchListener(OnTouchListener)
+     * @see Scene setOnTouchListener(OnTouchListener)
      * @param hitTestResult represents the node that was touched
      * @param motionEvent the motion event
      */
@@ -96,8 +96,8 @@ public class Scene extends NodeParent {
   private boolean isUnderTesting = false;
 
   // Systems.
-  final CollisionSystem collisionSystem = new CollisionSystem();
-  private final TouchEventSystem touchEventSystem = new TouchEventSystem();
+//  final CollisionSystem collisionSystem = new CollisionSystem();
+//  private final TouchEventSystem touchEventSystem = new TouchEventSystem();
 
   private final ArrayList<OnUpdateListener> onUpdateListeners = new ArrayList<>();
 
@@ -198,42 +198,42 @@ public class Scene extends NodeParent {
     Preconditions.checkNotNull(view.getRenderer()).setLightProbe(lightProbe);
   }
 
-  /**
-   * Register a callback to be invoked when the scene is touched. The callback will be invoked after
-   * the touch event is dispatched to the nodes in the scene if no node consumed the event. This is
-   * called even if the touch is not over a node, in which case {@link HitTestResult#getNode()} will
-   * be null.
-   *
-   * @param onTouchListener the touch listener to attach
-   */
-  public void setOnTouchListener(@Nullable OnTouchListener onTouchListener) {
-    touchEventSystem.setOnTouchListener(onTouchListener);
-  }
+//  /**
+//   * Register a callback to be invoked when the scene is touched. The callback will be invoked after
+//   * the touch event is dispatched to the nodes in the scene if no node consumed the event. This is
+//   * called even if the touch is not over a node, in which case {@link HitTestResult#getNode()} will
+//   * be null.
+//   *
+//   * @param onTouchListener the touch listener to attach
+//   */
+//  public void setOnTouchListener(@Nullable OnTouchListener onTouchListener) {
+//    touchEventSystem.setOnTouchListener(onTouchListener);
+//  }
+//
+//  /**
+//   * Adds a listener that will be called before the {@link OnTouchListener} is invoked. This
+//   * is invoked even if the gesture was consumed, making it possible to observe all motion events
+//   * dispatched to the scene. This is called even if the touch is not over a node, in which case
+//   * {@link HitTestResult#getNode()} will be null. The listeners will be called in the order in
+//   * which they were added.
+//   *
+//   * @param onPeekTouchListener the peek touch listener to add
+//   */
+//  public void addOnPeekTouchListener(OnPeekTouchListener onPeekTouchListener) {
+//    touchEventSystem.addOnPeekTouchListener(onPeekTouchListener);
+//  }
 
-  /**
-   * Adds a listener that will be called before the {@link OnTouchListener} is invoked. This
-   * is invoked even if the gesture was consumed, making it possible to observe all motion events
-   * dispatched to the scene. This is called even if the touch is not over a node, in which case
-   * {@link HitTestResult#getNode()} will be null. The listeners will be called in the order in
-   * which they were added.
-   *
-   * @param onPeekTouchListener the peek touch listener to add
-   */
-  public void addOnPeekTouchListener(OnPeekTouchListener onPeekTouchListener) {
-    touchEventSystem.addOnPeekTouchListener(onPeekTouchListener);
-  }
-
-  /**
-   * Removes a listener that will be called before the {@link OnTouchListener} is invoked.
-   * This is invoked even if the gesture was consumed, making it possible to observe all motion
-   * events dispatched to the scene. This is called even if the touch is not over a node, in which
-   * case {@link HitTestResult#getNode()} will be null.
-   *
-   * @param onPeekTouchListener the peek touch listener to remove
-   */
-  public void removeOnPeekTouchListener(OnPeekTouchListener onPeekTouchListener) {
-    touchEventSystem.removeOnPeekTouchListener(onPeekTouchListener);
-  }
+//  /**
+//   * Removes a listener that will be called before the {@link OnTouchListener} is invoked.
+//   * This is invoked even if the gesture was consumed, making it possible to observe all motion
+//   * events dispatched to the scene. This is called even if the touch is not over a node, in which
+//   * case {@link HitTestResult#getNode()} will be null.
+//   *
+//   * @param onPeekTouchListener the peek touch listener to remove
+//   */
+//  public void removeOnPeekTouchListener(OnPeekTouchListener onPeekTouchListener) {
+//    touchEventSystem.removeOnPeekTouchListener(onPeekTouchListener);
+//  }
 
   /**
    * Adds a listener that will be called once per frame immediately before the Scene is updated. The
@@ -276,142 +276,142 @@ public class Scene extends NodeParent {
     child.setSceneRecursively(null);
   }
 
-  /**
-   * Tests to see if a motion event is touching any nodes within the scene, based on a ray hit test
-   * whose origin is the screen position of the motion event, and outputs a HitTestResult containing
-   * the node closest to the screen.
-   *
-   * @param motionEvent the motion event to use for the test
-   * @return the result includes the first node that was hit by the motion event (may be null), and
-   *     information about where the motion event hit the node in world-space
-   */
-  public HitTestResult hitTest(MotionEvent motionEvent) {
-    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
+//  /**
+//   * Tests to see if a motion event is touching any nodes within the scene, based on a ray hit test
+//   * whose origin is the screen position of the motion event, and outputs a HitTestResult containing
+//   * the node closest to the screen.
+//   *
+//   * @param motionEvent the motion event to use for the test
+//   * @return the result includes the first node that was hit by the motion event (may be null), and
+//   *     information about where the motion event hit the node in world-space
+//   */
+//  public HitTestResult hitTest(MotionEvent motionEvent) {
+//    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
+//
+//    if (camera == null) {
+//      return new HitTestResult();
+//    }
+//
+//    Ray ray = camera.motionEventToRay(motionEvent);
+//    return hitTest(ray);
+//  }
 
-    if (camera == null) {
-      return new HitTestResult();
-    }
+//  /**
+//   * Tests to see if a ray is hitting any nodes within the scene and outputs a HitTestResult
+//   * containing the node closest to the ray origin that intersects with the ray.
+//   *
+//   * @see Camera#screenPointToRay(float, float)
+//   * @param ray the ray to use for the test
+//   * @return the result includes the first node that was hit by the ray (may be null), and
+//   *     information about where the ray hit the node in world-space
+//   */
+//  public HitTestResult hitTest(Ray ray) {
+//    Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
+//
+//    HitTestResult result = new HitTestResult();
+//    Collider collider = collisionSystem.raycast(ray, result);
+//    if (collider != null) {
+//      result.setNode((Node) collider.getTransformProvider());
+//    }
+//
+//    return result;
+//  }
 
-    Ray ray = camera.motionEventToRay(motionEvent);
-    return hitTest(ray);
-  }
+//  /**
+//   * Tests to see if a motion event is touching any nodes within the scene and returns a list of
+//   * HitTestResults containing all of the nodes that were hit, sorted by distance.
+//   *
+//   * @param motionEvent The motion event to use for the test.
+//   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
+//   *     no nodes were hit.
+//   */
+//  public ArrayList<HitTestResult> hitTestAll(MotionEvent motionEvent) {
+//    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
+//
+//    if (camera == null) {
+//      return new ArrayList<>();
+//    }
+//    Ray ray = camera.motionEventToRay(motionEvent);
+//    return hitTestAll(ray);
+//  }
 
-  /**
-   * Tests to see if a ray is hitting any nodes within the scene and outputs a HitTestResult
-   * containing the node closest to the ray origin that intersects with the ray.
-   *
-   * @see Camera#screenPointToRay(float, float)
-   * @param ray the ray to use for the test
-   * @return the result includes the first node that was hit by the ray (may be null), and
-   *     information about where the ray hit the node in world-space
-   */
-  public HitTestResult hitTest(Ray ray) {
-    Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
+//  /**
+//   * Tests to see if a ray is hitting any nodes within the scene and returns a list of
+//   * HitTestResults containing all of the nodes that were hit, sorted by distance.
+//   *
+//   * @see Camera#screenPointToRay(float, float)
+//   * @param ray The ray to use for the test.
+//   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
+//   *     no nodes were hit.
+//   */
+//  public ArrayList<HitTestResult> hitTestAll(Ray ray) {
+//    Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
+//
+//    ArrayList<HitTestResult> results = new ArrayList<>();
+//
+//    collisionSystem.raycastAll(
+//        ray,
+//        results,
+//        (result, collider) -> result.setNode((Node) collider.getTransformProvider()),
+//        () -> new HitTestResult());
+//
+//    return results;
+//  }
 
-    HitTestResult result = new HitTestResult();
-    Collider collider = collisionSystem.raycast(ray, result);
-    if (collider != null) {
-      result.setNode((Node) collider.getTransformProvider());
-    }
+//  /**
+//   * Tests to see if the given node's collision shape overlaps the collision shape of any other
+//   * nodes in the scene using {@link Node#getCollisionShape()}. The node used for testing does not
+//   * need to be active.
+//   *
+//   * @see #overlapTestAll(Node)
+//   * @param node The node to use for the test.
+//   * @return A node that is overlapping the test node. If no node is overlapping the test node, then
+//   *     this is null. If multiple nodes are overlapping the test node, then this could be any of
+//   *     them.
+//   */
+//  @Nullable
+//  public Node overlapTest(Node node) {
+//    Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
+//
+//    Collider collider = node.getCollider();
+//    if (collider == null) {
+//      return null;
+//    }
+//
+//    Collider intersectedCollider = collisionSystem.intersects(collider);
+//    if (intersectedCollider == null) {
+//      return null;
+//    }
+//
+//    return (Node) intersectedCollider.getTransformProvider();
+//  }
 
-    return result;
-  }
-
-  /**
-   * Tests to see if a motion event is touching any nodes within the scene and returns a list of
-   * HitTestResults containing all of the nodes that were hit, sorted by distance.
-   *
-   * @param motionEvent The motion event to use for the test.
-   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
-   *     no nodes were hit.
-   */
-  public ArrayList<HitTestResult> hitTestAll(MotionEvent motionEvent) {
-    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
-
-    if (camera == null) {
-      return new ArrayList<>();
-    }
-    Ray ray = camera.motionEventToRay(motionEvent);
-    return hitTestAll(ray);
-  }
-
-  /**
-   * Tests to see if a ray is hitting any nodes within the scene and returns a list of
-   * HitTestResults containing all of the nodes that were hit, sorted by distance.
-   *
-   * @see Camera#screenPointToRay(float, float)
-   * @param ray The ray to use for the test.
-   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
-   *     no nodes were hit.
-   */
-  public ArrayList<HitTestResult> hitTestAll(Ray ray) {
-    Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
-
-    ArrayList<HitTestResult> results = new ArrayList<>();
-
-    collisionSystem.raycastAll(
-        ray,
-        results,
-        (result, collider) -> result.setNode((Node) collider.getTransformProvider()),
-        () -> new HitTestResult());
-
-    return results;
-  }
-
-  /**
-   * Tests to see if the given node's collision shape overlaps the collision shape of any other
-   * nodes in the scene using {@link Node#getCollisionShape()}. The node used for testing does not
-   * need to be active.
-   *
-   * @see #overlapTestAll(Node)
-   * @param node The node to use for the test.
-   * @return A node that is overlapping the test node. If no node is overlapping the test node, then
-   *     this is null. If multiple nodes are overlapping the test node, then this could be any of
-   *     them.
-   */
-  @Nullable
-  public Node overlapTest(Node node) {
-    Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
-
-    Collider collider = node.getCollider();
-    if (collider == null) {
-      return null;
-    }
-
-    Collider intersectedCollider = collisionSystem.intersects(collider);
-    if (intersectedCollider == null) {
-      return null;
-    }
-
-    return (Node) intersectedCollider.getTransformProvider();
-  }
-
-  /**
-   * Tests to see if a node is overlapping any other nodes within the scene using {@link
-   * Node#getCollisionShape()}. The node used for testing does not need to be active.
-   *
-   * @see #overlapTest(Node)
-   * @param node The node to use for the test.
-   * @return A list of all nodes that are overlapping the test node. If no node is overlapping the
-   *     test node, then the list is empty.
-   */
-  public ArrayList<Node> overlapTestAll(Node node) {
-    Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
-
-    ArrayList<Node> results = new ArrayList<>();
-
-    Collider collider = node.getCollider();
-    if (collider == null) {
-      return results;
-    }
-
-    collisionSystem.intersectsAll(
-        collider,
-        (Collider intersectedCollider) ->
-            results.add((Node) intersectedCollider.getTransformProvider()));
-
-    return results;
-  }
+//  /**
+//   * Tests to see if a node is overlapping any other nodes within the scene using {@link
+//   * Node#getCollisionShape()}. The node used for testing does not need to be active.
+//   *
+//   * @see #overlapTest(Node)
+//   * @param node The node to use for the test.
+//   * @return A list of all nodes that are overlapping the test node. If no node is overlapping the
+//   *     test node, then the list is empty.
+//   */
+//  public ArrayList<Node> overlapTestAll(Node node) {
+//    Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
+//
+//    ArrayList<Node> results = new ArrayList<>();
+//
+//    Collider collider = node.getCollider();
+//    if (collider == null) {
+//      return results;
+//    }
+//
+//    collisionSystem.intersectsAll(
+//        collider,
+//        (Collider intersectedCollider) ->
+//            results.add((Node) intersectedCollider.getTransformProvider()));
+//
+//    return results;
+//  }
 
   /** Returns true if this Scene was created by a test. */
   boolean isUnderTesting() {
@@ -498,14 +498,14 @@ public class Scene extends NodeParent {
     }
   }
 
-  public void onTouchEvent(MotionEvent motionEvent) {
-    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
-
-    // TODO: Investigate API for controlling what node's can be hit by the hitTest.
-    // i.e. layers, disabling collision shapes.
-    HitTestResult hitTestResult = hitTest(motionEvent);
-    touchEventSystem.onTouchEvent(hitTestResult, motionEvent);
-  }
+//  public void onTouchEvent(MotionEvent motionEvent) {
+//    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
+//
+//    // TODO: Investigate API for controlling what node's can be hit by the hitTest.
+//    // i.e. layers, disabling collision shapes.
+////    HitTestResult hitTestResult = hitTest(motionEvent);
+//    touchEventSystem.onTouchEvent(hitTestResult, motionEvent);
+//  }
 
   public void dispatchUpdate(FrameTime frameTime) {
     for (OnUpdateListener onUpdateListener : onUpdateListeners) {

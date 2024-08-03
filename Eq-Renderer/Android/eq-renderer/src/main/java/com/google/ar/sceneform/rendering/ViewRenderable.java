@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.collision.Box;
+//import com.google.ar.sceneform.collision.Box;
 import com.google.ar.sceneform.common.TransformProvider;
 import com.google.ar.sceneform.math.Matrix;
 import com.google.ar.sceneform.math.Vector3;
@@ -123,7 +123,7 @@ public class ViewRenderable extends Renderable {
 
     // Empty collision box. Will be modified to fit the size of the view after the view is measured.
     // If the size of the view changes, the collision shape will change too.
-    collisionShape = new Box(Vector3.zero());
+//    collisionShape = new Box(Vector3.zero());
   }
 
   ViewRenderable(ViewRenderable other) {
@@ -287,28 +287,28 @@ public class ViewRenderable extends Renderable {
       return;
     }
 
-    Box box = (Box) collisionShape;
-    if (box == null) {
-      return;
-    }
-
-    IRenderableInternalData renderableData = getRenderableData();
-    Vector3 viewSize = viewSizer.getSize(view);
-
-    Vector3 size = renderableData.getSizeAabb();
-    size.x *= viewSize.x;
-    size.y *= viewSize.y;
-
-    Vector3 center = renderableData.getCenterAabb();
-    center.x *= viewSize.x;
-    center.y *= viewSize.y;
-
-    // Offset the collision shape based on the alignment.
-    center.x += getOffsetRatioForAlignment(horizontalAlignment) * size.x;
-    center.y += getOffsetRatioForAlignment(verticalAlignment) * size.y;
-
-    box.setSize(size);
-    box.setCenter(center);
+//    Box box = (Box) collisionShape;
+//    if (box == null) {
+//      return;
+//    }
+//
+//    IRenderableInternalData renderableData = getRenderableData();
+//    Vector3 viewSize = viewSizer.getSize(view);
+//
+//    Vector3 size = renderableData.getSizeAabb();
+//    size.x *= viewSize.x;
+//    size.y *= viewSize.y;
+//
+//    Vector3 center = renderableData.getCenterAabb();
+//    center.x *= viewSize.x;
+//    center.y *= viewSize.y;
+//
+//    // Offset the collision shape based on the alignment.
+//    center.x += getOffsetRatioForAlignment(horizontalAlignment) * size.x;
+//    center.y += getOffsetRatioForAlignment(verticalAlignment) * size.y;
+//
+//    box.setSize(size);
+//    box.setCenter(center);
   }
 
   private float getOffsetRatioForAlignment(HorizontalAlignment horizontalAlignment) {

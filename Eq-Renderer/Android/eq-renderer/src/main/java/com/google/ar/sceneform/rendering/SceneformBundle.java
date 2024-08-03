@@ -2,9 +2,9 @@ package com.google.ar.sceneform.rendering;
 
 import androidx.annotation.Nullable;
 
-import com.google.ar.sceneform.collision.Box;
-import com.google.ar.sceneform.collision.CollisionShape;
-import com.google.ar.sceneform.collision.Sphere;
+//import com.google.ar.sceneform.collision.Box;
+//import com.google.ar.sceneform.collision.CollisionShape;
+//import com.google.ar.sceneform.collision.Sphere;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.schemas.CollisionShapeType;
 import com.google.ar.sceneform.schemas.SceneformBundleDef;
@@ -59,24 +59,24 @@ public final class SceneformBundle {
     return null;
   }
 
-  public static CollisionShape readCollisionGeometry(SceneformBundleDef rcb) throws IOException {
-    SuggestedCollisionShapeDef shape = rcb.suggestedCollisionShape();
-    int type = shape.type();
-    switch (type) {
-      case CollisionShapeType.Box:
-        Box box = new Box();
-        box.setCenter(new Vector3(shape.center().x(), shape.center().y(), shape.center().z()));
-        box.setSize(new Vector3(shape.size().x(), shape.size().y(), shape.size().z()));
-        return box;
-      case CollisionShapeType.Sphere:
-        Sphere sphere = new Sphere();
-        sphere.setCenter(new Vector3(shape.center().x(), shape.center().y(), shape.center().z()));
-        sphere.setRadius(shape.size().x());
-        return sphere;
-      default:
-        throw new IOException("Invalid collisionCollisionGeometry type.");
-    }
-  }
+//  public static CollisionShape readCollisionGeometry(SceneformBundleDef rcb) throws IOException {
+//    SuggestedCollisionShapeDef shape = rcb.suggestedCollisionShape();
+//    int type = shape.type();
+//    switch (type) {
+//      case CollisionShapeType.Box:
+//        Box box = new Box();
+//        box.setCenter(new Vector3(shape.center().x(), shape.center().y(), shape.center().z()));
+//        box.setSize(new Vector3(shape.size().x(), shape.size().y(), shape.size().z()));
+//        return box;
+//      case CollisionShapeType.Sphere:
+//        Sphere sphere = new Sphere();
+//        sphere.setCenter(new Vector3(shape.center().x(), shape.center().y(), shape.center().z()));
+//        sphere.setRadius(shape.size().x());
+//        return sphere;
+//      default:
+//        throw new IOException("Invalid collisionCollisionGeometry type.");
+//    }
+//  }
 
   public static boolean isSceneformBundle(ByteBuffer buffer) {
     for (int i = 0; i < RCB_SIGNATURE.length; ++i) {

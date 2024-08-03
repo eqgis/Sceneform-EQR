@@ -42,7 +42,6 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
     private final FrameTime frameTime = new FrameTime();
 
     private Scene scene;
-    private volatile boolean debugEnabled = false;
 
     private boolean isInitialized = false;
 
@@ -85,21 +84,21 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
         initialize();
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public boolean onTouchEvent(MotionEvent motionEvent) {
-        // this makes sure that the view's onTouchListener is called.
-        if (!super.onTouchEvent(motionEvent)) {
-            scene.onTouchEvent(motionEvent);
-            // We must always return true to guarantee that this view will receive all touch events.
-            // TODO: Update Scene.onTouchEvent to return if it was handled.
-            for (OnTouchListener listener:mOnTouchListeners) {
-                listener.onTouch(null,motionEvent);
-            }
-            return true;
-        }
-        return true;
-    }
+//    @SuppressLint("ClickableViewAccessibility")
+//    @Override
+//    public boolean onTouchEvent(MotionEvent motionEvent) {
+//        // this makes sure that the view's onTouchListener is called.
+//        if (!super.onTouchEvent(motionEvent)) {
+//            scene.onTouchEvent(motionEvent);
+//            // We must always return true to guarantee that this view will receive all touch events.
+//            // TODO: Update Scene.onTouchEvent to return if it was handled.
+//            for (OnTouchListener listener:mOnTouchListeners) {
+//                listener.onTouch(null,motionEvent);
+//            }
+//            return true;
+//        }
+//        return true;
+//    }
 
     /**
      * Set the background to a given {@link Drawable}, or remove the background. If the background is
@@ -230,21 +229,6 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
         return Renderer.reclaimReleasedResources();
     }
 
-    /**
-     * If enabled, provides various visualizations for debugging.
-     *
-     * @param enable True to enable debugging visualizations, false to disable it.
-     */
-    public void enableDebug(boolean enable) {
-        debugEnabled = enable;
-    }
-
-    /**
-     * Indicates whether debugging is enabled for this view.
-     */
-    public boolean isDebugEnabled() {
-        return debugEnabled;
-    }
 
     /**
      * Returns the renderer used for this view, or null if the renderer is not setup.
@@ -263,41 +247,41 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
         return scene;
     }
 
-    /**
-     * To capture the contents of this view, designate a {@link Surface} onto which this SceneView
-     * should be mirrored. Use {@link android.media.MediaRecorder#getSurface()}, {@link
-     * android.media.MediaCodec#createInputSurface()} or {@link
-     * android.media.MediaCodec#createPersistentInputSurface()} to obtain the input surface for
-     * recording. This will incur a rendering performance cost and should only be set when capturing
-     * this view. To stop the additional rendering, call stopMirroringToSurface.
-     *
-     * @param surface the Surface onto which the rendered scene should be mirrored.
-     * @param left    the left edge of the rectangle into which the view should be mirrored on surface.
-     * @param bottom  the bottom edge of the rectangle into which the view should be mirrored on
-     *                surface.
-     * @param width   the width of the rectangle into which the SceneView should be mirrored on surface.
-     * @param height  the height of the rectangle into which the SceneView should be mirrored on
-     *                surface.
-     */
-    public void startMirroringToSurface(
-            Surface surface, int left, int bottom, int width, int height) {
-        if (renderer != null) {
-            renderer.startMirroring(surface, left, bottom, width, height);
-        }
-    }
+//    /**
+//     * To capture the contents of this view, designate a {@link Surface} onto which this SceneView
+//     * should be mirrored. Use {@link android.media.MediaRecorder#getSurface()}, {@link
+//     * android.media.MediaCodec#createInputSurface()} or {@link
+//     * android.media.MediaCodec#createPersistentInputSurface()} to obtain the input surface for
+//     * recording. This will incur a rendering performance cost and should only be set when capturing
+//     * this view. To stop the additional rendering, call stopMirroringToSurface.
+//     *
+//     * @param surface the Surface onto which the rendered scene should be mirrored.
+//     * @param left    the left edge of the rectangle into which the view should be mirrored on surface.
+//     * @param bottom  the bottom edge of the rectangle into which the view should be mirrored on
+//     *                surface.
+//     * @param width   the width of the rectangle into which the SceneView should be mirrored on surface.
+//     * @param height  the height of the rectangle into which the SceneView should be mirrored on
+//     *                surface.
+//     */
+//    public void startMirroringToSurface(
+//            Surface surface, int left, int bottom, int width, int height) {
+//        if (renderer != null) {
+//            renderer.startMirroring(surface, left, bottom, width, height);
+//        }
+//    }
 
-    /**
-     * When capturing is complete, call this method to stop mirroring the SceneView to the specified
-     * {@link Surface}. If this is not called, the additional performance cost will remain.
-     *
-     * <p>The application is responsible for calling {@link Surface#release()} on the Surface when
-     * done.
-     */
-    public void stopMirroringToSurface(Surface surface) {
-        if (renderer != null) {
-            renderer.stopMirroring(surface);
-        }
-    }
+//    /**
+//     * When capturing is complete, call this method to stop mirroring the SceneView to the specified
+//     * {@link Surface}. If this is not called, the additional performance cost will remain.
+//     *
+//     * <p>The application is responsible for calling {@link Surface#release()} on the Surface when
+//     * done.
+//     */
+//    public void stopMirroringToSurface(Surface surface) {
+//        if (renderer != null) {
+//            renderer.stopMirroring(surface);
+//        }
+//    }
 
     /**
      * Initialize the renderer. This creates the Renderer and sets the camera.
@@ -369,37 +353,17 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      */
     public void doFrameNoRepost(long frameTimeNanos) {
         // TODO: Display the tracked performance metrics in debug mode.
-        if (debugEnabled) {
-            frameTotalTracker.beginSample();
-        }
 
         if (onBeginFrame(frameTimeNanos)) {
             doUpdate(frameTimeNanos);
             doRender(frameTimeNanos);
         }
 
-        if (debugEnabled) {
-            frameTotalTracker.endSample();
-            if ((System.currentTimeMillis() / 1000) % 60 == 0) {
-                Log.d(TAG, " PERF COUNTER: frameRender: " + frameRenderTracker.getAverage());
-                Log.d(TAG, " PERF COUNTER: frameTotal: " + frameTotalTracker.getAverage());
-                Log.d(TAG, " PERF COUNTER: frameUpdate: " + frameUpdateTracker.getAverage());
-            }
-        }
     }
 
     private void doUpdate(long frameTimeNanos) {
-        if (debugEnabled) {
-            frameUpdateTracker.beginSample();
-        }
-
         frameTime.update(frameTimeNanos);
-
         scene.dispatchUpdate(frameTime);
-
-        if (debugEnabled) {
-            frameUpdateTracker.endSample();
-        }
     }
 
     private void doRender(long frameTimeNanos) {
@@ -408,15 +372,7 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
             return;
         }
 
-        if (debugEnabled) {
-            frameRenderTracker.beginSample();
-        }
-
-        renderer.render(frameTimeNanos, debugEnabled);
-
-        if (debugEnabled) {
-            frameRenderTracker.endSample();
-        }
+        renderer.render(frameTimeNanos);
     }
 
     /**

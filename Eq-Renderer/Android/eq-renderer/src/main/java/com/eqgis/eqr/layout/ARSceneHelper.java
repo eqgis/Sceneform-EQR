@@ -86,10 +86,10 @@ class ARSceneHelper {
                 return false;
             }
         });
-        arSceneView.getScene().addOnPeekTouchListener((hitTestResult, motionEvent) -> {
-            if (hitTestResult.getNode()==null){
-                gestureDetector.onTouchEvent(motionEvent);}
-        });
+//        arSceneView.getScene().addOnPeekTouchListener((hitTestResult, motionEvent) -> {
+//            if (hitTestResult.getNode()==null){
+//                gestureDetector.onTouchEvent(motionEvent);}
+//        });
 
         return this;
     }

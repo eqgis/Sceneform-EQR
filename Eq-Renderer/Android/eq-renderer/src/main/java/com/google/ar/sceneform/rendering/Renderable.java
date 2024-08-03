@@ -8,8 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.collision.Box;
-import com.google.ar.sceneform.collision.CollisionShape;
+//import com.google.ar.sceneform.collision.Box;
+//import com.google.ar.sceneform.collision.CollisionShape;
 import com.google.ar.sceneform.common.TransformProvider;
 import com.google.ar.sceneform.math.Matrix;
 import com.google.ar.sceneform.resources.ResourceRegistry;
@@ -49,7 +49,7 @@ public abstract class Renderable {
     //The number of frames per seconds defined in the asset
     private int animationFrameRate;
     @Nullable
-    protected CollisionShape collisionShape;
+//    protected CollisionShape collisionShape;
 
     private final ChangeId changeId = new ChangeId();
 
@@ -105,9 +105,9 @@ public abstract class Renderable {
         isShadowReceiver = other.isShadowReceiver;
 
         // Copy collision shape.
-        if (other.collisionShape != null) {
-            collisionShape = other.collisionShape.makeCopy();
-        }
+//        if (other.collisionShape != null) {
+//            collisionShape = other.collisionShape.makeCopy();
+//        }
 
         asyncLoadEnabled = other.asyncLoadEnabled;
         animationFrameRate = other.animationFrameRate;
@@ -116,20 +116,20 @@ public abstract class Renderable {
     }
 
     /**
-     * Get the {@link CollisionShape} used for collision detection with this {@link Renderable}.
+     * Get the {CollisionShape} used for collision detection with this {@link Renderable}.
      */
-    public @Nullable
-    CollisionShape getCollisionShape() {
-        return collisionShape;
-    }
+//    public @Nullable
+//    CollisionShape getCollisionShape() {
+//        return collisionShape;
+//    }
 
     /**
-     * Set the {@link CollisionShape} used for collision detection with this {@link Renderable}.
+     * Set the { CollisionShape} used for collision detection with this {@link Renderable}.
      */
-    public void setCollisionShape(@Nullable CollisionShape collisionShape) {
-        this.collisionShape = collisionShape;
-        changeId.update();
-    }
+//    public void setCollisionShape(@Nullable CollisionShape collisionShape) {
+//        this.collisionShape = collisionShape;
+//        changeId.update();
+//    }
 
     /**
      * Returns the material bound to the first submesh.
@@ -266,7 +266,7 @@ public abstract class Renderable {
 
         definition.applyDefinitionToData(renderableData, materialBindings, materialNames);
 
-        collisionShape = new Box(renderableData.getSizeAabb(), renderableData.getCenterAabb());
+//        collisionShape = new Box(renderableData.getSizeAabb(), renderableData.getCenterAabb());
     }
 
     /**
