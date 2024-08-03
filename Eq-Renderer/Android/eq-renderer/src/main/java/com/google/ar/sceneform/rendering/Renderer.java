@@ -356,6 +356,21 @@ public class Renderer implements EqUiHelper.RendererCallback {
     }
   }
 
+  /**
+   * 设置间接光
+   * @param light
+   */
+  public void setIndirectLight(IndirectLight light){
+    if (indirectLight != null) {
+      scene.setIndirectLight(light);
+      IEngine engine = EngineInstance.getEngine();
+      engine.destroyIndirectLight(indirectLight);
+    }else {
+      scene.setIndirectLight(light);
+    }
+    indirectLight = light;
+  }
+
   /** @hide */
   public void setDesiredSize(int width, int height) {
     int minor = Math.min(width, height);

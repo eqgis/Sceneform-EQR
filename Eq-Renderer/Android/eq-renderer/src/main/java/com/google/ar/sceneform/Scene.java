@@ -9,8 +9,10 @@ import androidx.annotation.VisibleForTesting;
 
 //import com.google.ar.sceneform.collision.Collider;
 //import com.google.ar.sceneform.collision.CollisionSystem;
+import com.google.android.filament.IndirectLight;
 import com.google.ar.sceneform.collision.Ray;
 import com.google.ar.sceneform.rendering.Color;
+import com.google.ar.sceneform.rendering.EngineInstance;
 import com.google.ar.sceneform.rendering.LightProbe;
 import com.google.ar.sceneform.rendering.Renderer;
 import com.google.ar.sceneform.utilities.AndroidPreconditions;
@@ -89,7 +91,7 @@ public class Scene extends NodeParent {
       EnvironmentalHdrParameters.makeDefault();
 
   private final Camera camera;
-  @Nullable private final Sun sunlightNode;
+  @Nullable private Sun sunlightNode;
   @Nullable private final SceneView view;
   @Nullable private LightProbe lightProbe;
   private boolean lightProbeSet = false;
@@ -107,12 +109,14 @@ public class Scene extends NodeParent {
     view = null;
     lightProbe = null;
     camera = new Camera(true);
-    if (!AndroidPreconditions.isMinAndroidApiLevel()) {
-      // Enforce min api level 24
-      sunlightNode = null;
-    } else {
-      sunlightNode = new Sun();
-    }
+
+    //取消默认加载Sun的方式
+//    if (!AndroidPreconditions.isMinAndroidApiLevel()) {
+//      // Enforce min api level 24
+//      sunlightNode = null;
+//    } else {
+//      sunlightNode = new Sun();
+//    }
 
     isUnderTesting = true;
   }
@@ -123,15 +127,17 @@ public class Scene extends NodeParent {
     Preconditions.checkNotNull(view, "Parameter \"view\" was null.");
     this.view = view;
     camera = new Camera(this);
-    if (!AndroidPreconditions.isMinAndroidApiLevel()) {
-      // Enforce min api level 24
-      sunlightNode = null;
-      return;
-    }
-    sunlightNode = new Sun(this);
+
+    //取消默认加载Sun的方式
+//    if (!AndroidPreconditions.isMinAndroidApiLevel()) {
+//      // Enforce min api level 24
+//      sunlightNode = null;
+//      return;
+//    }
+//    sunlightNode = new Sun(this);
 
     // Setup the default lighting for the scene, if it exists.
-    setupLightProbe(view);
+//    setupLightProbe(view);//lite版本取消自动添加光照探针
   }
 
   /** Returns the SceneView used to create the scene. */
@@ -275,143 +281,6 @@ public class Scene extends NodeParent {
     super.onRemoveChild(child);
     child.setSceneRecursively(null);
   }
-
-//  /**
-//   * Tests to see if a motion event is touching any nodes within the scene, based on a ray hit test
-//   * whose origin is the screen position of the motion event, and outputs a HitTestResult containing
-//   * the node closest to the screen.
-//   *
-//   * @param motionEvent the motion event to use for the test
-//   * @return the result includes the first node that was hit by the motion event (may be null), and
-//   *     information about where the motion event hit the node in world-space
-//   */
-//  public HitTestResult hitTest(MotionEvent motionEvent) {
-//    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
-//
-//    if (camera == null) {
-//      return new HitTestResult();
-//    }
-//
-//    Ray ray = camera.motionEventToRay(motionEvent);
-//    return hitTest(ray);
-//  }
-
-//  /**
-//   * Tests to see if a ray is hitting any nodes within the scene and outputs a HitTestResult
-//   * containing the node closest to the ray origin that intersects with the ray.
-//   *
-//   * @see Camera#screenPointToRay(float, float)
-//   * @param ray the ray to use for the test
-//   * @return the result includes the first node that was hit by the ray (may be null), and
-//   *     information about where the ray hit the node in world-space
-//   */
-//  public HitTestResult hitTest(Ray ray) {
-//    Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
-//
-//    HitTestResult result = new HitTestResult();
-//    Collider collider = collisionSystem.raycast(ray, result);
-//    if (collider != null) {
-//      result.setNode((Node) collider.getTransformProvider());
-//    }
-//
-//    return result;
-//  }
-
-//  /**
-//   * Tests to see if a motion event is touching any nodes within the scene and returns a list of
-//   * HitTestResults containing all of the nodes that were hit, sorted by distance.
-//   *
-//   * @param motionEvent The motion event to use for the test.
-//   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
-//   *     no nodes were hit.
-//   */
-//  public ArrayList<HitTestResult> hitTestAll(MotionEvent motionEvent) {
-//    Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
-//
-//    if (camera == null) {
-//      return new ArrayList<>();
-//    }
-//    Ray ray = camera.motionEventToRay(motionEvent);
-//    return hitTestAll(ray);
-//  }
-
-//  /**
-//   * Tests to see if a ray is hitting any nodes within the scene and returns a list of
-//   * HitTestResults containing all of the nodes that were hit, sorted by distance.
-//   *
-//   * @see Camera#screenPointToRay(float, float)
-//   * @param ray The ray to use for the test.
-//   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
-//   *     no nodes were hit.
-//   */
-//  public ArrayList<HitTestResult> hitTestAll(Ray ray) {
-//    Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
-//
-//    ArrayList<HitTestResult> results = new ArrayList<>();
-//
-//    collisionSystem.raycastAll(
-//        ray,
-//        results,
-//        (result, collider) -> result.setNode((Node) collider.getTransformProvider()),
-//        () -> new HitTestResult());
-//
-//    return results;
-//  }
-
-//  /**
-//   * Tests to see if the given node's collision shape overlaps the collision shape of any other
-//   * nodes in the scene using {@link Node#getCollisionShape()}. The node used for testing does not
-//   * need to be active.
-//   *
-//   * @see #overlapTestAll(Node)
-//   * @param node The node to use for the test.
-//   * @return A node that is overlapping the test node. If no node is overlapping the test node, then
-//   *     this is null. If multiple nodes are overlapping the test node, then this could be any of
-//   *     them.
-//   */
-//  @Nullable
-//  public Node overlapTest(Node node) {
-//    Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
-//
-//    Collider collider = node.getCollider();
-//    if (collider == null) {
-//      return null;
-//    }
-//
-//    Collider intersectedCollider = collisionSystem.intersects(collider);
-//    if (intersectedCollider == null) {
-//      return null;
-//    }
-//
-//    return (Node) intersectedCollider.getTransformProvider();
-//  }
-
-//  /**
-//   * Tests to see if a node is overlapping any other nodes within the scene using {@link
-//   * Node#getCollisionShape()}. The node used for testing does not need to be active.
-//   *
-//   * @see #overlapTest(Node)
-//   * @param node The node to use for the test.
-//   * @return A list of all nodes that are overlapping the test node. If no node is overlapping the
-//   *     test node, then the list is empty.
-//   */
-//  public ArrayList<Node> overlapTestAll(Node node) {
-//    Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
-//
-//    ArrayList<Node> results = new ArrayList<>();
-//
-//    Collider collider = node.getCollider();
-//    if (collider == null) {
-//      return results;
-//    }
-//
-//    collisionSystem.intersectsAll(
-//        collider,
-//        (Collider intersectedCollider) ->
-//            results.add((Node) intersectedCollider.getTransformProvider()));
-//
-//    return results;
-//  }
 
   /** Returns true if this Scene was created by a test. */
   boolean isUnderTesting() {
