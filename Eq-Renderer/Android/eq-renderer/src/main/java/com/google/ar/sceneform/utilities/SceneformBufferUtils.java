@@ -123,7 +123,7 @@ public final class SceneformBufferUtils {
       // Propagate exceptions up.
     }
   }
-
+//TODO Decode IKKYU TAG
   public static byte[] inputStreamToByteArray(InputStream input) throws IOException {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     copy(input, output);

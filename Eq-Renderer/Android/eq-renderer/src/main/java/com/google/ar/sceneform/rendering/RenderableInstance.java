@@ -1,5 +1,6 @@
 package com.google.ar.sceneform.rendering;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
@@ -29,12 +30,14 @@ import com.google.ar.sceneform.utilities.ChangeId;
 import com.google.ar.sceneform.utilities.LoadHelper;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.ar.sceneform.utilities.SceneformBufferUtils;
+import com.hunantv.imgo.util.ThreadManager;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 /**
@@ -121,13 +124,18 @@ public class RenderableInstance implements AnimatableModel {
                     createFilamentChildEntity(EngineInstance.getEngine(), entity, relativeTransform);
         }
 
+        Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-1");
         createGltfModelInstance();
 
-        createFilamentAssetModelInstance();
+        Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2");
+        createFilamentAssetModelInstance();//耗时操作
 
+        Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-3");
         ResourceManager.getInstance()
                 .getRenderableInstanceCleanupRegistry()
                 .register(this, new CleanupCallback(entity, childEntity));
+
+        Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-4");
     }
 
     /**
@@ -142,6 +150,7 @@ public class RenderableInstance implements AnimatableModel {
         return 1.0f;
     }
 
+    @SuppressLint("NewApi")
     void createFilamentAssetModelInstance() {
         if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
             RenderableInternalFilamentAssetData renderableData =
@@ -149,70 +158,83 @@ public class RenderableInstance implements AnimatableModel {
 
             Engine engine = EngineInstance.getEngine().getFilamentEngine();
 
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 1");
             //updated by ikkyu
             loader = new AssetLoader(
-                            engine,
-                            RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
-                            EntityManager.get());
+                    engine,
+                    RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
+                    EntityManager.get());
 
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 2");
+//            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
 //            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
             FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
                     : loader.createAssetFromJson(renderableData.gltfByteBuffer);
 
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 3");
             if (createdAsset == null) {
                 throw new IllegalStateException("Failed to load gltf");
             }
 
-//            if (renderable.collisionShape == null) {
-//                com.google.android.filament.Box box = createdAsset.getBoundingBox();
-//                float[] halfExtent = box.getHalfExtent();
-//                float[] center = box.getCenter();
-//                renderable.collisionShape =
-//                        new Box(
-//                                new Vector3(halfExtent[0], halfExtent[1], halfExtent[2]).scaled(2.0f),
-//                                new Vector3(center[0], center[1], center[2]));
+
+            //gltf需要
+//            Function<String, Uri> urlResolver = renderableData.urlResolver;
+//            for (String uri : createdAsset.getResourceUris()) {
+//                if (urlResolver == null) {
+//                    Log.e(TAG, "Failed to download uri " + uri + " no url resolver.");
+//                    continue;
+//                }
+//                Uri dataUri = urlResolver.apply(uri);
+//                try {
+//                    Callable<InputStream> callable = LoadHelper.fromUri(renderableData.context, dataUri);
+//                    renderableData.resourceLoader.addResourceData(
+//                            uri, ByteBuffer.wrap(SceneformBufferUtils.inputStreamCallableToByteArray(callable)));
+//                } catch (Exception e) {
+//                    Log.e(TAG, "Failed to download data uri " + dataUri, e);
+//                }
 //            }
 
-            Function<String, Uri> urlResolver = renderableData.urlResolver;
-            for (String uri : createdAsset.getResourceUris()) {
-                if (urlResolver == null) {
-                    Log.e(TAG, "Failed to download uri " + uri + " no url resolver.");
-                    continue;
-                }
-                Uri dataUri = urlResolver.apply(uri);
-                try {
-                    Callable<InputStream> callable = LoadHelper.fromUri(renderableData.context, dataUri);
-                    renderableData.resourceLoader.addResourceData(
-                            uri, ByteBuffer.wrap(SceneformBufferUtils.inputStreamCallableToByteArray(callable)));
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to download data uri " + dataUri, e);
-                }
+
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 4");
+//            if(renderable.asyncLoadEnabled) {
+//            renderableData.resourceLoader.asyncBeginLoad(createdAsset);//默认采用异步加载资源
+
+            Log.d(TAG, "IKKYU-createFilamentAssetModelInstance: "  + Thread.currentThread());
+            try {
+//                renderableData.resourceLoader.asyncBeginLoad(createdAsset);//默认采用异步加载资源
+//                CompletableFuture.runAsync(()->{
+                boolean b = renderableData.resourceLoader.asyncBeginLoad(createdAsset);//默认采用异步加载资源
+                Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 4:" + b);
+//                },ThreadPools.getThreadPoolExecutor());
+            }catch (Exception e){
+                Log.e(TAG, "createFilamentAssetModelInstance: " + Thread.currentThread(), e);
             }
+//            } else {
+//                renderableData.resourceLoader.loadResources(createdAsset);
+//            }
 
-            if(renderable.asyncLoadEnabled) {
-                renderableData.resourceLoader.asyncBeginLoad(createdAsset);
-            } else {
-                renderableData.resourceLoader.loadResources(createdAsset);
-            }
 
-            RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 5");
 
-            this.materialBindings.clear();
-            this.materialNames.clear();
-            for (int entity : createdAsset.getEntities()) {
-                @EntityInstance int renderableInstance = renderableManager.getInstance(entity);
-                if (renderableInstance == 0) {
-                    continue;
-                }
-                MaterialInstance materialInstance = renderableManager.getMaterialInstanceAt(renderableInstance, 0);
-                materialNames.add(materialInstance.getName());
+//            RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
+//
+//            this.materialBindings.clear();
+//            this.materialNames.clear();
+//            for (int entity : createdAsset.getEntities()) {
+//                @EntityInstance int renderableInstance = renderableManager.getInstance(entity);
+//                if (renderableInstance == 0) {
+//                    continue;
+//                }
+//                MaterialInstance materialInstance = renderableManager.getMaterialInstanceAt(renderableInstance, 0);
+//                materialNames.add(materialInstance.getName());
+//
+//                MaterialInternalDataGltfImpl materialData = new MaterialInternalDataGltfImpl(materialInstance.getMaterial());
+//                Material material = new Material(materialData);
+//                material.updateGltfMaterialInstance(materialInstance);
+//                materialBindings.add(material);
+//            }
 
-                MaterialInternalDataGltfImpl materialData = new MaterialInternalDataGltfImpl(materialInstance.getMaterial());
-                Material material = new Material(materialData);
-                material.updateGltfMaterialInstance(materialInstance);
-                materialBindings.add(material);
-            }
-
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 -6");
             TransformManager transformManager = EngineInstance.getEngine().getTransformManager();
 
             @EntityInstance int rootInstance = transformManager.getInstance(createdAsset.getRoot());
@@ -221,21 +243,25 @@ public class RenderableInstance implements AnimatableModel {
 
             transformManager.setParent(rootInstance, parentInstance);
 
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 7");
             filamentAsset = createdAsset;
 
             setRenderPriority(renderable.getRenderPriority());
             setShadowCaster(renderable.isShadowCaster());
             setShadowReceiver(renderable.isShadowReceiver());
 
-            filamentAnimator = createdAsset.getAnimator();
-//            filamentAnimator = createdAsset.getInstance().getAnimator();
-            animations = new ArrayList<>();
-            for (int i = 0; i < filamentAnimator.getAnimationCount(); i++) {
-                animations.add(new ModelAnimation(this, filamentAnimator.getAnimationName(i), i,
-                        filamentAnimator.getAnimationDuration(i),
-                        getRenderable().getAnimationFrameRate()));
-            }
+//            filamentAnimator = createdAsset.getAnimator();
+////            filamentAnimator = createdAsset.getInstance().getAnimator();
+//            animations = new ArrayList<>();
+//            for (int i = 0; i < filamentAnimator.getAnimationCount(); i++) {
+//                animations.add(new ModelAnimation(this, filamentAnimator.getAnimationName(i), i,
+//                        filamentAnimator.getAnimationDuration(i),
+//                        getRenderable().getAnimationFrameRate()));
+//            }
             createdAsset.releaseSourceData();//added by ikkyu 2024/07/30
+
+
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 8");
         }
     }
 
@@ -587,7 +613,8 @@ public class RenderableInstance implements AnimatableModel {
             RenderableInternalFilamentAssetData renderableData =
                     (RenderableInternalFilamentAssetData) renderable.getRenderableData();
             renderableData.resourceLoader.asyncCancelLoad();
-            renderableData.resourceLoader.evictResourceData();
+            // Frees memory by evicting the URI cache that was populated via addResourceData.。glb模式没有添加URI
+//            renderableData.resourceLoader.evictResourceData();
 //            renderableData.resourceLoader.destroy();
         }
         renderable.getRenderableData().dispose();//Other RenderableData dispose

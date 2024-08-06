@@ -49,7 +49,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   private static final Color DEFAULT_CLEAR_COLOR = new Color(0.0f, 0.0f, 0.0f, 1.0f);
 
   // Limit resolution to 1080p for the minor edge. This is enough for Filament.
-  public static int MAXIMUM_RESOLUTION = 720;
+  public static int MAXIMUM_RESOLUTION = 1080;
 
   @Nullable private CameraProvider cameraProvider;
   private final SurfaceView surfaceView;

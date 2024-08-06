@@ -1,5 +1,6 @@
 package com.google.ar.sceneform;
 
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 
@@ -849,19 +850,22 @@ public class Node extends NodeParent implements TransformProvider {
      * @return the created renderable instance
      */
     public RenderableInstance setRenderable(@Nullable Renderable renderable) {
-        AndroidPreconditions.checkUiThread();
+//        AndroidPreconditions.checkUiThread();
 
         // Renderable hasn't changed, return early.
         if (renderableInstance != null && renderableInstance.getRenderable() == renderable) {
             return renderableInstance;
         }
 
+        Log.d("IKKYU-SetRenderable", "setRenderable: ----1");
         if (renderableInstance != null) {
             if (active) {
                 renderableInstance.detachFromRenderer();//setRenderableInstance again
             }
             //free memory
             renderableInstance.destroy();
+
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2");
             renderableInstance = null;
         }
 
@@ -873,15 +877,18 @@ public class Node extends NodeParent implements TransformProvider {
 
         if (renderable != null) {
             RenderableInstance instance = renderable.createInstance(this);
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-1");
             if (active && (scene != null && !scene.isUnderTesting())) {
                 instance.attachToRenderer(getRendererOrDie());
             }
+            Log.d("IKKYU-SetRenderable", "setRenderable: ----2-2");
             renderableInstance = instance;
             renderableId = renderable.getId().get();
         } else {
             renderableId = ChangeId.EMPTY_ID;
         }
 
+        Log.d("IKKYU-SetRenderable", "setRenderable: ----3");
 //        refreshCollider();
 
         return renderableInstance;

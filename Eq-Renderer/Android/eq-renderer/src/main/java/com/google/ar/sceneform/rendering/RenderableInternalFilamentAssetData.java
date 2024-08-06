@@ -6,6 +6,8 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.filament.gltfio.MaterialProvider;
+//import com.google.android.filament.gltfio.UbershaderProvider;
 import com.google.android.filament.gltfio.UbershaderLoader;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.android.filament.IndexBuffer;
@@ -33,8 +35,9 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
   ResourceLoader resourceLoader;
   @Nullable Function<String, Uri> urlResolver;
   static UbershaderLoader ubershaderLoader;
+//  static UbershaderLoader ubershaderLoader;
 
-  static UbershaderLoader getMaterialProvider() {
+  static MaterialProvider getMaterialProvider() {
     if (ubershaderLoader == null) {
       ubershaderLoader = new UbershaderLoader(EngineInstance.getEngine().getFilamentEngine());
     }

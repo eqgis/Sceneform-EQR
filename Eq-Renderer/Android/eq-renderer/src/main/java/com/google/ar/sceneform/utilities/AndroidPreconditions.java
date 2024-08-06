@@ -21,12 +21,12 @@ public class AndroidPreconditions {
    * available (i.e. for unit tests.
    */
   public static void checkUiThread() {
-    if (!isAndroidApiAvailable() || isUnderTesting()) {
-      return;
-    }
-
-    boolean isOnUIThread = Looper.getMainLooper().getThread() == Thread.currentThread();
-    Preconditions.checkState(isOnUIThread, "Must be called from the UI thread.");
+//    if (!isAndroidApiAvailable() || isUnderTesting()) {
+//      return;
+//    }
+//
+//    boolean isOnUIThread = Looper.getMainLooper().getThread() == Thread.currentThread();
+//    Preconditions.checkState(isOnUIThread, "Must be called from the UI thread.");
   }
 
   /**

@@ -67,7 +67,7 @@ public class LoadRenderableFromFilamentGltfTask<T extends Renderable> {
                       && gltfByteBuffer[3] == 0x46;
               this.renderableData.gltfByteBuffer = ByteBuffer.wrap(gltfByteBuffer);
               return renderable;
-            },
+            },/*todo check this，IKKYU TAG*/
             ThreadPools.getMainExecutor());
   }
 

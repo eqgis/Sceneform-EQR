@@ -373,7 +373,7 @@ public abstract class Renderable {
         private RenderableDefinition definition = null;
         private boolean isGltf = false;
         private boolean isFilamentAsset = false;
-        private boolean asyncLoadEnabled = false;
+        private boolean asyncLoadEnabled = true;
         @Nullable
         private LoadGltfListener loadGltfListener;
         @Nullable
@@ -521,11 +521,11 @@ public abstract class Renderable {
                     throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
                 }
             } else if (isGltf) {
-                if (context != null) {
-                    result = loadRenderableFromGltf(context, renderable, this.materialsBytes);
-                } else {
-                    throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
-                }
+//                if (context != null) {
+//                    result = loadRenderableFromGltf(context, renderable, this.materialsBytes);
+//                } else {
+//                    throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
+//                }
             } else {
 //                LoadRenderableFromSfbTask<T> loader =
 //                        new LoadRenderableFromSfbTask<>(renderable, sourceUri);

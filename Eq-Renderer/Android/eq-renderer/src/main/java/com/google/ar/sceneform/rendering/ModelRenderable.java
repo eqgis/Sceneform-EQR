@@ -100,7 +100,8 @@ public class ModelRenderable extends Renderable {
    */
   @Override
   public ModelRenderable makeCopy() {
-    return new ModelRenderable(this);
+//    return new ModelRenderable(this);//IKKYU TAG 不再进行材质拷贝
+    return this;
   }
 
   /** Constructs a {@link ModelRenderable}. */

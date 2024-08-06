@@ -3,6 +3,7 @@ package com.eqgis.eqr.utils;
 //import com.google.ar.sceneform.collision.Box;
 //import com.google.ar.sceneform.collision.CollisionShape;
 import com.google.android.filament.Box;
+import com.google.android.filament.gltfio.FilamentAsset;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Vector3;
 import com.google.ar.sceneform.rendering.ModelRenderable;
@@ -39,7 +40,9 @@ public class ScaleTool {
 //        return 1.0f;
 //    }
     public static float calculateUnitsScale(RenderableInstance renderable){
-        Box boundingBox = renderable.getFilamentAsset().getBoundingBox();
+        FilamentAsset filamentAsset = renderable.getFilamentAsset();
+        if (filamentAsset == null)return 0.0f;
+        Box boundingBox = filamentAsset.getBoundingBox();
 
 //        if (collisionShape instanceof Box){
 //            Box box = (Box) collisionShape;
@@ -49,7 +52,7 @@ public class ScaleTool {
 //        }
         float[] halfExtent = boundingBox.getHalfExtent();
         if (Float.isNaN(halfExtent[0])){
-            return 1.0f;
+            return 0.0f;
         }
         float max = 2.0f * Math.max(halfExtent[0],Math.max(halfExtent[1],halfExtent[2]));
         return 1.0f / max;
