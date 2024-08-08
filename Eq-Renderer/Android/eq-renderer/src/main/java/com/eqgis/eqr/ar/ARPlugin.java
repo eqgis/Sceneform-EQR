@@ -1,4 +1,4 @@
-package com.eqgis.ar;
+package com.eqgis.eqr.ar;
 
 import android.content.Context;
 import android.content.Intent;

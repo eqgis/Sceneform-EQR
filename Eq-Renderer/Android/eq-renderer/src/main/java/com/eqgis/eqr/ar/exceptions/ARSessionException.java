@@ -1,4 +1,4 @@
-package com.eqgis.ar.exceptions;
+package com.eqgis.eqr.ar.exceptions;
 
 import android.util.Log;
 

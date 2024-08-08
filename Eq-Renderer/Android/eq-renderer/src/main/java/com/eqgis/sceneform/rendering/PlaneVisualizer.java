@@ -5,8 +5,8 @@ import androidx.annotation.Nullable;
 import com.eqgis.sceneform.common.TransformProvider;
 import com.eqgis.sceneform.math.Matrix;
 import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.ar.ARPlane;
-import com.eqgis.ar.TrackingState;
+import com.eqgis.eqr.ar.ARPlane;
+import com.eqgis.eqr.ar.TrackingState;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;

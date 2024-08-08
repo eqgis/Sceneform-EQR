@@ -1,4 +1,4 @@
-package com.eqgis.ar;
+package com.eqgis.eqr.ar;
 
 import android.content.Context;
 
@@ -12,8 +12,8 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.eqgis.sceneform.rendering.CameraStream;
-import com.eqgis.ar.exceptions.ARCameraException;
-import com.eqgis.ar.exceptions.ARSessionException;
+import com.eqgis.eqr.ar.exceptions.ARCameraException;
+import com.eqgis.eqr.ar.exceptions.ARSessionException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -272,7 +272,7 @@ public class ARSession {
 
     /**
      * 更新计算结果
-     * <p>应用在需要获取最新的数据时调用此接口，如相机发生移动以后，使用此接口可以获取新的锚点坐标、平面坐标、相机获取的图像帧等。如果{@link com.eqgis.ar.ARConfig.UpdateMode}为BLOCKING，那么该函数会阻塞至有新的帧可用。</p>
+     * <p>应用在需要获取最新的数据时调用此接口，如相机发生移动以后，使用此接口可以获取新的锚点坐标、平面坐标、相机获取的图像帧等。如果{@link com.eqgis.eqr.ar.ARConfig.UpdateMode}为BLOCKING，那么该函数会阻塞至有新的帧可用。</p>
      * @return
      * @throws ARCameraException
      */

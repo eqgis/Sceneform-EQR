@@ -1,4 +1,4 @@
-package com.eqgis.ar;
+package com.eqgis.eqr.ar;
 
 /**
  * AR图片元数据

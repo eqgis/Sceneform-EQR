@@ -12,8 +12,8 @@ import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
-import com.eqgis.ar.ARFrame;
-import com.eqgis.ar.ARPlane;
+import com.eqgis.eqr.ar.ARFrame;
+import com.eqgis.eqr.ar.ARPlane;
 
 import java.util.Collection;
 import java.util.HashMap;

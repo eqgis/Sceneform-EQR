@@ -4,12 +4,12 @@ import android.content.Context;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
-import com.eqgis.ar.ARFrame;
-import com.eqgis.ar.ARHitResult;
-import com.eqgis.ar.ARPlane;
-import com.eqgis.ar.ARTrackable;
-import com.eqgis.ar.OnTapArPlaneListener;
-import com.eqgis.ar.TrackingState;
+import com.eqgis.eqr.ar.ARFrame;
+import com.eqgis.eqr.ar.ARHitResult;
+import com.eqgis.eqr.ar.ARPlane;
+import com.eqgis.eqr.ar.ARTrackable;
+import com.eqgis.eqr.ar.OnTapArPlaneListener;
+import com.eqgis.eqr.ar.TrackingState;
 import com.eqgis.eqr.ResourceConfig;
 import com.google.android.filament.MaterialInstance;
 import com.eqgis.sceneform.ArSceneView;

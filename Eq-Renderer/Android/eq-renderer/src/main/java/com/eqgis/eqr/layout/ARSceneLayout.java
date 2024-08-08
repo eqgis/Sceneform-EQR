@@ -9,16 +9,16 @@ import android.view.ViewGroup;
 
 import androidx.core.app.ActivityCompat;
 
-import com.eqgis.ar.ARFrame;
-import com.eqgis.ar.OnSessionInitializationListener;
-import com.eqgis.ar.OnTapArPlaneListener;
-import com.eqgis.ar.TrackingState;
+import com.eqgis.eqr.ar.ARFrame;
+import com.eqgis.eqr.ar.OnSessionInitializationListener;
+import com.eqgis.eqr.ar.OnTapArPlaneListener;
+import com.eqgis.eqr.ar.TrackingState;
 import com.eqgis.sceneform.ArSceneView;
-import com.eqgis.ar.ARConfig;
-import com.eqgis.ar.ARPlugin;
-import com.eqgis.ar.ARSession;
-import com.eqgis.ar.exceptions.ARCameraException;
-import com.eqgis.ar.exceptions.ARSessionException;
+import com.eqgis.eqr.ar.ARConfig;
+import com.eqgis.eqr.ar.ARPlugin;
+import com.eqgis.eqr.ar.ARSession;
+import com.eqgis.eqr.ar.exceptions.ARCameraException;
+import com.eqgis.eqr.ar.exceptions.ARSessionException;
 
 /**
  * AR场景布局控件

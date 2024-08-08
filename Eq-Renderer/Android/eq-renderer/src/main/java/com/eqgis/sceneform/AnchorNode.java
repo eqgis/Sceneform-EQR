@@ -8,9 +8,9 @@ import com.eqgis.eqr.node.RootNode;
 import com.eqgis.sceneform.math.MathHelper;
 import com.eqgis.sceneform.math.Quaternion;
 import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.ar.ARAnchor;
-import com.eqgis.ar.ARPose;
-import com.eqgis.ar.TrackingState;
+import com.eqgis.eqr.ar.ARAnchor;
+import com.eqgis.eqr.ar.ARPose;
+import com.eqgis.eqr.ar.TrackingState;
 
 /**
  * Node that is automatically positioned in world space based on an ARCore Anchor.

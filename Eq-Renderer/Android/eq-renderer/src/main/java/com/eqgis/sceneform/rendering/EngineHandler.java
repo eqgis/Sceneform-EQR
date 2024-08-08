@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
 
+import com.hunantv.imgo.util.LogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ class EngineHandler extends android.os.HandlerThread {
 
   public void postLoadDataRunnable(Runnable runnable) {
     if (mLoadDataRunnable != null) {
+      LogUtil.d("testwxy", "removeCallbacks(mLoadDataRunnable):" + mLoadDataRunnable);
       workHandler.removeCallbacks(mLoadDataRunnable);
     }
     mLoadDataRunnable = runnable;

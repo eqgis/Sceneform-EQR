@@ -24,7 +24,9 @@ public final class RenderingResources {
   private static int GetSceneformSourceResource(Context context, Resource resource) {
     switch (resource) {
       case CAMERA_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_flat");
+        //改用支持颜色混合的材质
+        return LoadHelper.rawResourceNameToIdentifier(context, "mat_blend_camera");
+//        return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_flat");
       case OCCLUSION_CAMERA_MATERIAL:
         return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_depth");
       case OPAQUE_COLORED_MATERIAL:

@@ -21,9 +21,9 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.eqgis.ar.ARConfig;
-import com.eqgis.ar.ARSession;
-import com.eqgis.ar.exceptions.ARSessionException;
+import com.eqgis.eqr.ar.ARConfig;
+import com.eqgis.eqr.ar.ARSession;
+import com.eqgis.eqr.ar.exceptions.ARSessionException;
 
 class SceneLayoutUtils {
   private static final String TAG = "SessionCreator";

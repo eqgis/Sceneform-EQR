@@ -3,7 +3,7 @@ package com.eqgis.sceneform;
 import com.eqgis.sceneform.math.Quaternion;
 import com.eqgis.sceneform.math.Vector3;
 import com.google.ar.core.Pose;
-import com.eqgis.ar.ARPose;
+import com.eqgis.eqr.ar.ARPose;
 
 /** Helper class for utility functions for interacting with the ARCore API. */
 public class ArHelpers {

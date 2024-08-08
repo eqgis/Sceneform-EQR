@@ -5,9 +5,8 @@ package com.eqgis.eqr.layout;
  * @author tanyx 2023/12/12
  * @version 1.0
  **/
-public interface LifecycleListener {
+interface LifecycleListener {
     void onResume();
     void onPause();
     void onDestroy();
-    void onSceneInitComplete();
 }

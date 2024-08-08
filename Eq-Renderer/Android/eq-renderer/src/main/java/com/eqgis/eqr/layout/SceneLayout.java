@@ -16,7 +16,6 @@ import com.eqgis.sceneform.Scene;
 import com.eqgis.sceneform.SceneView;
 import com.eqgis.sceneform.math.Quaternion;
 import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.sceneform.rendering.EngineInstance;
 
 import java.util.List;
 
@@ -69,6 +68,8 @@ public class SceneLayout extends FrameLayout{
         //添加布局
         addLayout();
 
+        rootNode = new RootNode();
+        rootNode.setParent(sceneView.getScene());
     }
 
     /**
@@ -76,21 +77,10 @@ public class SceneLayout extends FrameLayout{
      * @return SceneView
      */
     protected void addLayout() {
-        EngineInstance.getHandler().post(()->{
-            LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            sceneView = new SceneView(context);
-            sceneView.setLayoutParams(layoutParams);
-
-            rootNode = new RootNode();
-            rootNode.setParent(sceneView.getScene());
-
-            SceneLayout.this.post(()->{
-                SceneLayout.this.addView(sceneView);
-                if (lifecycleListener!=null){
-                    lifecycleListener.onSceneInitComplete();
-                }
-            });
-        });
+        LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        sceneView = new SceneView(context);
+        sceneView.setLayoutParams(layoutParams);
+        this.addView(sceneView);
     }
 
     /**
@@ -206,7 +196,7 @@ public class SceneLayout extends FrameLayout{
      * 设置生命周期监听事件
      * @param lifecycleListener
      */
-    public void setLifecycleListener(LifecycleListener lifecycleListener){
+    protected void setLifecycleListener(LifecycleListener lifecycleListener){
         this.lifecycleListener = lifecycleListener;
     }
 

@@ -6,6 +6,7 @@ import android.util.AttributeSet;
 import androidx.annotation.Nullable;
 
 import com.eqgis.sceneform.rendering.CameraStream;
+import com.eqgis.sceneform.rendering.Color;
 import com.eqgis.sceneform.rendering.ExternalTexture;
 import com.eqgis.sceneform.rendering.Renderer;
 import com.eqgis.sceneform.utilities.Preconditions;
@@ -25,6 +26,9 @@ public class ExSceneView extends SceneView{
     private ExternalTexture externalTexture;
     private Renderer renderer;
     private BeginFrameListener beginFrameListener;
+
+    //用于与背景进行混合的颜色值，结合”mat_blend_camera“材质文件使用
+    private Color blendColor = new Color(1,0.705f,0.203f,1);
 
     public interface BeginFrameListener{
         void onBeginFrame(long frameTimeNanos);
@@ -79,6 +83,8 @@ public class ExSceneView extends SceneView{
         // Setup Camera Stream if needed.
         if (!cameraStream.isTextureInitialized()) {
             cameraStream.initializeTexture(externalTexture);
+        }else {
+            cameraStream.updateBlendColor(blendColor);
         }
 
         //update depthImage
@@ -101,4 +107,10 @@ public class ExSceneView extends SceneView{
         return externalTexture;
     }
 
+    public void setBlendColor(float r,float g,float b, float a){
+        this.blendColor.r = r;
+        this.blendColor.g = g;
+        this.blendColor.b = b;
+        this.blendColor.a = a;
+    }
 }

@@ -1,4 +1,4 @@
-package com.eqgis.ar;
+package com.eqgis.eqr.ar;
 
 import com.google.ar.core.Plane;
 import com.google.ar.core.Point;

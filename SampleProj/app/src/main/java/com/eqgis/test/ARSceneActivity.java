@@ -4,14 +4,9 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
-import com.eqgis.ar.ARCamera;
-import com.eqgis.ar.ARPlugin;
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.test.scene.GltfSampleScene;
-import com.eqgis.sceneform.ARPlatForm;
-import com.huawei.hiar.AREnginesApk;
 
 /**
  * AR三维场景

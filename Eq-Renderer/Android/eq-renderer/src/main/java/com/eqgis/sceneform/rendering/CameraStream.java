@@ -1,6 +1,7 @@
 package com.eqgis.sceneform.rendering;
 
 import android.media.Image;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -19,11 +20,11 @@ import com.google.android.filament.VertexBuffer.VertexAttribute;
 import com.eqgis.sceneform.ARPlatForm;
 import com.eqgis.sceneform.utilities.AndroidPreconditions;
 import com.eqgis.sceneform.utilities.Preconditions;
-import com.eqgis.ar.ARCamera;
-import com.eqgis.ar.ARCameraIntrinsics;
-import com.eqgis.ar.ARConfig;
-import com.eqgis.ar.ARFrame;
-import com.eqgis.ar.ARSession;
+import com.eqgis.eqr.ar.ARCamera;
+import com.eqgis.eqr.ar.ARCameraIntrinsics;
+import com.eqgis.eqr.ar.ARConfig;
+import com.eqgis.eqr.ar.ARFrame;
+import com.eqgis.eqr.ar.ARSession;
 
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -377,6 +378,7 @@ public class CameraStream {
         cameraMaterial.setExternalTexture(
                 MATERIAL_CAMERA_TEXTURE,
                 Preconditions.checkNotNull(cameraTexture));
+
     }
 
     private void setOcclusionMaterial(Material material) {
@@ -837,6 +839,15 @@ public class CameraStream {
 
             engine.destroyIndexBuffer(cameraIndexBuffer);
             engine.destroyVertexBuffer(cameraVertexBuffer);
+        }
+    }
+
+    /**实现与相机纹理的颜色混合*/
+    public void updateBlendColor(Color blendColor){
+        if (cameraMaterial != null){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                cameraMaterial.setFloat4("blendColor",blendColor);
+            }
         }
     }
 }

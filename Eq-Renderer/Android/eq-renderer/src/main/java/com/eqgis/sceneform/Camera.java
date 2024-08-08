@@ -5,7 +5,7 @@ import android.view.MotionEvent;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.eqgis.ar.ARCamera;
+import com.eqgis.eqr.ar.ARCamera;
 import com.eqgis.sceneform.collision.Ray;
 import com.eqgis.sceneform.math.MathHelper;
 import com.eqgis.sceneform.math.Matrix;
@@ -14,7 +14,7 @@ import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.sceneform.rendering.CameraProvider;
 import com.eqgis.sceneform.rendering.EngineInstance;
 import com.eqgis.sceneform.utilities.Preconditions;
-import com.eqgis.ar.ARPose;
+import com.eqgis.eqr.ar.ARPose;
 
 /**
  * Represents a virtual camera, which determines the perspective through which the scene is viewed.

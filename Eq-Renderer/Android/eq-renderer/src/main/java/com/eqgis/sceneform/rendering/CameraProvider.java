@@ -4,7 +4,7 @@ import com.eqgis.sceneform.common.TransformProvider;
 import com.eqgis.sceneform.math.Matrix;
 import com.eqgis.sceneform.math.Quaternion;
 import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.ar.ARCamera;
+import com.eqgis.eqr.ar.ARCamera;
 
 /**
  * Required interface for a virtual camera.
