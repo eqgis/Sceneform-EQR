@@ -16,7 +16,7 @@ import com.google.android.filament.gltfio.Gltfio;
  */
 public class EngineInstance {
   @Nullable private static IEngine engine = null;
-  @Nullable private static EGLContext glContext = null;
+//  @Nullable private static EGLContext glContext = null;
   private static boolean headlessEngine = false;
   private static boolean filamentInitialized = false;
 
@@ -61,9 +61,9 @@ public class EngineInstance {
   private static Engine createFilamentEngine() {
     Engine result = createSharedFilamentEngine();
     if (result == null) {
-      glContext = GLHelper.makeContext();
-      result = Engine.create(glContext);
-//      result = Engine.create(Engine.Backend.DEFAULT);
+//      glContext = GLHelper.makeContext();
+//      result = Engine.create(glContext);
+      result = Engine.create(Engine.Backend.DEFAULT);
     }
     return result;
   }
@@ -77,10 +77,10 @@ public class EngineInstance {
   private static void destroyFilamentEngine() {
     if (engine != null) {
       if (headlessEngine || !destroySharedFilamentEngine()) {
-        if (glContext != null) {
-          GLHelper.destroyContext(glContext);
-          glContext = null;
-        }
+//        if (glContext != null) {
+//          GLHelper.destroyContext(glContext);
+//          glContext = null;
+//        }
         Preconditions.checkNotNull(engine).destroy();
       }
       engine = null;

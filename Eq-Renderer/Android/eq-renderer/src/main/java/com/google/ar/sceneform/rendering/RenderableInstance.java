@@ -30,7 +30,6 @@ import com.google.ar.sceneform.utilities.ChangeId;
 import com.google.ar.sceneform.utilities.LoadHelper;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.ar.sceneform.utilities.SceneformBufferUtils;
-import com.hunantv.imgo.util.ThreadManager;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -168,8 +167,9 @@ public class RenderableInstance implements AnimatableModel {
             Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 2");
 //            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
 //            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
-            FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
-                    : loader.createAssetFromJson(renderableData.gltfByteBuffer);
+//            FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
+//                    : loader.createAssetFromJson(renderableData.gltfByteBuffer);
+            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
 
             Log.d("IKKYU-SetRenderable", "setRenderable: ----2-0-2 - 3");
             if (createdAsset == null) {

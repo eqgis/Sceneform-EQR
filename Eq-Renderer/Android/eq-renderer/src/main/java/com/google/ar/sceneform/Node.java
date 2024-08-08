@@ -850,7 +850,7 @@ public class Node extends NodeParent implements TransformProvider {
      * @return the created renderable instance
      */
     public RenderableInstance setRenderable(@Nullable Renderable renderable) {
-//        AndroidPreconditions.checkUiThread();
+        AndroidPreconditions.checkUiThread();
 
         // Renderable hasn't changed, return early.
         if (renderableInstance != null && renderableInstance.getRenderable() == renderable) {

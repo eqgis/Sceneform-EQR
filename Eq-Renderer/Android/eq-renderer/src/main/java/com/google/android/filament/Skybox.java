@@ -29,7 +29,7 @@ import static com.google.android.filament.Colors.LinearColor;
  *
  * <h1>Creation and destruction</h1>
  *
- * A <code>Skybox</code> object is created using the {@link Builder} and destroyed by calling
+ * A <code>Skybox</code> object is created using the {@link Skybox.Builder} and destroyed by calling
  * {@link Engine#destroySkybox}.<br>
  * <pre>
  *  Engine engine = Engine.create();

@@ -9,16 +9,23 @@ import android.widget.Toast;
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.test.scene.GltfSampleScene;
 import com.google.ar.sceneform.Node;
+import com.google.ar.sceneform.rendering.ThreadPools;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * 基础三维场景
  */
 public class BaseSceneActivity extends BaseActivity {
+    Executor executor = Executors.newSingleThreadExecutor();
+
     @SuppressLint({"ClickableViewAccessibility", "MissingInflatedId"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+//        ThreadPools.setMainExecutor(executor);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base_scene);
 

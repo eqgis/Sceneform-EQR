@@ -41,7 +41,7 @@ import androidx.annotation.Size;
  *
  * <h1>Creation and destruction</h1>
  *
- * <p>An {@link IndirectLight} object is created using the {@link Builder} and
+ * <p>An {@link IndirectLight} object is created using the {@link IndirectLight.Builder} and
  * destroyed by calling {@link Engine#destroyIndirectLight}.</p>
  *
  * <pre>

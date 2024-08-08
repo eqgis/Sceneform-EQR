@@ -2,6 +2,7 @@ package com.eqgis.test.scene;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.widget.Toast;
@@ -28,6 +29,7 @@ import java.util.function.Function;
 public class GltfSampleScene implements ISampleScene{
     private String modelPath = "gltf/test.glb";
     public float distance = 3.6f;
+    public final String TAG = GltfSampleScene.class.getSimpleName();
 
 
     /**
@@ -43,6 +45,7 @@ public class GltfSampleScene implements ISampleScene{
     @Override
     public void create(Context context, RootNode rootNode) {
         addGltf(context, rootNode);
+        Log.d(TAG, "create: ");
 
         //添加光源
         addLight(rootNode);
@@ -64,24 +67,33 @@ public class GltfSampleScene implements ISampleScene{
      */
     public void addGltf(Context context, RootNode rootNode) {
         modelNode = new Node();
-        ModelRenderable
-                .builder()
-                .setSource(context, Uri.parse(modelPath))
-                .setIsFilamentGltf(true)
-                .build()
-                .thenApply(new Function<ModelRenderable, Object>() {
-                    @Override
-                    public Object apply(ModelRenderable modelRenderable) {
-                        modelNode.setRenderable(modelRenderable);
-                        //缩放成单位尺寸
-                        modelNode.setLocalScale(Vector3.one()
-                                .scaled(ScaleTool.calculateUnitsScale(modelNode.getRenderableInstance())));
+
+        long start = System.currentTimeMillis();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ModelRenderable
+                        .builder()
+                        .setSource(context, Uri.parse(modelPath))
+                        .setIsFilamentGltf(true)
+                        .build()
+                        .thenApply(new Function<ModelRenderable, Object>() {
+                            @Override
+                            public Object apply(ModelRenderable modelRenderable) {
+                                modelNode.setRenderable(modelRenderable);
+                                //缩放成单位尺寸
+                                modelNode.setLocalScale(Vector3.one()
+                                        .scaled(ScaleTool.calculateUnitsScale(modelNode.getRenderableInstance())));
 //                        modelNode.setLocalRotation(new Quaternion(Vector3.up(),30));
-                        modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
-                        modelNode.setParent(rootNode);
-                        return null;
-                    }
-                });
+                                modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
+                                modelNode.setParent(rootNode);
+                                Log.d(TAG, "耗时：" + (System.currentTimeMillis() - start) + " ms");
+                                return null;
+                            }
+                        });
+            }
+        }).start();
 
 
         //给模型添加点击事件，多用于选中模型
