@@ -10,7 +10,7 @@ import com.eqgis.ar.ARCamera;
 import com.eqgis.ar.ARPlugin;
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.test.scene.GltfSampleScene;
-import com.google.ar.sceneform.ARPlatForm;
+import com.eqgis.sceneform.ARPlatForm;
 import com.huawei.hiar.AREnginesApk;
 
 /**

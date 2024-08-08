@@ -5,12 +5,12 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.Material;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.RenderableDefinition;
-import com.google.ar.sceneform.rendering.Vertex;
-import com.google.ar.sceneform.utilities.AndroidPreconditions;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.Material;
+import com.eqgis.sceneform.rendering.ModelRenderable;
+import com.eqgis.sceneform.rendering.RenderableDefinition;
+import com.eqgis.sceneform.rendering.Vertex;
+import com.eqgis.sceneform.utilities.AndroidPreconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -417,8 +417,8 @@ public class GeometryUtils {
     public static ModelRenderable makeInnerSphere(float radius, Vector3 center, Material material) {
         AndroidPreconditions.checkMinAndroidApiLevel();
 
-        final int stacks = 24;
-        final int slices = 24;
+        final int stacks = 12;
+        final int slices = 12;
 
         // 创建顶点组
         ArrayList<Vertex> vertices = new ArrayList<Vertex>((slices + 1) * stacks + 2);

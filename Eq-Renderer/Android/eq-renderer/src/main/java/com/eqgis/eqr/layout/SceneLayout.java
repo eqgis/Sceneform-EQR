@@ -10,12 +10,13 @@ import android.widget.FrameLayout;
 import com.eqgis.eqr.core.Eqr;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.exception.NotSupportException;
-import com.google.ar.sceneform.Camera;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.Scene;
-import com.google.ar.sceneform.SceneView;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
+import com.eqgis.sceneform.Camera;
+import com.eqgis.sceneform.Node;
+import com.eqgis.sceneform.Scene;
+import com.eqgis.sceneform.SceneView;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.EngineInstance;
 
 import java.util.List;
 
@@ -68,8 +69,6 @@ public class SceneLayout extends FrameLayout{
         //添加布局
         addLayout();
 
-        rootNode = new RootNode();
-        rootNode.setParent(sceneView.getScene());
     }
 
     /**
@@ -77,10 +76,21 @@ public class SceneLayout extends FrameLayout{
      * @return SceneView
      */
     protected void addLayout() {
-        LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        sceneView = new SceneView(context);
-        sceneView.setLayoutParams(layoutParams);
-        this.addView(sceneView);
+        EngineInstance.getHandler().post(()->{
+            LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            sceneView = new SceneView(context);
+            sceneView.setLayoutParams(layoutParams);
+
+            rootNode = new RootNode();
+            rootNode.setParent(sceneView.getScene());
+
+            SceneLayout.this.post(()->{
+                SceneLayout.this.addView(sceneView);
+                if (lifecycleListener!=null){
+                    lifecycleListener.onSceneInitComplete();
+                }
+            });
+        });
     }
 
     /**
@@ -196,7 +206,7 @@ public class SceneLayout extends FrameLayout{
      * 设置生命周期监听事件
      * @param lifecycleListener
      */
-    protected void setLifecycleListener(LifecycleListener lifecycleListener){
+    public void setLifecycleListener(LifecycleListener lifecycleListener){
         this.lifecycleListener = lifecycleListener;
     }
 

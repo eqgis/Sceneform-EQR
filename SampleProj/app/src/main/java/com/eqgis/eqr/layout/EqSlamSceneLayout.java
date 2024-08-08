@@ -12,14 +12,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+
+import com.eqgis.sceneform.Camera;
 import com.eqgis.slam.core.SlamCore;
 import com.eqgis.slam.core.TrackingState;
 import com.eqgis.slam.listener.OnPlaneUpdateListener;
 import com.eqgis.slam.listener.OnPoseUpdateListener;
 import com.eqgis.slam.listener.OnStateUpdateListener;
-import com.google.ar.sceneform.SceneView;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
+import com.eqgis.sceneform.SceneView;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -118,7 +120,7 @@ public class EqSlamSceneLayout extends SceneLayout{
     private int screenRotation = 1;
     private SlamCore slam;
 
-    private com.google.ar.sceneform.Camera camera;
+    private Camera camera;
 
     /**
      * CV的相机监听

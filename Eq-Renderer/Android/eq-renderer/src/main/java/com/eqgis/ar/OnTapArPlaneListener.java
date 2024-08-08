@@ -2,8 +2,6 @@ package com.eqgis.ar;
 
 import android.view.MotionEvent;
 
-import com.google.ar.sceneform.Node;
-
 /**
  * AR平面出门监听
  **/

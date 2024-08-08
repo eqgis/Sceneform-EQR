@@ -10,13 +10,14 @@ import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
 import com.eqgis.eqr.utils.ScaleTool;
-import com.google.ar.sceneform.HitTestResult;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.Color;
-import com.google.ar.sceneform.rendering.Light;
-import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.eqgis.sceneform.HitTestResult;
+import com.eqgis.sceneform.Node;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.Color;
+import com.eqgis.sceneform.rendering.EngineInstance;
+import com.eqgis.sceneform.rendering.Light;
+import com.eqgis.sceneform.rendering.ModelRenderable;
 
 import java.util.function.Function;
 
@@ -42,21 +43,25 @@ public class GltfSampleScene implements ISampleScene{
 
     @Override
     public void create(Context context, RootNode rootNode) {
-        addGltf(context, rootNode);
+        EngineInstance.getHandler().post(()->{
+            addGltf(context, rootNode);
 
-        //添加光源
-        addLight(rootNode);
+            //添加光源
+            addLight(rootNode);
+        });
     }
 
     @Override
     public void destroy(Context context) {
-        if (modelNode.getRenderableInstance() != null){
-            //销毁模型渲染实例
-            modelNode.getRenderableInstance().destroy();
-        }
-        //断开节点
-        modelNode.setParent(null);
-        lightNode.setParent(null);
+        EngineInstance.getHandler().post(()->{
+            if (modelNode.getRenderableInstance() != null){
+                //销毁模型渲染实例
+                modelNode.getRenderableInstance().destroy();
+            }
+            //断开节点
+            modelNode.setParent(null);
+            lightNode.setParent(null);
+        });
     }
 
     /**
@@ -74,8 +79,9 @@ public class GltfSampleScene implements ISampleScene{
                     public Object apply(ModelRenderable modelRenderable) {
                         modelNode.setRenderable(modelRenderable);
                         //缩放成单位尺寸
+                        assert modelNode.getRenderableInstance() != null;
                         modelNode.setLocalScale(Vector3.one()
-                                .scaled(ScaleTool.calculateUnitsScale(modelRenderable)));
+                                .scaled(ScaleTool.calculateUnitsScale(modelNode.getRenderableInstance())));
 //                        modelNode.setLocalRotation(new Quaternion(Vector3.up(),30));
                         modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
                         modelNode.setParent(rootNode);
