@@ -2,7 +2,6 @@ package com.eqgis.test.scene;
 
 import android.content.Context;
 import android.net.Uri;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.widget.Toast;
@@ -11,13 +10,14 @@ import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
 import com.eqgis.eqr.utils.ScaleTool;
-import com.google.ar.sceneform.HitTestResult;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.Color;
-import com.google.ar.sceneform.rendering.Light;
-import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.eqgis.sceneform.HitTestResult;
+import com.eqgis.sceneform.Node;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.Color;
+import com.eqgis.sceneform.rendering.EngineInstance;
+import com.eqgis.sceneform.rendering.Light;
+import com.eqgis.sceneform.rendering.ModelRenderable;
 
 import java.util.function.Function;
 
@@ -29,7 +29,6 @@ import java.util.function.Function;
 public class GltfSampleScene implements ISampleScene{
     private String modelPath = "gltf/test.glb";
     public float distance = 3.6f;
-    public final String TAG = GltfSampleScene.class.getSimpleName();
 
 
     /**
@@ -44,22 +43,25 @@ public class GltfSampleScene implements ISampleScene{
 
     @Override
     public void create(Context context, RootNode rootNode) {
-        addGltf(context, rootNode);
-        Log.d(TAG, "create: ");
+        EngineInstance.getHandler().post(()->{
+            addGltf(context, rootNode);
 
-        //添加光源
-        addLight(rootNode);
+            //添加光源
+            addLight(rootNode);
+        });
     }
 
     @Override
     public void destroy(Context context) {
-        if (modelNode.getRenderableInstance() != null){
-            //销毁模型渲染实例
-            modelNode.getRenderableInstance().destroy();
-        }
-        //断开节点
-        modelNode.setParent(null);
-        lightNode.setParent(null);
+        EngineInstance.getHandler().post(()->{
+            if (modelNode.getRenderableInstance() != null){
+                //销毁模型渲染实例
+                modelNode.getRenderableInstance().destroy();
+            }
+            //断开节点
+            modelNode.setParent(null);
+            lightNode.setParent(null);
+        });
     }
 
     /**
@@ -67,33 +69,25 @@ public class GltfSampleScene implements ISampleScene{
      */
     public void addGltf(Context context, RootNode rootNode) {
         modelNode = new Node();
-
-        long start = System.currentTimeMillis();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ModelRenderable
-                        .builder()
-                        .setSource(context, Uri.parse(modelPath))
-                        .setIsFilamentGltf(true)
-                        .build()
-                        .thenApply(new Function<ModelRenderable, Object>() {
-                            @Override
-                            public Object apply(ModelRenderable modelRenderable) {
-                                modelNode.setRenderable(modelRenderable);
-                                //缩放成单位尺寸
-                                modelNode.setLocalScale(Vector3.one()
-                                        .scaled(ScaleTool.calculateUnitsScale(modelNode.getRenderableInstance())));
+        ModelRenderable
+                .builder()
+                .setSource(context, Uri.parse(modelPath))
+                .setIsFilamentGltf(true)
+                .build()
+                .thenApply(new Function<ModelRenderable, Object>() {
+                    @Override
+                    public Object apply(ModelRenderable modelRenderable) {
+                        modelNode.setRenderable(modelRenderable);
+                        //缩放成单位尺寸
+                        assert modelNode.getRenderableInstance() != null;
+                        modelNode.setLocalScale(Vector3.one()
+                                .scaled(ScaleTool.calculateUnitsScale(modelNode.getRenderableInstance())));
 //                        modelNode.setLocalRotation(new Quaternion(Vector3.up(),30));
-                                modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
-                                modelNode.setParent(rootNode);
-                                Log.d(TAG, "耗时：" + (System.currentTimeMillis() - start) + " ms");
-                                return null;
-                            }
-                        });
-            }
-        }).start();
+                        modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
+                        modelNode.setParent(rootNode);
+                        return null;
+                    }
+                });
 
 
         //给模型添加点击事件，多用于选中模型

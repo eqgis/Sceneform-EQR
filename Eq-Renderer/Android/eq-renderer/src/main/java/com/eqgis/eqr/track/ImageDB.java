@@ -5,10 +5,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
-import com.eqgis.ar.ARAugmentedImageDatabase;
-import com.eqgis.ar.ARSession;
-import com.eqgis.ar.ARConfig;
-import com.eqgis.ar.exceptions.ARCameraException;
+import com.eqgis.eqr.ar.ARAugmentedImageDatabase;
+import com.eqgis.eqr.ar.ARSession;
+import com.eqgis.eqr.ar.ARConfig;
+import com.eqgis.eqr.ar.exceptions.ARCameraException;
 import com.eqgis.eqr.layout.ARSceneLayout;
 
 import java.io.IOException;

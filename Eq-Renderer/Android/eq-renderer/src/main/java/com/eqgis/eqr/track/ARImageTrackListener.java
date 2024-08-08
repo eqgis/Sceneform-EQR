@@ -1,6 +1,6 @@
 package com.eqgis.eqr.track;
 
-import com.eqgis.ar.ARAugmentedImage;
+import com.eqgis.eqr.ar.ARAugmentedImage;
 
 import java.util.Collection;
 

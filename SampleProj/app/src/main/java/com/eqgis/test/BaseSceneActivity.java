@@ -7,47 +7,62 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.eqgis.eqr.gesture.NodeGestureController;
+import com.eqgis.eqr.layout.LifecycleListener;
 import com.eqgis.test.scene.GltfSampleScene;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.rendering.ThreadPools;
+import com.eqgis.sceneform.Node;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * 基础三维场景
  */
 public class BaseSceneActivity extends BaseActivity {
-    Executor executor = Executors.newSingleThreadExecutor();
-
     @SuppressLint({"ClickableViewAccessibility", "MissingInflatedId"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        ThreadPools.setMainExecutor(executor);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base_scene);
 
         sceneLayout = findViewById(R.id.base_scene_layout);
-        sceneLayout.getCamera().setVerticalFovDegrees(45);
-        sceneLayout.setTransparent(true);
-        //节点手势控制器初始化
-        NodeGestureController.getInstance()
-                .setCamera(sceneLayout.getCamera())
-                .init(this)
-                .setEnabled(true);
 
-        //加载GLTF模型
-        sampleScene = new GltfSampleScene();
-        sampleScene.create(this,sceneLayout.getRootNode());
-
-        View touchView = findViewById(R.id.touch_view);
-        touchView.setOnTouchListener(new View.OnTouchListener() {
+        sceneLayout.setLifecycleListener(new LifecycleListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                NodeGestureController.getInstance().onTouch(motionEvent);
-                return true;
+            public void onResume() {
+
+            }
+
+            @Override
+            public void onPause() {
+
+            }
+
+            @Override
+            public void onDestroy() {
+
+            }
+
+            @Override
+            public void onSceneInitComplete() {
+                sceneLayout.getCamera().setVerticalFovDegrees(45);
+                sceneLayout.setTransparent(true);
+                //节点手势控制器初始化
+                NodeGestureController.getInstance()
+                        .setCamera(sceneLayout.getCamera())
+                        .init(BaseSceneActivity.this)
+                        .setEnabled(true);
+
+                //加载GLTF模型
+                sampleScene = new GltfSampleScene();
+                sampleScene.create(BaseSceneActivity.this,sceneLayout.getRootNode());
+
+                View touchView = findViewById(R.id.touch_view);
+                touchView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        NodeGestureController.getInstance().onTouch(motionEvent);
+                        return true;
+                    }
+                });
             }
         });
     }

@@ -2,7 +2,7 @@ package com.eqgis.eqr.animation;
 
 import android.animation.ObjectAnimator;
 
-import com.google.ar.sceneform.Node;
+import com.eqgis.sceneform.Node;
 
 
 /**

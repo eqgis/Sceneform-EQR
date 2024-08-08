@@ -1,14 +1,10 @@
 package com.eqgis.eqr.utils;
 
-//import com.google.ar.sceneform.collision.Box;
-//import com.google.ar.sceneform.collision.CollisionShape;
+//import com.eqgis.sceneform.collision.Box;
+//import com.eqgis.sceneform.collision.CollisionShape;
 import com.google.android.filament.Box;
 import com.google.android.filament.gltfio.FilamentAsset;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.Renderable;
-import com.google.ar.sceneform.rendering.RenderableInstance;
+import com.eqgis.sceneform.rendering.RenderableInstance;
 
 /**
  * 缩放比例工具类

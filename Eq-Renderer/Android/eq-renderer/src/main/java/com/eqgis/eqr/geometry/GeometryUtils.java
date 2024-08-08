@@ -5,12 +5,12 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.Material;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.RenderableDefinition;
-import com.google.ar.sceneform.rendering.Vertex;
-import com.google.ar.sceneform.utilities.AndroidPreconditions;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.Material;
+import com.eqgis.sceneform.rendering.ModelRenderable;
+import com.eqgis.sceneform.rendering.RenderableDefinition;
+import com.eqgis.sceneform.rendering.Vertex;
+import com.eqgis.sceneform.utilities.AndroidPreconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
