@@ -31,8 +31,10 @@ import androidx.annotation.Nullable;
  * @see View
  */
 public class RenderTarget {
-    private long mNativeObject;
     private static final int ATTACHMENT_COUNT = AttachmentPoint.values().length;
+    private static final Texture.CubemapFace[] sCubemapFaceValues = Texture.CubemapFace.values();
+
+    private long mNativeObject;
     private final Texture[] mTextures = new Texture[ATTACHMENT_COUNT];
 
     private RenderTarget(long nativeRenderTarget, Builder builder) {
@@ -78,8 +80,6 @@ public class RenderTarget {
 
         /**
          * Sets a texture to a given attachment point.
-         *
-         * <p>All RenderTargets must have a non-null <code>COLOR</code> attachment.</p>
          *
          * @param attachment The attachment point of the texture.
          * @param texture The associated texture object.
@@ -194,7 +194,7 @@ public class RenderTarget {
      * a cubemap.
      */
     public Texture.CubemapFace getFace(AttachmentPoint attachment) {
-        return Texture.CubemapFace.values()[nGetFace(getNativeObject(), attachment.ordinal())];
+        return sCubemapFaceValues[nGetFace(getNativeObject(), attachment.ordinal())];
     }
 
     /**

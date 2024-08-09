@@ -36,7 +36,7 @@ public class LoadRenderableFromFilamentGltfTask<T extends Renderable> {
       throw new IllegalStateException("Expected task type " + TAG);
     }
     this.renderableData.resourceLoader =
-        new ResourceLoader(EngineInstance.getEngine().getFilamentEngine(),false,true);
+        new ResourceLoader(EngineInstance.getEngine().getFilamentEngine()/*,false,true*/);
     this.renderableData.urlResolver =
         missingPath -> getUriFromMissingResource(sourceUri, missingPath, urlResolver);
     this.renderableData.context = context.getApplicationContext();

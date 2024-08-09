@@ -22,6 +22,14 @@ import androidx.annotation.NonNull;
  * <code>TextureSampler</code> defines how a texture is accessed.
  */
 public class TextureSampler {
+    static final class EnumCache {
+        static final MinFilter[] sMinFilterValues = MinFilter.values();
+        static final MagFilter[] sMagFilterValues = MagFilter.values();
+        static final WrapMode[] sWrapModeValues = WrapMode.values();
+        static final CompareMode[] sCompareModeValues = CompareMode.values();
+        static final CompareFunction[] sCompareFunctionValues = CompareFunction.values();
+    }
+
     public enum WrapMode {
         /**
          * The edge of the texture extends to infinity.
@@ -118,7 +126,7 @@ public class TextureSampler {
         NEVER
     }
 
-    int mSampler = 0; // bit field used by native
+    long mSampler = 0; // bit field used by native
 
     /**
      * Initializes the <code>TextureSampler</code> with default values.
@@ -202,7 +210,7 @@ public class TextureSampler {
      * @return the minification filter
      */
     public MinFilter getMinFilter() {
-        return MinFilter.values()[nGetMinFilter(mSampler)];
+        return EnumCache.sMinFilterValues[nGetMinFilter(mSampler)];
     }
 
     /**
@@ -218,7 +226,7 @@ public class TextureSampler {
      * @return the magnification filter
      */
     public MagFilter getMagFilter() {
-        return MagFilter.values()[nGetMagFilter(mSampler)];
+        return EnumCache.sMagFilterValues[nGetMagFilter(mSampler)];
     }
 
     /**
@@ -234,7 +242,7 @@ public class TextureSampler {
      * @return the wrapping mode in the s (horizontal) direction
      */
     public WrapMode getWrapModeS() {
-        return WrapMode.values()[nGetWrapModeS(mSampler)];
+        return EnumCache.sWrapModeValues[nGetWrapModeS(mSampler)];
     }
 
     /**
@@ -249,7 +257,7 @@ public class TextureSampler {
      * @return the wrapping mode in the t (vertical) direction
      */
     public WrapMode getWrapModeT() {
-        return WrapMode.values()[nGetWrapModeT(mSampler)];
+        return EnumCache.sWrapModeValues[nGetWrapModeT(mSampler)];
     }
 
     /**
@@ -264,11 +272,11 @@ public class TextureSampler {
      * @return the wrapping mode in the r (depth) direction
      */
     public WrapMode getWrapModeR() {
-        return WrapMode.values()[nGetWrapModeR(mSampler)];
+        return EnumCache.sWrapModeValues[nGetWrapModeR(mSampler)];
     }
 
     /**
-     * Sets the wrapping mode in the t (depth) direction.
+     * Sets the wrapping mode in the r (depth) direction.
      * @param mode wrapping mode
      */
     public void setWrapModeR(WrapMode mode) {
@@ -297,7 +305,7 @@ public class TextureSampler {
      * @return the comparison mode
      */
     public CompareMode getCompareMode() {
-        return CompareMode.values()[nGetCompareMode(mSampler)];
+        return EnumCache.sCompareModeValues[nGetCompareMode(mSampler)];
     }
 
     /**
@@ -313,7 +321,7 @@ public class TextureSampler {
      * @return the comparison function
      */
     public CompareFunction getCompareFunction() {
-        return CompareFunction.values()[nGetCompareFunction(mSampler)];
+        return EnumCache.sCompareFunctionValues[nGetCompareFunction(mSampler)];
     }
 
     /**
@@ -334,26 +342,26 @@ public class TextureSampler {
         }
     }
 
-    private static native int nCreateSampler(int min, int max, int s, int t, int r);
-    private static native int nCreateCompareSampler(int mode, int function);
+    private static native long nCreateSampler(int min, int max, int s, int t, int r);
+    private static native long nCreateCompareSampler(int mode, int function);
 
-    private static native int nGetMinFilter(int sampler);
-    private static native int nSetMinFilter(int sampler, int filter);
-    private static native int nGetMagFilter(int sampler);
-    private static native int nSetMagFilter(int sampler, int filter);
+    private static native int nGetMinFilter(long sampler);
+    private static native long nSetMinFilter(long sampler, int filter);
+    private static native int nGetMagFilter(long sampler);
+    private static native long nSetMagFilter(long sampler, int filter);
 
-    private static native int nGetWrapModeS(int sampler);
-    private static native int nSetWrapModeS(int sampler, int mode);
-    private static native int nGetWrapModeT(int sampler);
-    private static native int nSetWrapModeT(int sampler, int mode);
-    private static native int nGetWrapModeR(int sampler);
-    private static native int nSetWrapModeR(int sampler, int mode);
+    private static native int nGetWrapModeS(long sampler);
+    private static native long nSetWrapModeS(long sampler, int mode);
+    private static native int nGetWrapModeT(long sampler);
+    private static native long nSetWrapModeT(long sampler, int mode);
+    private static native int nGetWrapModeR(long sampler);
+    private static native long nSetWrapModeR(long sampler, int mode);
 
-    private static native int nGetCompareMode(int sampler);
-    private static native int nSetCompareMode(int sampler, int mode);
-    private static native int nGetCompareFunction(int sampler);
-    private static native int nSetCompareFunction(int sampler, int function);
+    private static native int nGetCompareMode(long sampler);
+    private static native long nSetCompareMode(long sampler, int mode);
+    private static native int nGetCompareFunction(long sampler);
+    private static native long nSetCompareFunction(long sampler, int function);
 
-    private static native float nGetAnisotropy(int sampler);
-    private static native int nSetAnisotropy(int sampler, float anisotropy);
+    private static native float nGetAnisotropy(long sampler);
+    private static native long nSetAnisotropy(long sampler, float anisotropy);
 }

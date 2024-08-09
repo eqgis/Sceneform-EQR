@@ -32,7 +32,9 @@ import androidx.annotation.Size;
  * @see Bookmark
  */
 public class Manipulator {
-    private long mNativeObject;
+    private static final Mode[] sModeValues = Mode.values();
+
+    private final long mNativeObject;
 
     private Manipulator(long nativeIndexBuffer) {
         mNativeObject = nativeIndexBuffer;
@@ -273,6 +275,17 @@ public class Manipulator {
         }
 
         /**
+         * Sets whether panning is enabled in the manipulator.
+         *
+         * @return this <code>Builder</code> object for chaining calls
+         */
+        @NonNull
+        public Builder panning(Boolean enabled) {
+            nBuilderPanning(mNativeBuilder, enabled);
+            return this;
+        }
+
+        /**
          * Creates and returns the <code>Manipulator</code> object.
          *
          * @return the newly created <code>Manipulator</code> object
@@ -320,7 +333,7 @@ public class Manipulator {
     /**
      * Gets the immutable mode of the manipulator.
      */
-    public Mode getMode() { return Mode.values()[nGetMode(mNativeObject)]; }
+    public Mode getMode() { return sModeValues[nGetMode(mNativeObject)]; }
 
     /**
      * Sets the viewport dimensions in terms of pixels.
@@ -481,6 +494,7 @@ public class Manipulator {
     private static native void nBuilderFlightPanSpeed(long nativeBuilder, float x, float y);
     private static native void nBuilderFlightMoveDamping(long nativeBuilder, float damping);
     private static native void nBuilderGroundPlane(long nativeBuilder, float a, float b, float c, float d);
+    private static native void nBuilderPanning(long nativeBuilder, Boolean enabled);
     private static native long nBuilderBuild(long nativeBuilder, int mode);
 
     private static native void nDestroyManipulator(long nativeManip);

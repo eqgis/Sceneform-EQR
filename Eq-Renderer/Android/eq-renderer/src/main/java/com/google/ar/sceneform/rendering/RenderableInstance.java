@@ -155,9 +155,9 @@ public class RenderableInstance implements AnimatableModel {
                             RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
                             EntityManager.get());
 
-//            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
-            FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
-                    : loader.createAssetFromJson(renderableData.gltfByteBuffer);
+            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
+//            FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
+//                    : loader.createAssetFromJson(renderableData.gltfByteBuffer);
 
             if (createdAsset == null) {
                 throw new IllegalStateException("Failed to load gltf");
@@ -227,8 +227,7 @@ public class RenderableInstance implements AnimatableModel {
             setShadowCaster(renderable.isShadowCaster());
             setShadowReceiver(renderable.isShadowReceiver());
 
-            filamentAnimator = createdAsset.getAnimator();
-//            filamentAnimator = createdAsset.getInstance().getAnimator();
+            filamentAnimator = createdAsset.getInstance().getAnimator();
             animations = new ArrayList<>();
             for (int i = 0; i < filamentAnimator.getAnimationCount(); i++) {
                 animations.add(new ModelAnimation(this, filamentAnimator.getAnimationName(i), i,

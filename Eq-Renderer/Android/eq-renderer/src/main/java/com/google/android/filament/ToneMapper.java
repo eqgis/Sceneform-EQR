@@ -16,12 +16,14 @@ package com.google.android.filament;
  * <li>Configurable tone mapping operators</li>
  * <ul>
  *   <li>GenericToneMapper</li>
+ *   <li>AgXToneMapper</li>
  * </ul>
  * <li>Fixed-aesthetic tone mapping operators</li>
  * <ul>
  *   <li>ACESToneMapper</li>
  *   <li>ACESLegacyToneMapper</li>
  *   <li>FilmicToneMapper</li>
+ *   <li>PBRNeutralToneMapper</li>
  * </ul>
  * <li>Debug/validation tone mapping operators</li>
  * <ul>
@@ -101,6 +103,55 @@ public class ToneMapper {
     }
 
     /**
+     * Khronos PBR Neutral tone mapping operator. This tone mapper was designed
+     * to preserve the appearance of materials across lighting conditions while
+     * avoiding artifacts in the highlights in high dynamic range conditions.
+     */
+    public static class PBRNeutralToneMapper extends ToneMapper {
+        public PBRNeutralToneMapper() {
+            super(nCreatePBRNeutralToneMapper());
+        }
+    }
+
+    /**
+     * AgX tone mapping operator.
+     */
+    public static class Agx extends ToneMapper {
+        public enum AgxLook {
+            /**
+             * Base contrast with no look applied
+             */
+            NONE,
+
+            /**
+             * A punchy and more chroma laden look for sRGB displays
+             */
+            PUNCHY,
+
+            /**
+             * A golden tinted, slightly washed look for BT.1886 displays
+             */
+            GOLDEN
+        }
+
+        /**
+         * Builds a new AgX tone mapper with no look applied.
+         */
+        public Agx() {
+            this(AgxLook.NONE);
+        }
+
+        /**
+         * Builds a new AgX tone mapper.
+         *
+         * @param look: an optional creative adjustment to contrast and saturation
+         */
+        public Agx(AgxLook look) {
+            super(nCreateAgxToneMapper(look.ordinal()));
+        }
+    }
+
+    /**
      * Generic tone mapping operator that gives control over the tone mapping
      * curve. This operator can be used to control the aesthetics of the final
      * image. This operator also allows to control the dynamic range of the
@@ -109,7 +160,6 @@ public class ToneMapper {
      * The tone mapping curve is defined by 5 parameters:
      * <ul>
      * <li>contrast: controls the contrast of the curve</li>
-     * <li>shoulder: controls the shoulder of the curve, i.e. how quickly scene
      * referred values map to output white</li>
      * <li>midGrayIn: sets the input middle gray</li>
      * <li>midGrayOut: sets the output middle gray</li>
@@ -123,15 +173,14 @@ public class ToneMapper {
          * the {@link ACESLegacy} tone mapper. The default values are:
          *
          * <ul>
-         * <li>contrast = 1.585f</li>
-         * <li>shoulder = 0.5f</li>
+         * <li>contrast = 1.55f</li>
          * <li>midGrayIn = 0.18f</li>
-         * <li>midGrayOut = 0.268f</li>
+         * <li>midGrayOut = 0.215f</li>
          * <li>hdrMax = 10.0f</li>
          * </ul>
          */
         public Generic() {
-            this(1.585f, 0.5f, 0.18f, 0.268f, 10.0f);
+            this(1.55f, 0.18f, 0.215f, 10.0f);
         }
 
         /**
@@ -139,16 +188,14 @@ public class ToneMapper {
          *
          * @param contrast: controls the contrast of the curve, must be > 0.0, values
          *                  in the range 0.5..2.0 are recommended.
-         * @param shoulder: controls the shoulder of the curve, i.e. how quickly scene
-         *                  referred values map to output white, between 0.0 and 1.0.
          * @param midGrayIn: sets the input middle gray, between 0.0 and 1.0.
          * @param midGrayOut: sets the output middle gray, between 0.0 and 1.0.
          * @param hdrMax: defines the maximum input value that will be mapped to
          *                output white. Must be >= 1.0.
          */
         public Generic(
-                float contrast, float shoulder, float midGrayIn, float midGrayOut, float hdrMax) {
-            super(nCreateGenericToneMapper(contrast, shoulder, midGrayIn, midGrayOut, hdrMax));
+                float contrast, float midGrayIn, float midGrayOut, float hdrMax) {
+            super(nCreateGenericToneMapper(contrast, midGrayIn, midGrayOut, hdrMax));
         }
 
         /** Returns the contrast of the curve as a strictly positive value. */
@@ -159,16 +206,6 @@ public class ToneMapper {
         /** Sets the contrast of the curve, must be > 0.0, values in the range 0.5..2.0 are recommended. */
         public void setContrast(float contrast) {
             nGenericSetContrast(getNativeObject(), contrast);
-        }
-
-        /** Returns how fast scene referred values map to output white as a value between 0.0 and 1.0. */
-        public float getShoulder() {
-            return nGenericGetShoulder(getNativeObject());
-        }
-
-        /** Sets how quickly scene referred values map to output white, between 0.0 and 1.0. */
-        public void setShoulder(float shoulder) {
-            nGenericSetShoulder(getNativeObject(), shoulder);
         }
 
         /** Returns the middle gray point for input values as a value between 0.0 and 1.0. */
@@ -208,18 +245,18 @@ public class ToneMapper {
     private static native long nCreateACESToneMapper();
     private static native long nCreateACESLegacyToneMapper();
     private static native long nCreateFilmicToneMapper();
+    private static native long nCreatePBRNeutralToneMapper();
+    private static native long nCreateAgxToneMapper(int look);
     private static native long nCreateGenericToneMapper(
-            float contrast, float shoulder, float midGrayIn, float midGrayOut, float hdrMax);
+            float contrast, float midGrayIn, float midGrayOut, float hdrMax);
 
     // Generic tone mappper
     private static native float nGenericGetContrast(long nativeObject);
-    private static native float nGenericGetShoulder(long nativeObject);
     private static native float nGenericGetMidGrayIn(long nativeObject);
     private static native float nGenericGetMidGrayOut(long nativeObject);
     private static native float nGenericGetHdrMax(long nativeObject);
 
     private static native void nGenericSetContrast(long nativeObject, float contrast);
-    private static native void nGenericSetShoulder(long nativeObject, float shoulder);
     private static native void nGenericSetMidGrayIn(long nativeObject, float midGrayIn);
     private static native void nGenericSetMidGrayOut(long nativeObject, float midGrayOut);
     private static native void nGenericSetHdrMax(long nativeObject, float hdrMax);
