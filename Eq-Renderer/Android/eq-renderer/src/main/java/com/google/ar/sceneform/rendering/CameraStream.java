@@ -832,7 +832,11 @@ public class CameraStream {
             }
 
             if (cameraStreamRenderable != UNINITIALIZED_FILAMENT_RENDERABLE) {
-                scene.remove(cameraStreamRenderable);
+                try {
+                    scene.removeEntity(cameraStreamRenderable);
+                }catch (IllegalStateException e){
+                    Log.w(TAG, "run: ", e);
+                }
             }
 
             engine.destroyIndexBuffer(cameraIndexBuffer);
