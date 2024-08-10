@@ -58,15 +58,15 @@ public class ExternalTexture {
     surface = null;
 
     // Create the filament stream.
-    Stream stream =
-        new Stream.Builder()
-            .stream(textureId)
-                .width(width)
-                .height(height)
-                .build(EngineInstance.getEngine().getFilamentEngine());
-    initialize(stream);
+//    Stream stream =
+//        new Stream.Builder()
+//            .stream(textureId)
+//                .width(width)
+//                .height(height)
+//                .build(EngineInstance.getEngine().getFilamentEngine());
+//    initialize(stream);
 
-//    initialize(textureId, width, height);
+    initialize(textureId, width, height);
   }
 
   /** Gets the surface texture created for this ExternalTexture. */
