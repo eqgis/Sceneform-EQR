@@ -58,7 +58,9 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
 
     //AR相关采用在线依赖
-    compileOnly 'com.google.ar:core:1.39.0'
+//    compileOnly 'com.google.ar:core:1.39.0'
+    compileOnly 'com.google.ar:core:1.45.0'
+
     compileOnly 'com.huawei.hms:arenginesdk:4.0.0.5'
 
     //离线依赖，注：需要相应so库,现为方便调试，引入filament-源码

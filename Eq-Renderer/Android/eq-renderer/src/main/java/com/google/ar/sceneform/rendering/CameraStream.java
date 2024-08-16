@@ -476,31 +476,31 @@ public class CameraStream {
             return;
         }
 
-        ARCamera arCamera = frame.getCamera();
-        ARCameraIntrinsics intrinsics = arCamera.getCameraImageIntrinsics();
-        int[] dimensions = intrinsics.getImageDimensions();
-        int width ;//= dimensions[1];//1440;//
-        int height ;//= dimensions[0];//1080;//
-//    int width = dimensions[0];//1440;//
-//    int height = dimensions[1];//1080;//
-
-        if (ARPlatForm.isArCore()/*3*/){
-            width = dimensions[0];//1440;//
-            height = dimensions[1];//1080;//
-        }else{
-//            width = dimensions[1];//1440;//
-//            height = dimensions[0];//1080;//
-            //Ikkyu_memo, AREngine width must be > height
-            if (dimensions[0] == 0 && dimensions[1] == 0){
-                width = 1440;
-                height = 1080;
-            }else {
-                width = Math.max(dimensions[1],dimensions[0]);
-                height = Math.min(dimensions[1],dimensions[0]);
-            }
-        }
-
-        cameraTexture = new ExternalTexture(cameraTextureId, width, height);
+//        ARCamera arCamera = frame.getCamera();
+//        ARCameraIntrinsics intrinsics = arCamera.getCameraImageIntrinsics();
+//        int[] dimensions = intrinsics.getImageDimensions();
+//        int width ;//= dimensions[1];//1440;//
+//        int height ;//= dimensions[0];//1080;//
+////    int width = dimensions[0];//1440;//
+////    int height = dimensions[1];//1080;//
+//
+//        if (ARPlatForm.isArCore()/*3*/){
+//            width = dimensions[0];//1440;//
+//            height = dimensions[1];//1080;//
+//        }else{
+////            width = dimensions[1];//1440;//
+////            height = dimensions[0];//1080;//
+//            //Ikkyu_memo, AREngine width must be > height
+//            if (dimensions[0] == 0 && dimensions[1] == 0){
+//                width = 1440;
+//                height = 1080;
+//            }else {
+//                width = Math.max(dimensions[1],dimensions[0]);
+//                height = Math.min(dimensions[1],dimensions[0]);
+//            }
+//        }
+        //在使用1.22.x之后的filament，由于textureId的使用接口变更，这里不再需要w和h
+        cameraTexture = new ExternalTexture(cameraTextureId);
 
         //updated by IKkyu 2022/01/22
         if (ARPlatForm.OCCLUSION_MODE != ARPlatForm.OcclusionMode.OCCLUSION_DISABLED

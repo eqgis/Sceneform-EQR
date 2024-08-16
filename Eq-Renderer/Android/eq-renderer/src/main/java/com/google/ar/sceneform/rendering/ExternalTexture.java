@@ -54,12 +54,13 @@ public class ExternalTexture {
   }
 
   /**
-   * Creates an ExternalTexture from an OpenGL ES textureId without a SurfaceTexture. For internal
-   * use only.
+   * 从OpenGL ES纹理中创建一个没有SurfaceTexture的ExternalTexture。
+   * 仅供CameraStream创建纹理时使用。
+   * @param textureId GL创建的id
    */
   @SuppressWarnings("initialization")
-  public ExternalTexture(int textureId, int width, int height) {
-    // Explicitly set the surface and surfaceTexture to null, since they are unused in this case.
+  ExternalTexture(int textureId) {
+    // 这个使用场景时，用不到surface和surfaceTexture
     surfaceTexture = null;
     surface = null;
 
@@ -67,7 +68,6 @@ public class ExternalTexture {
     IEngine engine = EngineInstance.getEngine();
     filamentTexture = new Texture.Builder()
             .sampler(Texture.Sampler.SAMPLER_EXTERNAL)
-            .format(Texture.InternalFormat.RGB16F)
             .importTexture(textureId)
             .build(engine.getFilamentEngine());
 
