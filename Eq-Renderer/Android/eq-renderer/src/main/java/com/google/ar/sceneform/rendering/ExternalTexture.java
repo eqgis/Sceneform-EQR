@@ -5,6 +5,7 @@ import android.view.Surface;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.filament.Engine;
 import com.google.ar.sceneform.utilities.AndroidPreconditions;
 import com.google.ar.sceneform.utilities.Preconditions;
 import com.google.android.filament.Stream;
@@ -47,6 +48,11 @@ public class ExternalTexture {
     initialize(stream);
   }
 
+  /** Gets the surface texture created for this ExternalTexture. */
+  public SurfaceTexture getSurfaceTexture() {
+    return Preconditions.checkNotNull(surfaceTexture);
+  }
+
   /**
    * Creates an ExternalTexture from an OpenGL ES textureId without a SurfaceTexture. For internal
    * use only.
@@ -58,20 +64,16 @@ public class ExternalTexture {
     surface = null;
 
     // Create the filament stream.
-//    Stream stream =
-//        new Stream.Builder()
-//            .stream(textureId)
-//                .width(width)
-//                .height(height)
-//                .build(EngineInstance.getEngine().getFilamentEngine());
-//    initialize(stream);
+    IEngine engine = EngineInstance.getEngine();
+    filamentTexture = new Texture.Builder()
+            .sampler(Texture.Sampler.SAMPLER_EXTERNAL)
+            .format(Texture.InternalFormat.RGB16F)
+            .importTexture(textureId)
+            .build(engine.getFilamentEngine());
 
-    initialize(textureId, width, height);
-  }
-
-  /** Gets the surface texture created for this ExternalTexture. */
-  public SurfaceTexture getSurfaceTexture() {
-    return Preconditions.checkNotNull(surfaceTexture);
+    ResourceManager.getInstance()
+            .getExternalTextureCleanupRegistry()
+            .register(this, new CleanupCallback(filamentTexture, filamentStream));
   }
 
   /**
@@ -114,37 +116,6 @@ public class ExternalTexture {
             .register(this, new CleanupCallback(filamentTexture, filamentStream));
   }
 
-  private void initialize(long textureId,int width, int height) {
-    if (filamentTexture != null) {
-      throw new AssertionError("Stream was initialized twice");
-    }
-
-    // Create the filament stream.
-    IEngine engine = EngineInstance.getEngine();
-    this.filamentStream = null;
-
-    // Create the filament texture.
-//    filamentTexture =
-//        new Texture.Builder()
-//            .sampler(Texture.Sampler.SAMPLER_EXTERNAL)
-//            .format(Texture.InternalFormat.RGB8)
-//            .build(engine.getFilamentEngine());
-
-//    filamentTexture.setExternalStream(
-//            engine.getFilamentEngine(),
-//            filamentStream);
-    filamentTexture = new Texture.Builder()
-            .width(width)
-            .height(height)
-            .importTexture(textureId)
-            .sampler(Texture.Sampler.SAMPLER_EXTERNAL)
-            .format(Texture.InternalFormat.RGB8)
-            .build(engine.getFilamentEngine());
-
-    ResourceManager.getInstance()
-            .getExternalTextureCleanupRegistry()
-            .register(this, new CleanupCallback(filamentTexture, filamentStream));
-  }
 
   /** Cleanup filament objects after garbage collection */
   private static final class CleanupCallback implements Runnable {

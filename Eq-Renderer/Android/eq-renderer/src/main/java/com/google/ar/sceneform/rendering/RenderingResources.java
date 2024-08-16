@@ -24,9 +24,11 @@ public final class RenderingResources {
   private static int GetSceneformSourceResource(Context context, Resource resource) {
     switch (resource) {
       case CAMERA_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_flat");
+//        return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_flat");
+        return LoadHelper.rawResourceNameToIdentifier(context, "camera_stream_base");
       case OCCLUSION_CAMERA_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_depth");
+//        return LoadHelper.rawResourceNameToIdentifier(context, "ar_environment_material_depth");
+        return LoadHelper.rawResourceNameToIdentifier(context, "camera_stream_depth");
       case OPAQUE_COLORED_MATERIAL:
 //        return LoadHelper.rawResourceNameToIdentifier(context, "mat_opaque_colored_material_doubleside");
         return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_opaque_colored_material");
