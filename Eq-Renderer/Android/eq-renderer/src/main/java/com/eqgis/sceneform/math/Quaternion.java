@@ -3,9 +3,10 @@ package com.eqgis.sceneform.math;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * A Sceneform quaternion class for floats.
- *
- * <p>Quaternion operations are Hamiltonian using the right-hand-rule convention.
+ * 四元数
+ * <pre>
+ *     用于表示旋转姿态，四元数运算是使用右手规则约定的哈密顿运算。
+ * </pre>
  */
 // TODO: Evaluate combining with java/com/google/ar/core/Quaternion.java
 public class Quaternion {

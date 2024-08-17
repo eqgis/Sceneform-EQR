@@ -5,12 +5,14 @@ import android.util.Log;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * 4x4 Matrix representing translation, scale, and rotation. Column major, right handed [0, 4, 8,
- * 12] [1, 5, 9, 13] [2, 6, 10, 14] [3, 7, 11, 15]
+ * 4x4矩阵
+ * <pre>
+ *     4x4 Matrix representing translation, scale, and rotation. Column major, right handed
+ *     [0, 4, 8,12] [1, 5, 9, 13] [2, 6, 10, 14] [3, 7, 11, 15]
+ * </pre>
  *
  * @hide
  */
-// TODO: Evaluate consolidating internal math.
 public class Matrix {
   private static final String TAG = Matrix.class.getSimpleName();
 
@@ -542,7 +544,7 @@ public class Matrix {
     return true;
   }
 
-  /** Compares Matrix values */
+  /** 比较两个矩阵 */
   public static boolean equals(Matrix lhs, Matrix rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
     Preconditions.checkNotNull(rhs, "Parameter \"rhs\" was null.");

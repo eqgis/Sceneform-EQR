@@ -1,14 +1,18 @@
 package com.eqgis.sceneform.math;
 
-/** Static functions for common math operations. */
+/**
+ * 数学计算助手
+ * <p>
+ *     包含常见数学运算的静态函数。
+ * </p>
+ * */
 public class MathHelper {
 
   static final float FLT_EPSILON = 1.19209290E-07f;
   static final float MAX_DELTA = 1.0E-10f;
 
   /**
-   * Returns true if two floats are equal within a tolerance. Useful for comparing floating point
-   * numbers while accounting for the limitations in floating point precision.
+   * 如果两个浮点数在一定范围内相等，则返回true。用于比较浮点数数字，同时考虑到浮点精度的限制。
    */
   // https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
   public static boolean almostEqualRelativeAndAbs(float a, float b) {
@@ -29,23 +33,22 @@ public class MathHelper {
     return false;
   }
 
-  /** Clamps a value between a minimum and maximum range. */
+  /** 将值夹在最小和最大范围之间。 */
   public static float clamp(float value, float min, float max) {
     return Math.min(max, Math.max(min, value));
   }
 
-  /** Clamps a value between a range of 0 and 1. */
+  /** 将值夹在[0,1]之间。 */
   static float clamp01(float value) {
     return clamp(value, 0.0f, 1.0f);
   }
 
   /**
-   * Linearly interpolates between a and b by a ratio.
-   *
-   * @param a the beginning value
-   * @param b the ending value
-   * @param t ratio between the two floats
-   * @return interpolated value between the two floats
+   * 在a和b之间用一个比例进行线性插值。
+   * @param a 起始值
+   * @param b 结束值
+   * @param t 比例
+   * @return 线性插值结果
    */
   public static float lerp(float a, float b, float t) {
     return a + t * (b - a);

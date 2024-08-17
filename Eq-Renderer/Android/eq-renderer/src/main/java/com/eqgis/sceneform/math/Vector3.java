@@ -2,7 +2,13 @@ package com.eqgis.sceneform.math;
 
 import com.eqgis.sceneform.utilities.Preconditions;
 
-/** A Vector with 3 floats. */
+/**
+ * 三维矢量
+ * <pre>
+ *     1. 用于表示空间位置
+ *     2. 用于表示向量(方向向量、法向量等)
+ * </pre>
+ * */
 // TODO: Evaluate consolidating internal math. Additional bugs: b/69935335
 public class Vector3 {
   public float x;
