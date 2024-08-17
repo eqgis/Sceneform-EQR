@@ -12,33 +12,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An AnimatableModel is an object whose properties can be animated by an {@link ModelAnimation}.
- * The object animation transformation can be done at the desired frame callback place.
- * <br<This means that it's up to the AnimatableModel to apply transformations as soon as the
- * {@link ModelAnimation} updates the value (like in a standard
- * {@link ObjectAnimator} context) or to apply them inside a global/common
- * frame callback.
- * <p>
- * An AnimatableModel can, for example, update the data of each animated property managed by an
- * {@link com.google.android.filament.gltfio.Animator}.
+ * 动画对象
+ * 对象动画转换可以在所需的帧回调位置完成。
+ * {@link ModelAnimation}
+ * {@link ObjectAnimator}
+ * {@link com.google.android.filament.gltfio.Animator}。
  */
 public interface AnimatableModel {
 
     /**
-     * Get the associated {@link ModelAnimation} at the given index or throw
-     * an {@link IndexOutOfBoundsException}.
-     *
-     * @param animationIndex Zero-based index for the animation of interest.
+     * 获取关联的{@link ModelAnimation}在给定的索引或抛出
+     * 和{@link IndexOutOfBoundsException}。
+     * @param animationIndex 动画索引
      */
     ModelAnimation getAnimation(int animationIndex);
 
     /**
-     * Returns the number of {@link ModelAnimation} definitions in the model.
+     * 获取模型动画对象 {@link ModelAnimation}的动画数量
      */
     int getAnimationCount();
 
     /**
-     * Called form the {@link ModelAnimation} when it dirty state changed.
+     * 当{@link ModelAnimation}处于dirty状态时触发
      */
     default void onModelAnimationChanged(ModelAnimation animation) {
         if(applyAnimationChange(animation)) {
@@ -47,21 +42,19 @@ public interface AnimatableModel {
     }
 
     /**
-     * Occurs when a {@link ModelAnimation} has received any property changed.
-     * <br>Depending on the returned value, the {@link ModelAnimation} will set his isDirty to false
-     * or not.
-     * <br>You can choose between applying changes on the {@link ObjectAnimator}
-     * {@link android.view.Choreographer.FrameCallback} or use your own
-     * {@link android.view.Choreographer} to handle an update/render update hierarchy.
-     * <br>Time position should be applied inside a global {@link android.view.Choreographer} frame
-     * callback to ensure that the transformations are applied in a hierarchical order.
-     *
-     * @return true is the changes have been applied/handled
+     * 当{@link ModelAnimation}收到任何属性更改时发生。
+     * <br>根据返回的值，{@link ModelAnimation}将把他的isDirty设置为false或不。
+     * <br>你可以选择在{@link ObjectAnimator}上应用更改
+     * {@link android.view.Choreographer。FrameCallback}或者使用你自己的
+     * {@link android.view.Choreographer.FrameCallback}
+     * <br>时间位置应该应用在全局{@link android.view.Choreographer}
+     * 回调以确保转换按层次顺序应用。
+     * @return true表示更改已被应用/处理
      */
     boolean applyAnimationChange(ModelAnimation animation);
 
     /**
-     * Get the associated {@link ModelAnimation} by name or null if none exist with the given name.
+     * 通过名称获取关联的{@link ModelAnimation}，如果给定的名称不存在，则为空。
      */
     default ModelAnimation getAnimation(String name) {
         int index = getAnimationIndex(name);
@@ -69,15 +62,14 @@ public interface AnimatableModel {
     }
 
     /**
-     * Get the associated {@link ModelAnimation} by name or throw an Exception if none exist with
-     * the given name.
+     * 通过名称获取关联的{@link ModelAnimation}，如果不存在则抛出异常
      */
     default ModelAnimation getAnimationOrThrow(String name) {
         return Preconditions.checkNotNull(getAnimation(name), "No animation found with the given name");
     }
 
     /**
-     * Get the Zero-based index for the animation name of interest or -1 if not found.
+     * 获取感兴趣的动画名称的从0开始的索引，如果没有找到则为-1。
      */
     default int getAnimationIndex(String name) {
         for (int i = 0; i < getAnimationCount(); i++) {
@@ -89,28 +81,26 @@ public interface AnimatableModel {
     }
 
     /**
-     * Get the name of the {@link ModelAnimation} at the Zero-based index
+     * 获取{@link ModelAnimation}的指定索引的动画名称
      * <p>
-     * This name corresponds to the one defined and exported in the renderable asset.
-     * Typically the Action names defined in the 3D creation software.
+     * 此名称对应于在可渲染资源中定义和导出的名称。
+     * 通常是在3D制作软件中定义的动作名称。
      * </p>
-     *
-     * @return The string name of the {@link ModelAnimation},
-     * <code>String.valueOf(animation.getIndex())</code>> if none was specified.
+     * @return  {@link ModelAnimation}的字符串名称，
+     * <code>String.valueOf(animation.getIndex())</code>>如果没有指定。
      */
     default String getAnimationName(int animationIndex) {
         return getAnimation(animationIndex).getName();
     }
 
     /**
-     * Get the names of the {@link ModelAnimation}
+     * 获取{@link ModelAnimation}的所有名称
      * <p>
-     * This names correspond to the ones defined and exported in the renderable asset.
-     * Typically the Action names defined in the 3D creation software.
+     * 此名称对应于在可渲染资源中定义和导出的名称。
+     * 通常是在3D制作软件中定义的动作名称。
      * </p>
-     *
-     * @return The string name of the {@link ModelAnimation},
-     * <code>String.valueOf(animation.getIndex())</code>> if none was specified.
+     * @return  {@link ModelAnimation}的字符串名称，
+     * <code>String.valueOf(animation.getIndex())</code>>如果没有指定。
      */
     default List<String> getAnimationNames() {
         List<String> names = new ArrayList<>();
@@ -121,22 +111,19 @@ public interface AnimatableModel {
     }
 
     /**
-     * Return true if {@link #getAnimationCount()} > 0
+     * 判断是否有动画
+     * @return Return true if {@link #getAnimationCount()} > 0
      */
     default boolean hasAnimations() {
         return getAnimationCount() > 0;
     }
 
     /**
-     * Sets the current position of (seeks) the animation to the specified time position in seconds.
-     * This time should be
+     * 将动画的当前位置设置为指定的时间位置(以秒为单位)。这次应该是
      * <p>
-     * This method will apply rotation, translation, and scale to the Renderable that have been
-     * targeted. Uses <code>TransformManager</code>
+     *     此方法将应用旋转，平移和缩放到已被渲染目标。<code>TransformManager</code>
      * </p>
-     *
-     * @param timePosition Elapsed time of interest in seconds.
-     *                     Between 0 and the max value of {@link ModelAnimation#getDuration()}.
+     * @param timePosition 以秒为单位的经过时间。在0和{@link ModelAnimation#getDuration()}的最大值之间。
      * @see ModelAnimation#getDuration()
      */
     default void setAnimationsTimePosition(float timePosition) {
@@ -146,14 +133,11 @@ public interface AnimatableModel {
     }
 
     /**
-     * Sets the current position of (seeks) all the animations to the specified frame number according
-     * to the {@link ModelAnimation#getFrameRate()}
+     * 设置(查找)所有动画的当前位置到指定的帧数到{@link ModelAnimation#getFrameRate()}
      * <p>
-     * This method will apply rotation, translation, and scale to the Renderable that have been
-     * targeted. Uses <code>TransformManager</code>
-     *
-     * @param framePosition Frame number on the timeline.
-     *                    Between 0 and {@link ModelAnimation#getFrameCount()}.
+     *     此方法将应用旋转，平移和缩放到已被渲染目标。<code>TransformManager</code>
+     * </p>
+     * @param framePosition 介于0和{@link ModelAnimation#getFrameCount()}之间。
      * @see ModelAnimation#getFrameCount()
      */
     default void setAnimationsFramePosition(int framePosition) {
@@ -163,12 +147,11 @@ public interface AnimatableModel {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for all {@link ModelAnimation}
-     * of this object.
-     * <h3>Don't forget to call {@link ObjectAnimator#start()}</h3>
+     * 为所有{@link ModelAnimation}构造并返回一个{@link ObjectAnimator}
+     * <h3>不要忘记调用{@link ObjectAnimator#start()}</h3>
      *
-     * @param repeat repeat/loop the animation
-     * @return The constructed ObjectAnimator
+     * @param repeat 重复/循环动画
+     * @return ObjectAnimator对象
      * @see ModelAnimator#ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     default ObjectAnimator animate(boolean repeat) {
@@ -180,16 +163,13 @@ public interface AnimatableModel {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for targeted {@link ModelAnimation} with a
-     * given name of this object.
-     * <br><b>Don't forget to call {@link ObjectAnimator#start()}</b>
-     *
-     * @param animationNames The string names of the animations.
-     *                       <br>This name should correspond to the one defined and exported in
-     *                       the model.
-     *                       <br>Typically the action name defined in the 3D creation software.
+     * 根据名称为目标{@link ModelAnimation}构造并返回一个{@link ObjectAnimator}
+     * <br><b>不要忘记调用{@link ObjectAnimator#start()}</b>
+     * @param animationNames 动画组名称
+     *                       <br>该名称应与中定义和导出的名称相对应
+     *                       <br>通常是在3D创建软件中定义的动作名称。
      *                       {@link ModelAnimation#getName()}
-     * @return The constructed ObjectAnimator
+     * @return ObjectAnimator对象
      * @see ModelAnimator#ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     default ObjectAnimator animate(String... animationNames) {
@@ -197,12 +177,11 @@ public interface AnimatableModel {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for targeted {@link ModelAnimation} with a
-     * a given index of this object.
-     * <br><b>Don't forget to call {@link ObjectAnimator#start()}</b>
+     * 为目标{@link ModelAnimation}构造并返回一个{@link ObjectAnimator}对象的给定索引。
+     * <br><b>不要忘记调用{@link ObjectAnimator#start()}</b>
      *
-     * @param animationIndexes Zero-based indexes for the animations of interest.
-     * @return The constructed ObjectAnimator
+     * @param animationIndexes 动画索引组
+     * @return ObjectAnimator
      * @see ModelAnimator#ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     default ObjectAnimator animate(int... animationIndexes) {
@@ -210,20 +189,17 @@ public interface AnimatableModel {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for a targeted {@link ModelAnimation} of
-     * this object.
-     * <b>The setAutoCancel(true) won't work for new call with different animations.</b>
-     * <br>This method applies by default this to the returned ObjectAnimator :
+     * 为目标{@link ModelAnimation}构造并返回一个{@link ObjectAnimator}这个对象。
+     * <b> setAutoCancel(true)对不同动画的新调用不起作用。</b>
+     * <br>默认情况下，该方法将This应用于返回的ObjectAnimator:
      * <ul>
-     * <li>The duration value to the max {@link ModelAnimation#getDuration()} in order to
-     * match the original animation speed.</li>
-     * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-     * interpolation.</li>
+     * <li>持续时间值到max {@link ModelAnimation#getDuration()}以便匹配原来的动画速度。</li>
+     * <li>将插值器设置为{@link LinearInterpolator}以匹配自然动画插值。</li>
      * </ul>
-     * <br><b>Don't forget to call {@link ObjectAnimator#start()}</b>
+     * <br><b>不要忘记调用{@link ObjectAnimator#start()}</b>
      *
-     * @param animations The animations of interest
-     * @return The constructed ObjectAnimator
+     * @param animations 动画组
+     * @return ObjectAnimator
      * @see ModelAnimator#ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     default ObjectAnimator animate(ModelAnimation... animations) {
