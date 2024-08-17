@@ -10,23 +10,15 @@ import android.view.animation.LinearInterpolator;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
- * This class provides support for animating an {@link AnimatableModel}
- * <h2>Usage</h2>
- *
- * <p>
- * By default the {@link ModelAnimator} can play the full {@link ModelAnimation} starting from 0 to
- * the animation duration with:
- * </p>
+ * 模型动画器
+ * <p>用于支持 {@link AnimatableModel}</p>
+ * <h2>用法</h2>
  * <pre>
  * {@link ModelAnimator#ofAnimation(AnimatableModel, String...)}
  * </pre>
- * <p>
- * If you want to specify a start and end, you should use:
- * </p>
  * <pre>
  * {@link ModelAnimator#ofAnimationTime(AnimatableModel, String, float...)}
  * </pre>
@@ -36,151 +28,15 @@ import java.util.List;
  * <pre>
  * {@link ModelAnimator#ofAnimationFraction(AnimatableModel, String, float...)}
  * </pre>
- *
- * <h2>Use cases</h2>
- *
- * <h3>Simple usage</h3>
- * <p>
- * On a very basic 3D model like a single infinite rotating sphere, you should not have to
- * use {@link ModelAnimator} but probably instead just call:
- * </p>
- * <pre>
- * {@link AnimatableModel#animate(boolean)}
- * </pre>
- *
- * <h3>Single Model with Single Animation</h3>
- * <p>
- * If you want to animate a single model to a specific timeline position, use:
- * </p>
- * <pre>
- * {@link ModelAnimator#ofAnimationTime(AnimatableModel, String, float...)}
- * </pre>
- * <pre>
- * {@link ModelAnimator#ofAnimationFrame(AnimatableModel, String, int...)}
- * </pre>
- * <pre>
- * {@link ModelAnimator#ofAnimationFraction(AnimatableModel, String, float...)}
- * </pre>
- * <ul>
- * <li>
- * A single time, frame, fraction value will go from the actual position to the desired one
- * </li>
- * <li>
- * Two values means form value1 to value2
- * </li>
- * <li>
- * More than two values means form value1 to value2 then to value3
- * </ul>
- * <i>Example:</i>
- * <pre>
- * ModelAnimator.ofAnimationFraction(model, "VerticalTranslation", 0f, 0.8f, 0f).start();
- * </pre>
- *
- * <h3>Single Model with Multiple Animations</h3>
- * <p>
- * If the model is a character, for example, there may be one ModelAnimation for a walkcycle, a
- * second for a jump, a third for sidestepping and so on.
- * </p>
- * <pre>
- * {@link ModelAnimator#ofAnimation(AnimatableModel, String...)}
- * </pre>
- * <pre>
- * {@link ModelAnimator#ofMultipleAnimations(AnimatableModel, String...)}
- * </pre>
- * <i>Example:</i>
- * <p>
- * Here you can see that no call to <code>animator.cancel()</code> is required because the
- * <code>animator.setAutoCancel(boolean)</code> is set to true by default.
- * </p>
- * <pre>
- * ObjectAnimator walkAnimator = ModelAnimator.ofAnimation(model, "walk");
- * walkButton.setOnClickListener(v -> walkAnimator.start());
- *
- * ObjectAnimator runAnimator = ModelAnimator.ofAnimation(model, "run");
- * runButton.setOnClickListener(v -> runAnimator.start());
- * </pre>
- * <i>or sequentially:</i>
- * <pre>
- * AnimatorSet animatorSet = new AnimatorSet();
- * animatorSet.playSequentially(ModelAnimator.ofMultipleAnimations(model, "walk", "run"));
- * animatorSet.start();
- * </pre>
- * <h3>Multiple Models with Multiple Animations</h3>
- * <p>
- * For a synchronised animation set like animating a complete scene with multiple models
- * time or sequentially, please consider using an {@link android.animation.AnimatorSet} with one
- * {@link ModelAnimator} parametrized per step :
- * </p>
- * <i>Example:</i>
- * <pre>
- * AnimatorSet completeFly = new AnimatorSet();
- *
- * ObjectAnimator liftOff = ModelAnimator.ofAnimationFraction(airPlaneModel, "FlyAltitude",0, 40);
- * liftOff.setInterpolator(new AccelerateInterpolator());
- *
- * AnimatorSet flying = new AnimatorSet();
- * ObjectAnimator flyAround = ModelAnimator.ofAnimation(airPlaneModel, "FlyAround");
- * flyAround.setRepeatCount(ValueAnimator.INFINITE);
- * flyAround.setDuration(10000);
- * ObjectAnimator airportBusHome = ModelAnimator.ofAnimationFraction(busModel, "Move", 0);
- * flying.playTogether(flyAround, airportBusHome);
- *
- * ObjectAnimator land = ModelAnimator.ofAnimationFraction(airPlaneModel, "FlyAltitude", 0);
- * land.setInterpolator(new DecelerateInterpolator());
- *
- * completeFly.playSequentially(liftOff, flying, land);
- * </pre>
- *
- * <h3>Morphing animation</h3>
- * <p>
- * Assuming a character object has a skeleton, one keyframe track could store the data for the
- * position changes of the lower arm bone over time, a different track the data for the rotation
- * changes of the same bone, a third the track position, rotation or scaling of another bone, and so
- * on. It should be clear, that an ModelAnimation can act on lots of such tracks.
- * </p>
- * <p>
- * Assuming the model has morph targets (for example one morph target showing a friendly face
- * and another showing an angry face), each track holds the information as to how the influence of a
- * certain morph target changes during the performance of the clip.
- * </p>
- * <p>
- * In a glTF context, this {@link Animator} updates matrices according to glTF
- * <code>animation</code> and <code>skin</code> definitions.
- * </p>
- *
- * <h3>{@link ModelAnimator} can be used for two things</h3>
- * <ul>
- * <li>
- * Updating matrices in <code>TransformManager</code> components according to the model
- * <code>animation</code> definitions.
- * </li>
- * <li>
- *     Updating bone matrices in <code>RenderableManager</code> components according to the model
- *     <code>skin</code> definitions.
- * </li>
- * </ul>
- * <p>
- * Every PropertyValuesHolder that applies a modification on the time position of the animation
- * must use the ModelAnimation.TIME_POSITION instead of its own Property in order to possibly cancel
- * any ObjectAnimator operating time modifications on the same ModelAnimation.
- * </p>
- * <p>
- * More information about Animator:
- * <a href="https://developer.android.com/guide/topics/graphics/prop-animation">
- * https://developer.android.com/guide/topics/graphics/prop-animation
- * </a>
- * </p>
  */
 public class ModelAnimator {
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for all {@link ModelAnimation}
-     * inside an {@link AnimatableModel}.
-     * <b>The setAutoCancel(true) won't work</b>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model The targeted model to animate
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param model {@link AnimatableModel}
+     * @return ObjectAnimator
      * @see #ofAnimation(AnimatableModel, ModelAnimation...)
      */
     public static ObjectAnimator ofAllAnimations(AnimatableModel model) {
@@ -192,12 +48,11 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns list of {@link ObjectAnimator} given names inside an
-     * {@link AnimatableModel}.
-     * Can be used directly with {@link android.animation.AnimatorSet#playTogether(Collection)}
-     * {@link android.animation.AnimatorSet#playSequentially(List)}
-     *
-     * @param model The targeted model to animate
+     * 创建动画对象集
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param model {@link AnimatableModel}
+     * @param animationNames 动画名称组
      * @return The constructed ObjectAnimator
      * @see #ofAnimation(AnimatableModel, ModelAnimation...)
      */
@@ -211,17 +66,13 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for targeted {@link ModelAnimation} with
-     * a given name inside an {@link AnimatableModel}.
-     * <b>The setAutoCancel(true) won't work for new call with different animations.</b>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model          The targeted model to animate
-     * @param animationNames The string names of the animations.
-     *                       <br>This name should correspond to the one defined and exported in
-     *                       the model.
-     *                       <br>Typically the action name defined in the 3D creation software.
-     *                       {@link ModelAnimation#getName()}
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param model {@link AnimatableModel}
+     * @param animationNames 动画名称组
+     * <br>该名称应与中定义和导出的名称对应模型。
+     * <br>通常是在3D创建软件中定义的动作名称。{@link ModelAnimation#getName()}
      * @return The constructed ObjectAnimator
      * @see #ofAnimation(AnimatableModel, ModelAnimation...)
      */
@@ -234,14 +85,12 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for targeted {@link ModelAnimation} with
-     * a given index inside an {@link AnimatableModel}.
-     * <b>The setAutoCancel(true) won't work for new call with different animations.</b>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model            The targeted animatable to animate
-     * @param animationIndexes Zero-based indexes for the animations of interest.
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param model            {@link AnimatableModel}
+     * @param animationIndexes 索引
+     * @return ObjectAnimator
      * @see #ofAnimation(AnimatableModel, ModelAnimation...)
      */
     public static ObjectAnimator ofAnimation(AnimatableModel model, int... animationIndexes) {
@@ -253,21 +102,19 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an {@link ObjectAnimator} for a targeted {@link ModelAnimation} inside
-     * an {@link AnimatableModel}.
-     * <b>The setAutoCancel(true) won't work for new call with different animations.</b>
-     * This method applies by default this to the returned ObjectAnimator :
+     * 为目标{@link ModelAnimation}内部构造并返回一个{@link ObjectAnimator}和{@link AnimatableModel}。
+     * <b> setAutoCancel(true)对不同动画的新调用不起作用。</b>
+     * 此方法默认将This应用于返回的ObjectAnimator:
      * <ul>
-     * <li>The duration value to the max {@link ModelAnimation#getDuration()} in order to
-     * match the original animation speed.</li>
-     * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-     * interpolation.</li>
+     * <li>持续时间值到max {@link ModelAnimation#getDuration()}以便
+     *匹配原来的动画速度。</li>
+     * <li>插入器为{@link LinearInterpolator}以匹配自然动画
+     李*插值。</li>
      * </ul>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model      The targeted animatable to animate
-     * @param animations The animations of interest
-     * @return The constructed ObjectAnimator
+     * <p>不要忘记调用{@link ObjectAnimator#start()}</p>
+     * @param model      AnimatableModel
+     * @param animations ModelAnimation
+     * @return ObjectAnimator
      */
     public static ObjectAnimator ofAnimation(AnimatableModel model, ModelAnimation... animations) {
         android.animation.PropertyValuesHolder[] propertyValuesHolders = new android.animation.PropertyValuesHolder[animations.length];
@@ -292,19 +139,17 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * time values.
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
      * @param model         The targeted model to animate
-     * @param animationName The string name of the animation.
-     *                      <br>This name should correspond to the one defined and exported in
-     *                      the model.
-     *                      <br>Typically the action name defined in the 3D creation software.
+     * @param animationName 动画的字符串名称。
+     *                      <br>该名称应与中定义和导出的名称对应模型。
+     *                      <br>通常是在3D创建软件中定义的动作名称。
      *                      {@link ModelAnimation#getName()}
-     * @param times         The elapsed times (between 0 and {@link ModelAnimation#getDuration()}
-     *                      that the {@link ModelAnimation} will animate between.
-     * @return The constructed ObjectAnimator
+     * @param times         经过的时间(从0到{@link ModelAnimation#getDuration()})
+     *                      {@link ModelAnimation}将在两者之间进行动画。
+     * @return ObjectAnimator
      * @see #ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      * @see ModelAnimation#getName()
      */
@@ -315,15 +160,11 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * time values.
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model          The targeted model to animate
-     * @param animationIndex Zero-based index for the animation of interest.
-     * @param times          The elapsed times (between 0 and {@link ModelAnimation#getDuration()}
-     *                       that the {@link ModelAnimation} will animate between.
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param animationIndex 索引
+     * @param times          从0到{@link ModelAnimation#getDuration()}经过的时间，{@link ModelAnimation}将在两者之间进行动画。
      * @see #ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     public static ObjectAnimator ofAnimationTime(AnimatableModel model, int animationIndex
@@ -333,38 +174,11 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * time values.
-     * <p>
-     * Time values can help you targeting a specific position on an animation coming from
-     * a 3D creation software with a default times based timeline.
-     * It's the 3D designer responsibility to tell you what specific timeline position
-     * corresponds to a specific model appearance.
-     * </p>
-     * <ul>
-     * <li>A single value implies that that value is the one being animated to starting from the
-     * actual value on the provided {@link ModelAnimation}.</li>
-     * <li>Two values imply a starting and ending values.</li>
-     * <li>More than two values imply a starting value, values to animate through along the way,
-     * and an ending value (these values will be distributed evenly across the duration of the
-     * animation).</li>
-     * </ul>
-     * <p>
-     * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-     * <br>This method applies by default this to the returned ObjectAnimator :
-     * </p>
-     * <ul>
-     * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-     * match the original animation speed.</li>
-     * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-     * interpolation.</li>
-     * </ul>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model     The targeted model to animate
-     * @param animation The animation of interest
-     * @param times     The elapsed times (between 0 and {@link ModelAnimation#getDuration()}
-     *                  that the {@link ModelAnimation} will animate between.
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param animation 动画
+     * @param times          从0到{@link ModelAnimation#getDuration()}经过的时间，{@link ModelAnimation}将在两者之间进行动画。
      * @return The constructed ObjectAnimator
      */
     public static ObjectAnimator ofAnimationTime(AnimatableModel model
@@ -374,19 +188,11 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * frame values.
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model         The targeted model to animate
-     * @param animationName The string name of the animation.
-     *                      <br>This name should correspond to the one defined and exported in
-     *                      the model.
-     *                      <br>Typically the action name defined in the 3D creation software.
-     *                      {@link ModelAnimation#getName()}
-     * @param frames        The frame numbers (between 0 and {@link ModelAnimation#getFrameCount()} that
-     *                      the {@link ModelAnimation} will animate between.
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @param animationName 动画名称
+     * @param frames        帧数
      * @see #ofAnimationFrame(AnimatableModel, ModelAnimation, int...)
      * @see ModelAnimation#getName()
      */
@@ -395,15 +201,9 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * frame values.
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model          The targeted model to animate
-     * @param animationIndex Zero-based index for the animation of interest.
-     * @param frames         The frame numbers (between 0 and {@link ModelAnimation#getFrameCount()} that
-     *                       the {@link ModelAnimation} will animate between.
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
      * @see #ofAnimationFrame(AnimatableModel, ModelAnimation, int...)
      */
     public static ObjectAnimator ofAnimationFrame(AnimatableModel model, int animationIndex, int... frames) {
@@ -411,41 +211,10 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * frame values.
-     * <p>
-     * Frame number can help you targeting a specific position on an animation coming from
-     * a 3D creation software with a frame numbers based timeline.
-     * It's the 3D designer responsibility to tell you what specific timeline position
-     * corresponds to a specific model appearance.
-     * <br>The corresponding time of a frame number is calculated using
-     * {@link ModelAnimation#getFrameRate()}.
-     * </p>
-     * <ul>
-     * <li>A single value implies that that value is the one being animated to starting from the
-     * actual value on the provided {@link ModelAnimation}.</li>
-     * <li>Two values imply a starting and ending values.</li>
-     * <li>More than two values imply a starting value, values to animate through along the way,
-     * and an ending value (these values will be distributed evenly across the duration of the
-     * animation).</li>
-     * </ul>
-     * <p>
-     * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-     * <br>This method applies by default this to the returned ObjectAnimator :
-     * </p>
-     * <ul>
-     * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-     * match the original animation speed.</li>
-     * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-     * interpolation.</li>
-     * </ul>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model     The targeted model to animate
-     * @param animation The animation of interest
-     * @param frames    The frame numbers (between 0 and {@link ModelAnimation#getFrameCount()} that
-     *                  the {@link ModelAnimation} will animate between.
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @return ObjectAnimator
      * @see #ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     public static ObjectAnimator ofAnimationFrame(AnimatableModel model
@@ -455,18 +224,10 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * fraction values.
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model         The targeted model to animate
-     * @param animationName The string name of the animation.
-     *                      <br>This name should correspond to the one defined and exported in
-     *                      the model.
-     *                      <br>Typically the action name defined in the 3D creation software.
-     *                      {@link ModelAnimation#getName()}
-     * @param fractions     The fractions (percentage) (between 0 and 1)
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @return ObjectAnimator
      * @see #ofAnimationFraction(AnimatableModel, ModelAnimation, float...)
      * @see ModelAnimation#getName()
      */
@@ -475,14 +236,10 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * fraction values.
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model          The targeted model to animate
-     * @param animationIndex Zero-based index for the animation of interest.
-     * @param fractions      The fractions (percentage) (between 0 and 1)
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @return ObjectAnimator
      * @see #ofAnimationFraction(AnimatableModel, ModelAnimation, float...)
      */
     public static ObjectAnimator ofAnimationFraction(AnimatableModel model, int animationIndex, float... fractions) {
@@ -490,32 +247,10 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator clipping a {@link ModelAnimation} to a given set of
-     * fraction values.
-     * <ul>
-     * <li>A single value implies that that value is the one being animated to starting from the
-     * actual value on the provided {@link ModelAnimation}.</li>
-     * <li>Two values imply a starting and ending values.</li>
-     * <li>More than two values imply a starting value, values to animate through along the way,
-     * and an ending value (these values will be distributed evenly across the duration of the
-     * animation).</li>
-     * </ul>
-     * <p>
-     * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-     * This method applies by default this to the returned ObjectAnimator :
-     * </p>
-     * <ul>
-     * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-     * match the original animation speed.</li>
-     * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-     * interpolation.</li>
-     * </ul>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model     The targeted model to animate
-     * @param animation The animation of interest
-     * @param fractions The fractions (percentage) (between 0 and 1)
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @return ObjectAnimator
      * @see #ofAnimationTime(AnimatableModel, ModelAnimation, float...)
      */
     public static ObjectAnimator ofAnimationFraction(AnimatableModel model
@@ -539,29 +274,10 @@ public class ModelAnimator {
     }
 
     /**
-     * Constructs and returns an ObjectAnimator a {@link ModelAnimation} applying
-     * PropertyValuesHolders.
-     * <ul>
-     * <li>A single value implies that that value is the one being animated to starting from the
-     * actual value on the provided {@link ModelAnimation}.</li>
-     * <li>Two values imply a starting and ending values.</li>
-     * <li>More than two values imply a starting value, values to animate through along the way,
-     * and an ending value (these values will be distributed evenly across the duration of the
-     * animation).</li>
-     * </ul>
-     * <p>
-     * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-     * <br>This method applies by default this to the returned ObjectAnimator :
-     * </p>
-     * <ul>
-     * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-     * interpolation.</li>
-     * </ul>
-     * <p>Don't forget to call {@link ObjectAnimator#start()}</p>
-     *
-     * @param model  The targeted model to animate
-     * @param values A set of PropertyValuesHolder objects whose values will be animated between over time.
-     * @return The constructed ObjectAnimator
+     * 创建动画对象
+     * <b>setAutoCancel(true) 不起作用</b>
+     * <p>不要忘记调用 {@link ObjectAnimator#start()}</p>
+     * @return ObjectAnimator
      */
     public static ObjectAnimator ofPropertyValuesHolder(AnimatableModel model, android.animation.PropertyValuesHolder... values) {
         ObjectAnimator objectAnimator = ObjectAnimator.ofPropertyValuesHolder(model, values);
@@ -571,14 +287,14 @@ public class ModelAnimator {
     }
 
     /**
-     * Get the associated <code>Animation</code> by name or null if none exist with the given name.
+     * 根据名称获取关联的动画，如果给定名称中不存在动画，则为空。
      * <p>
-     * This name should correspond to the one defined and exported in the model.
-     * <br>Typically the action name defined in the 3D creation software.
+     *     该名称应与模型中定义和导出的名称对应。
+     *     <br>通常是在3D创建软件中定义的动作名称。
      * </p>
      *
-     * @param name Weak reference to the string name of the animation or the
-     *             <code>String.valueOf(animation.getIndex())</code>> if none was specified.
+     * @param name 对象的字符串名称的弱引用
+     *            如果没有指定，返回<code>String.valueOf(animation.getIndex())</code>>
      */
     private static ModelAnimation getAnimationByName(AnimatableModel model, String name) {
         for (int i = 0; i < model.getAnimationCount(); i++) {
@@ -591,20 +307,8 @@ public class ModelAnimator {
     }
 
     /**
-     * This class holds information about a property and the values that that property
-     * should take during an animation.
-     * <p>PropertyValuesHolder objects can be used to create animations with ObjectAnimator or
-     * that operate on several different properties in parallel.</p>
-     *
-     * <h2>Warning:</h2>
-     * <p>Using this PropertyValuesHolder is very useful for targeting multiple
-     * time or frame properties of multiple animations inside a same ObjectAnimator model</p>
-     * <p><b>and</b> insure a less consuming {@link android.view.Choreographer.FrameCallback} than
-     * using {@link android.animation.AnimatorSet#playTogether(Animator...)}</p>
-     * <p><b>but</b> If you want to use the
-     * {@link ObjectAnimator#setAutoCancel(boolean)} functionality, you have to
-     * take care of this :</p>
-     *
+     * 该类保存有关属性和该属性的值的信息
+     * 动画播放过程中用到
      * <pre>
      * ObjectAnimator.hasSameTargetAndProperties(Animator anim) {
      *      PropertyValuesHolder[] theirValues = ((ObjectAnimator) anim).getValues();
@@ -629,34 +333,23 @@ public class ModelAnimator {
     public static class PropertyValuesHolder {
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted {@link ModelAnimation}.
-         * This method applies by default this to the returned ObjectAnimator :
+         * 为目标{@link ModelAnimation}构造并返回PropertyValuesHolder。
+         * 此方法默认将This应用于返回的ObjectAnimator:
          * <ul>
-         * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-         * match the original animation speed.</li>
-         * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-         * interpolation.</li>
+         * <li>持续时间值要{@link ModelAnimation#getDuration()}以便匹配原来的动画速度。</li>
+         * <li>插入器为{@link LinearInterpolator}以匹配自然动画的插值。</li>
          * </ul>
-         *
-         * @param animation The animation of interest
-         * @return The constructed PropertyValuesHolder object.
+         * @param animation Animation
+         * @return PropertyValuesHolder
          */
         public static android.animation.PropertyValuesHolder ofAnimation(ModelAnimation animation) {
             return ofAnimationTime(animation, 0, animation.getDuration());
         }
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted animation set of time
-         * values.
-         *
-         * @param animationName The string name of the animation.
-         *                      <br>This name should correspond to the one defined and exported in
-         *                      the model.
-         *                      <br>Typically the action name defined in the 3D creation software.
-         *                      {@link ModelAnimation#getName()}
-         * @param times         The elapsed times (between 0 and {@link ModelAnimation#getDuration()}
-         *                      that the {@link ModelAnimation} will animate between.
-         * @return The constructed PropertyValuesHolder object.
+         * 构造并返回一个指定动画时间的PropertyValuesHolder
+         * @param times         运行时间(从0到{@link ModelAnimation#getDuration()}，
+         *                      动画{@link ModelAnimation}将在两者之间进行动画。
          * @see #ofAnimationTime(ModelAnimation, float...)
          */
         public static android.animation.PropertyValuesHolder ofAnimationTime(String animationName, float... times) {
@@ -664,49 +357,18 @@ public class ModelAnimator {
         }
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted {@link ModelAnimation} with
-         * a given set of time values.
-         * <ul>
-         * <li>A single value implies that that value is the one being animated to starting from the
-         * actual value on the provided {@link ModelAnimation}.</li>
-         * <li>Two values imply a starting and ending values.</li>
-         * <li>More than two values imply a starting value, values to animate through along the way,
-         * and an ending value (these values will be distributed evenly across the duration of the
-         * animation).</li>
-         * </ul>
-         * <p>
-         * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-         * <br>This method applies by default this to the returned ObjectAnimator :
-         * </p>
-         * <ul>
-         * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-         * match the original animation speed.</li>
-         * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-         * interpolation.</li>
-         * </ul>
-         *
-         * @param animation The animation of interest
-         * @param times     The elapsed times (between 0 and {@link ModelAnimation#getDuration()}
-         *                  that the {@link ModelAnimation} will animate between.
-         * @return The constructed PropertyValuesHolder object.
+         * 创建PropertyValuesHolder
+         * @param times         运行时间(从0到{@link ModelAnimation#getDuration()}，
+         *                      动画{@link ModelAnimation}将在两者之间进行动画。
+         * @return PropertyValuesHolder
          */
         public static android.animation.PropertyValuesHolder ofAnimationTime(ModelAnimation animation, float... times) {
             return android.animation.PropertyValuesHolder.ofFloat(new AnimationProperty<>(animation, ModelAnimation.TIME_POSITION), times);
         }
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted {@link ModelAnimation} with
-         * a given set of fame values.
-         *
-         * @param animationName The string name of the animation.
-         *                      <br>This name should correspond to the one defined and exported in
-         *                      the model.
-         *                      <br>Typically the action name defined in the 3D creation software.
-         *                      {@link ModelAnimation#getName()}
-         * @param frames        The frame numbers (between 0 and
-         *                      {@link ModelAnimation#getFrameCount()} that
-         *                      the {@link ModelAnimation} will animate between.
-         * @return The constructed PropertyValuesHolder object.
+         * 构造并返回一个指定动画时间的PropertyValuesHolder
+         * @return PropertyValuesHolder
          * @see #ofAnimationFrame(String, int...)
          */
         public static android.animation.PropertyValuesHolder ofAnimationFrame(String animationName, int... frames) {
@@ -714,31 +376,8 @@ public class ModelAnimator {
         }
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted {@link ModelAnimation} with
-         * a given set of frame values.
-         * <ul>
-         * <li>A single value implies that that value is the one being animated to starting from the
-         * actual value on the provided {@link ModelAnimation}.</li>
-         * <li>Two values imply a starting and ending values.</li>
-         * <li>More than two values imply a starting value, values to animate through along the way,
-         * and an ending value (these values will be distributed evenly across the duration of the
-         * animation).</li>
-         * </ul>
-         * <p>
-         * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-         * <br>This method applies by default this to the returned ObjectAnimator :
-         * </p>
-         * <ul>
-         * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-         * match the original animation speed.</li>
-         * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-         * interpolation.</li>
-         * </ul>
-         *
-         * @param animation The animation of interest
-         * @param frames    The frame numbers (between 0 and {@link ModelAnimation#getFrameCount()} that
-         *                  the {@link ModelAnimation} will animate between.
-         * @return The constructed PropertyValuesHolder object.
+         * 构造并返回一个指定动画时间的PropertyValuesHolder
+         * @return PropertyValuesHolder
          */
         public static android.animation.PropertyValuesHolder ofAnimationFrame(ModelAnimation animation, int... frames) {
             return android.animation.PropertyValuesHolder.ofInt(new AnimationProperty<>(animation, ModelAnimation.FRAME_POSITION), frames);
@@ -746,16 +385,8 @@ public class ModelAnimator {
 
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted {@link ModelAnimation} with
-         * a given set of fraction values.
-         *
-         * @param animationName The string name of the animation.
-         *                      <br>This name should correspond to the one defined and exported in
-         *                      the model.
-         *                      <br>Typically the action name defined in the 3D creation software.
-         *                      {@link ModelAnimation#getName()}
-         * @param fractions     The fractions (percentage) (between 0 and 1)
-         * @return The constructed PropertyValuesHolder object.
+         * 构造并返回一个指定动画时间的PropertyValuesHolder
+         * @return PropertyValuesHolder
          * @see #ofAnimationFraction(ModelAnimation, float...)
          */
         public static android.animation.PropertyValuesHolder ofAnimationFraction(String animationName, float... fractions) {
@@ -763,30 +394,8 @@ public class ModelAnimator {
         }
 
         /**
-         * Constructs and returns a PropertyValuesHolder for a targeted {@link ModelAnimation} with
-         * a given set of fraction values.
-         * <ul>
-         * <li>A single value implies that that value is the one being animated to starting from the
-         * actual value on the provided {@link ModelAnimation}.</li>
-         * <li>Two values imply a starting and ending values.</li>
-         * <li>More than two values imply a starting value, values to animate through along the way,
-         * and an ending value (these values will be distributed evenly across the duration of the
-         * animation).</li>
-         * </ul>
-         * <p>
-         * The properties (time, frame,... position) are applied to the {@link AnimatableModel}
-         * <br>This method applies by default this to the returned ObjectAnimator :
-         * </p>
-         * <ul>
-         * <li>The duration value to the {@link ModelAnimation#getDuration()} in order to
-         * match the original animation speed.</li>
-         * <li>The interpolator to {@link LinearInterpolator} in order to match the natural animation
-         * interpolation.</li>
-         * </ul>
-         *
-         * @param animation The animation of interest
-         * @param fractions The fractions (percentage) (between 0 and 1)
-         * @return The constructed PropertyValuesHolder object.
+         * 构造并返回一个指定动画时间的PropertyValuesHolder
+         * @return PropertyValuesHolder
          */
         public static android.animation.PropertyValuesHolder ofAnimationFraction(ModelAnimation animation, float... fractions) {
             return android.animation.PropertyValuesHolder.ofFloat(new AnimationProperty<>(animation, ModelAnimation.FRACTION_POSITION), fractions);
