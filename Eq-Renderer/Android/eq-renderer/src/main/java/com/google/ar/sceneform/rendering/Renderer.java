@@ -4,13 +4,13 @@ import android.content.Context;
 import android.os.Build;
 import android.view.Surface;
 import android.view.SurfaceView;
-import android.view.TextureView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
+import com.google.android.filament.View;
 import com.google.ar.sceneform.SceneView;
 import com.google.ar.sceneform.utilities.AndroidPreconditions;
 import com.google.ar.sceneform.utilities.EnvironmentalHdrParameters;
@@ -23,36 +23,31 @@ import com.google.android.filament.SwapChain;
 import com.google.android.filament.TransformManager;
 import com.google.android.filament.View.DynamicResolutionOptions;
 import com.google.android.filament.Viewport;
-//import com.google.android.filament.android.UiHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * A rendering context.
- *
- * <p>Contains everything that will be drawn on a surface.
- *
- * @hide Not a public facing API for version 1.0
+ * 渲染对象
+ * <p>包含所有要渲染到surface上的内容</p>
  */
 public class Renderer implements EqUiHelper.RendererCallback {
-  // Default camera settings are used everwhere that ARCore HDR Lighting (Deeplight) is disabled or
-  // unavailable.
+  //默认相机设置，在不使用ARCore/AREngine等外部相机参数的时候使用。
   private static final float DEFAULT_CAMERA_APERATURE = 4.0f;
   private static final float DEFAULT_CAMERA_SHUTTER_SPEED = 1.0f / 30.0f;
   private static final float DEFAULT_CAMERA_ISO = 320.0f;
 
-  // HDR lighting camera settings are chosen to provide an exposure value of 1.0.  These are used
-  // when ARCore HDR Lighting is enabled in Sceneform.
+  //选择HDR照明相机设置以提供1.0的曝光值。当启用ARCore HDR照明时用到
   private static final float ARCORE_HDR_LIGHTING_CAMERA_APERATURE = 1.0f;
   private static final float ARCORE_HDR_LIGHTING_CAMERA_SHUTTER_SPEED = 1.2f;
   private static final float ARCORE_HDR_LIGHTING_CAMERA_ISO = 100.0f;
 
   private static final Color DEFAULT_CLEAR_COLOR = new Color(0.0f, 0.0f, 0.0f, 1.0f);
 
-  // Limit resolution to 1080p for the minor edge. This is enough for Filament.
-  private static final int MAXIMUM_RESOLUTION = 1080;
+  // 将分辨率限制在1440以内,可在初始化之前修改下面两个参数
+  public static int MAXIMUM_RESOLUTION = 1440;
+  public static boolean DYNAMIC_RESOLUTION_ENABLED = true;
 
   @Nullable private CameraProvider cameraProvider;
   private final SurfaceView surfaceView;
@@ -115,8 +110,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Starts mirroring to the specified {@link Surface}.
-   *
+   * 开始将画面映射到指定平面{@link Surface}
    * @hide
    */
   public void startMirroring(Surface surface, int left, int bottom, int width, int height) {
@@ -130,7 +124,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Stops mirroring to the specified {@link Surface}.
+   * 停止将画面映射到指定平面{@link Surface}
    *
    * @hide
    */
@@ -145,7 +139,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Access to the underlying Filament renderer.
+   * * 获取filament的渲染器对象
    *
    * @hide
    */
@@ -154,7 +148,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Access to the underlying Filament view.
+   * 获取filament的视图对象
    *
    * @hide
    */
@@ -185,9 +179,9 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Inverts winding for front face rendering.
+   * 反转渲染
    *
-   * @hide Used internally by ArSceneView
+   * @hide ArSceneView中使用
    */
   
   public void setFrontFaceWindingInverted(Boolean inverted) {
@@ -195,9 +189,9 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Checks whether winding is inverted for front face rendering.
+   *检查是否启用反转渲染
    *
-   * @hide Used internally by ViewRenderable
+   * @hide ViewRenderable中用到
    */
   
   public boolean isFrontFaceWindingInverted() {
@@ -225,8 +219,8 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Sets a callback to happen after each frame is rendered. This can be used to log performance
-   * metrics for a given frame.
+   * 设置每个帧渲染后发生的回调。这可以用于记录性能
+   * 给定帧的度量。
    */
   public void setFrameRenderDebugCallback(Runnable onFrameRenderDebugCallback) {
     this.onFrameRenderDebugCallback = onFrameRenderDebugCallback;
@@ -293,8 +287,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
           throw new AssertionError("Internal Error: Failed to get swap chain");
         }
 
-        // Render the scene, unless the renderer wants to skip the frame.
-        // This means you are sending frames too quickly to the GPU
+        //渲染场景
         if (renderer.beginFrame(swapChainLocal, frameTimeNanos)) {
           final float[] projectionMatrixData = cameraProvider.getProjectionMatrix().data;
           for (int i = 0; i < 16; ++i) {
@@ -311,12 +304,9 @@ public class Renderer implements EqUiHelper.RendererCallback {
             preRenderCallback.preRender(renderer, swapChainLocal, camera);
           }
 
-          // Currently, filament does not provide functionality for disabling cameras, and
-          // rendering a view with a null camera doesn't clear the viewport. As a workaround, we
-          // render an empty view when the camera is disabled. this is actually similar to what we
-          // need to do in the future if we want to add multiple camera support anyways. filament
-          // only allows one camera per-view, so for multiple cameras you need to create multiple
-          // views pointing to the same scene.
+          //目前，filament不提供禁用摄像头的功能
+          //使用null相机渲染视图不会清除viewport。
+          //当相机被禁用时，渲染一个空视图，作为绕行方式。
           com.google.android.filament.View currentView =
               cameraProvider.isActive() ? view : emptyView;
           renderer.render(currentView);
@@ -341,7 +331,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
           renderer.endFrame();
         }
 
-//        reclaimReleasedResources();
+        reclaimReleasedResources();
       }
     }
   }
@@ -386,9 +376,8 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Set the Light Probe used for reflections and indirect light.
-   *
-   * @hide the scene level API is publicly exposed, this is used by the Scene internally.
+   * 设置用于反射和间接光的光探针。
+   * @hide
    */
   public void setLightProbe(LightProbe lightProbe) {
     if (lightProbe == null) {
@@ -448,79 +437,60 @@ public class Renderer implements EqUiHelper.RendererCallback {
     if (swapChainLocal != null) {
       final IEngine engine = EngineInstance.getEngine();
       engine.destroySwapChain(swapChainLocal);
-      // Required to ensure we don't return before Filament is done executing the
-      // destroySwapChain command, otherwise Android might destroy the Surface
-      // too early
+      //确保在filament执行完之前不会执行destroySwapChain命令，否则Android可能会销毁Surface
       engine.flushAndWait();
       swapChain = null;
     }
   }
 
-  /** @hide Only used for scuba testing for now. */
-  public void setDynamicResolutionEnabled(boolean isEnabled) {
-    // Enable dynamic resolution. By default it will scale down to 25% of the screen area
-    // (i.e.: 50% on each axis, e.g.: reducing a 1080p image down to 720p).
-    // This can be changed in the options below.
-    // TODO: This functionality should probably be exposed to the developer eventually.
+  /** @hide */
+  private void setDynamicResolutionEnabled(boolean isEnabled) {
+    //启用动态解析。默认情况下，它将缩小到屏幕面积的25%
+    //(即:每个轴上的50%)
+    //这可以在下面的选项中修改。
     DynamicResolutionOptions options = new DynamicResolutionOptions();
     options.enabled = isEnabled;
     view.setDynamicResolutionOptions(options);
   }
 
-  /** @hide Only used for scuba testing for now. */
+  /** @hide  */
   @VisibleForTesting
   public void setAntiAliasing(com.google.android.filament.View.AntiAliasing antiAliasing) {
     view.setAntiAliasing(antiAliasing);
   }
 
-  /** @hide Only used for scuba testing for now. */
+  /** @hide  */
   @VisibleForTesting
   public void setDithering(com.google.android.filament.View.Dithering dithering) {
     view.setDithering(dithering);
   }
 
-  /** @hide Used internally by ArSceneView. */
-  
-  public void setPostProcessingEnabled(boolean enablePostProcessing) {return ;}
-
-
-
-  /** @hide Used internally by ArSceneView */
-  
-  public void setRenderQuality(com.google.android.filament.View.RenderQuality renderQuality) {return ;}
-
-
-
   /**
-   * Sets a high performance configuration for the filament view. Disables MSAA, disables
-   * post-process, disables dynamic resolution, sets quality to 'low'.
-   *
-   * @hide Used internally by ArSceneView
+   * 为filament设置高性能配置。禁用FXAA，禁用
+   * 后处理，禁用动态分辨率，设置质量为“低”。
+   *  @hide 由ArSceneView内部使用
    */
   
-  public void enablePerformanceMode() {return ;}
-
-
-
-
-
-
-
-
+  public void enablePerformanceMode() {
+    view.setAntiAliasing(View.AntiAliasing.NONE);
+    View.RenderQuality quality = new View.RenderQuality();
+    quality.hdrColorBuffer = View.QualityLevel.LOW;
+    view.setRenderQuality(quality);
+  }
 
   /**
-   * Getter to help convert between filament and Environmental HDR.
-   *
-   * @hide This may be removed in the future
+   * 获取环境HDR参数
+   * 用于辅助 filament 和 环境 HDR之间的转换
+   * @hide 后续可能不在需要
    */
   public EnvironmentalHdrParameters getEnvironmentalHdrParameters() {
     return environmentalHdrParameters;
   }
 
   /**
-   * Setter to help convert between filament and Environmental HDR.
-   *
-   * @hide This may be removed in the future
+   * 设置环境HDR参数
+   * 用于辅助 filament 和 环境 HDR之间的转换
+   * @hide 后续可能不在需要
    */
   public void setEnvironmentalHdrParameters(EnvironmentalHdrParameters environmentalHdrParameters) {
     this.environmentalHdrParameters = environmentalHdrParameters;
@@ -552,19 +522,9 @@ public class Renderer implements EqUiHelper.RendererCallback {
     lightInstances.remove(instance);
   }
 
-  
   private void addModelInstanceInternal(RenderableInstance instance) {return ;}
 
-
-
-
-
-  
   private void removeModelInstanceInternal(RenderableInstance instance) {return ;}
-
-
-
-
 
   /** @hide */
   public void addInstance(RenderableInstance instance) {
@@ -598,7 +558,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     filamentHelper.setRenderCallback(this);
     //使用TextureView时，需要实现透明背景
     filamentHelper.setOpaque(false);
-    filamentHelper.setMediaOverlay(true);//TODO CHECK 影响SurfaceView
+//    filamentHelper.setMediaOverlay(true);//CHECK 影响SurfaceView
     filamentHelper.attachTo(surfaceView);
 
     IEngine engine = EngineInstance.getEngine();
@@ -614,7 +574,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     view.setCamera(camera);
     view.setScene(scene);
 
-    setDynamicResolutionEnabled(true);
+    setDynamicResolutionEnabled(DYNAMIC_RESOLUTION_ENABLED);
 
     emptyView.setCamera(engine.createCamera());
     emptyView.setScene(engine.createScene());
@@ -635,9 +595,8 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Returns the exposure setting for renderering.
-   *
-   * @hide This is support deeplight API which is not stable yet.
+   * 返回渲染的曝光设置。
+   * @hide 这是支持深度显示的API，目前还不稳定。
    */
   
   public float getExposure() {
@@ -667,15 +626,14 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   /**
-   * Releases rendering resources ready for garbage collection
-   *
-   * @return Count of resources currently in use
+   * 释放准备进行垃圾收集的渲染资源
+   * @return 资源计数
    */
   public static long reclaimReleasedResources() {
     return ResourceManager.getInstance().reclaimReleasedResources();
   }
 
-  /** Immediately releases all rendering resources, even if in use. */
+  /** 立即释放所有渲染资源，即使正在使用。 */
   public static void destroyAllResources() {
     ResourceManager.getInstance().destroyAllResources();
     EngineInstance.destroyEngine();
