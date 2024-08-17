@@ -10,8 +10,8 @@ import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Mathematical representation of a box. Used to perform intersection and collision tests against
- * oriented boxes.
+ * BOX对象
+ * <p>用于碰撞检测</p>
  */
 public class Box extends CollisionShape {
   private static final String TAG = Box.class.getSimpleName();
@@ -19,13 +19,12 @@ public class Box extends CollisionShape {
   private final Vector3 size = Vector3.one();
   private final Matrix rotationMatrix = new Matrix();
 
-  /** Create a box with a center of (0,0,0) and a size of (1,1,1). */
+  /** 构建一个默认的Box对象 */
   public Box() {}
 
   /**
-   * Create a box with a center of (0,0,0) and a specified size.
-   *
-   * @param size the size of the box.
+   * 构造函数
+   * @param size 尺寸
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Box(Vector3 size) {
@@ -33,10 +32,9 @@ public class Box extends CollisionShape {
   }
 
   /**
-   * Create a box with a specified center and size.
-   *
-   * @param size the size of the box
-   * @param center the center of the box
+   * 构造函数
+   * @param size 尺寸
+   * @param center 中心位置
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Box(Vector3 size, Vector3 center) {
@@ -48,10 +46,9 @@ public class Box extends CollisionShape {
   }
 
   /**
-   * Set the center of this box.
-   *
+   * 设置中心位置
    * @see #getCenter()
-   * @param center the new center of the box
+   * @param center Box对象的中心位置
    */
   public void setCenter(Vector3 center) {
     Preconditions.checkNotNull(center, "Parameter \"center\" was null.");
@@ -60,20 +57,19 @@ public class Box extends CollisionShape {
   }
 
   /**
-   * Get a copy of the box's center.
-   *
+   * 获取Box对象的中心位置
+   * <p>这里获取的是中心位置的克隆对象</p>
    * @see #setCenter(Vector3)
-   * @return a new vector that represents the box's center
+   * @return 中心位置
    */
   public Vector3 getCenter() {
     return new Vector3(center);
   }
 
   /**
-   * Set the size of this box.
-   *
+   * 设置尺寸
    * @see #getSize()
-   * @param size the new size of the box
+   * @param size 尺寸
    */
   public void setSize(Vector3 size) {
     Preconditions.checkNotNull(size, "Parameter \"size\" was null.");
@@ -82,29 +78,27 @@ public class Box extends CollisionShape {
   }
 
   /**
-   * Get a copy of the box's size.
-   *
+   * 获取Box对象的尺寸
+   *<p>这里获取的是尺寸的克隆对象</p>
    * @see #setSize(Vector3)
-   * @return a new vector that represents the box's size
+   * @return 尺寸
    */
   public Vector3 getSize() {
     return new Vector3(size);
   }
 
   /**
-   * Calculate the extents (half the size) of the box.
-   *
-   * @return a new vector that represents the box's extents
+   * 计算Box的范围
+   * @return Box的范围
    */
   public Vector3 getExtents() {
     return getSize().scaled(0.5f);
   }
 
   /**
-   * Set the rotation of this box.
-   *
+   * 设置旋转四元数
    * @see #getRotation()
-   * @param rotation the new rotation of the box
+   * @param rotation 四元数
    */
   public void setRotation(Quaternion rotation) {
     Preconditions.checkNotNull(rotation, "Parameter \"rotation\" was null.");
@@ -113,10 +107,9 @@ public class Box extends CollisionShape {
   }
 
   /**
-   * Get a copy of the box's rotation.
-   *
+   * 获取Box对象的旋转四元数
    * @see #setRotation(Quaternion)
-   * @return a new quaternion that represents the box's rotation
+   * @return 四元数
    */
   public Quaternion getRotation() {
     Quaternion result = new Quaternion();
@@ -130,10 +123,9 @@ public class Box extends CollisionShape {
   }
 
   /**
-   * Get the raw rotation matrix representing the box's orientation. Do not modify directly.
-   * Instead, use setRotation.
-   *
-   * @return a reference to the box's raw rotation matrix
+   * 获取原始旋转矩阵，表示盒子的方向。请勿直接修改。
+   * 相反，使用设置。
+   * @return 原始的旋转矩阵
    */
   Matrix getRawRotationMatrix() {
     return rotationMatrix;

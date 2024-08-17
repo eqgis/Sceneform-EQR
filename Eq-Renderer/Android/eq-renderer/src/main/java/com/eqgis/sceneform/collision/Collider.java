@@ -7,9 +7,8 @@ import com.eqgis.sceneform.common.TransformProvider;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Represents the collision information associated with a transformation that can be attached to the
- * collision system. Not publicly exposed.
- *
+ * 碰撞体组件
+ * <p>内部使用，用于碰撞检测</p>
  * @hide
  */
 public class Collider {

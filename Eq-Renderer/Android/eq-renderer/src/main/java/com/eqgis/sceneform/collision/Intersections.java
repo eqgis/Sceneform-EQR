@@ -10,13 +10,16 @@ import com.eqgis.sceneform.utilities.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Implementation of common intersection tests used for collision detection. */
+/**
+ * 相交判断工具类
+ * <p>实现碰撞检测的相交测试</p>
+ * */
 @Keep
 class Intersections {
   private static final int NUM_VERTICES_PER_BOX = 8;
   private static final int NUM_TEST_AXES = 15;
 
-  /** Determine if two spheres intersect with each other. */
+  /** 判断两个球体是否相交。*/
   static boolean sphereSphereIntersection(Sphere sphere1, Sphere sphere2) {
     Preconditions.checkNotNull(sphere1, "Parameter \"sphere1\" was null.");
     Preconditions.checkNotNull(sphere2, "Parameter \"sphere2\" was null.");
@@ -30,7 +33,7 @@ class Intersections {
         && differenceLengthSquared != 0.0f;
   }
 
-  /** Determine if two boxes intersect with each other. */
+  /** 判断两个Box对象是否相交 */
   static boolean boxBoxIntersection(Box box1, Box box2) {
     Preconditions.checkNotNull(box1, "Parameter \"box1\" was null.");
     Preconditions.checkNotNull(box2, "Parameter \"box2\" was null.");
@@ -66,7 +69,7 @@ class Intersections {
     return true;
   }
 
-  /** Determine if a sphere and a box intersect with each other. */
+  /** 判断BOX是否与球体相交*/
   static boolean sphereBoxIntersection(Sphere sphere, Box box) {
     Preconditions.checkNotNull(sphere, "Parameter \"sphere\" was null.");
     Preconditions.checkNotNull(box, "Parameter \"box\" was null.");
@@ -162,7 +165,7 @@ class Intersections {
     return min2 <= max1 && min1 <= max2;
   }
 
-  /** Converts a box into an array of 8 vertices that represent the corners of the box. */
+  /** 将一个框转换为一个由8个顶点组成的数组，这些顶点表示框的各个角。 */
   private static List<Vector3> getVerticesFromBox(Box box) {
     Preconditions.checkNotNull(box, "Parameter \"box\" was null.");
 

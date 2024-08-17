@@ -4,8 +4,8 @@ import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Stores the results of ray intersection tests against various types of CollisionShape.
- *
+ * 射线检测结果
+ * <p>存储针对各种类型的CollisionShape的光线相交测试的结果。</p>
  * @hide
  */
 public class RayHit {
@@ -18,9 +18,8 @@ public class RayHit {
   }
 
   /**
-   * Get the distance along the ray to the impact point on the surface of the collision shape.
-   *
-   * @return distance along the ray that the hit occurred at
+   * 得到沿射线到碰撞形状表面上的撞击点的距离。
+   * @return 距离
    */
   public float getDistance() {
     return distance;
@@ -33,9 +32,8 @@ public class RayHit {
   }
 
   /**
-   * Get the position in world-space where the ray hit the collision shape.
-   *
-   * @return a new vector that represents the position in world-space that the hit occurred at
+   * 获得射线在世界空间中撞击到碰撞形状的位置。
+   * @return 位置
    */
   public Vector3 getPoint() {
     return new Vector3(point);

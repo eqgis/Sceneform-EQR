@@ -3,15 +3,17 @@ package com.eqgis.sceneform.collision;
 import com.eqgis.sceneform.utilities.ChangeId;
 import com.eqgis.sceneform.common.TransformProvider;
 
-/** Base class for all types of shapes that collision checks can be performed against. */
+/**
+ * 碰撞体形状类
+ * <p>可以对其执行碰撞检查的所有形状类型的基类。</p>
+ * */
 public abstract class CollisionShape {
   private final ChangeId changeId = new ChangeId();
 
   public abstract CollisionShape makeCopy();
 
   /**
-   * Must be called by subclasses when the shape changes to inform listeners of the change.
-   *
+   * 必须在形状更改时由子类调用，以通知侦听器更改。
    * @hide
    */
   protected void onChanged() {

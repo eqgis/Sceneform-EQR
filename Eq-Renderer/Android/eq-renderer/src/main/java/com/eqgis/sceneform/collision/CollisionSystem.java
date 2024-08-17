@@ -11,14 +11,13 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Manages all of the colliders within a scene.
- *
+ * 碰撞系统
+ * <p>用于管理场景中的所有碰撞体组件</p>
  * @hide
  */
 public class CollisionSystem {
   private static final String TAG = CollisionSystem.class.getSimpleName();
 
-  // TODO: Store things in some spatial partition or another.
   private final ArrayList<Collider> colliders = new ArrayList<>();
 
   public void addCollider(Collider collider) {
@@ -31,6 +30,12 @@ public class CollisionSystem {
     colliders.remove(collider);
   }
 
+  /**
+   * 执行射线检测
+   * @param ray 射线
+   * @param resultHit 射线检测结果
+   * @return 碰撞体
+   */
   @Nullable
   public Collider raycast(Ray ray, RayHit resultHit) {
     Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
@@ -56,6 +61,9 @@ public class CollisionSystem {
     return result;
   }
 
+  /**
+   * 执行射线检测
+   */
   @SuppressWarnings("AndroidApiChecker")
   public <T extends RayHit> int raycastAll(
       Ray ray,
@@ -106,6 +114,11 @@ public class CollisionSystem {
     return hitCount;
   }
 
+  /**
+   * 对碰撞体进行相交判断
+   * @param collider 碰撞体
+   * @return 相交的碰撞体
+   */
   @Nullable
   public Collider intersects(Collider collider) {
     Preconditions.checkNotNull(collider, "Parameter \"collider\" was null.");
@@ -133,6 +146,11 @@ public class CollisionSystem {
     return null;
   }
 
+  /**
+   * 相交判断
+   * @param collider 碰撞体
+   * @param processResult  结果
+   */
   @SuppressWarnings("AndroidApiChecker")
   public void intersectsAll(Collider collider, Consumer<Collider> processResult) {
     Preconditions.checkNotNull(collider, "Parameter \"collider\" was null.");

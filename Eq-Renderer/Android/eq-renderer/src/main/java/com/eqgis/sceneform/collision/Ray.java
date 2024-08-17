@@ -3,20 +3,21 @@ package com.eqgis.sceneform.collision;
 import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.sceneform.utilities.Preconditions;
 
-/** Mathematical representation of a ray. Used to perform intersection and collision tests. */
+/**
+ * 射线
+ * <p>射线的数学表示，用于射线检测</p>
+ * */
 public class Ray {
   private Vector3 origin = new Vector3();
   private Vector3 direction = Vector3.forward();
 
-  /** Create a ray with an origin of (0,0,0) and a direction of Vector3.forward(). */
+  /** 构造函数 */
   public Ray() {}
 
   /**
-   * Create a ray with a specified origin and direction. The direction will automatically be
-   * normalized.
-   *
-   * @param origin the ray's origin
-   * @param direction the ray's direction
+   * 构造函数
+   * @param origin 射线起点
+   * @param direction 射线的方向
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Ray(Vector3 origin, Vector3 direction) {
@@ -28,9 +29,8 @@ public class Ray {
   }
 
   /**
-   * Set the origin of the ray in world coordinates.
-   *
-   * @param origin the new origin of the ray.
+   * 构造函数
+   * @param origin 射线起点
    */
   public void setOrigin(Vector3 origin) {
     Preconditions.checkNotNull(origin, "Parameter \"origin\" was null.");
@@ -38,18 +38,17 @@ public class Ray {
   }
 
   /**
-   * Get the origin of the ray.
-   *
-   * @return a new vector that represents the ray's origin
+   * 获取射线起点
+   * @return 起点位置
    */
   public Vector3 getOrigin() {
     return new Vector3(origin);
   }
 
   /**
-   * Set the direction of the ray. The direction will automatically be normalized.
-   *
-   * @param direction the new direction of the ray
+   * 设置射线的方向
+   * <p>参数会自动进行归一化处理</p>
+   * @param direction 射线的方向向量
    */
   public void setDirection(Vector3 direction) {
     Preconditions.checkNotNull(direction, "Parameter \"direction\" was null.");
@@ -58,19 +57,17 @@ public class Ray {
   }
 
   /**
-   * Get the direction of the ray.
-   *
-   * @return a new vector that represents the ray's direction
+   * 获取射线的方向向量
+   * @return 射线的方向向量
    */
   public Vector3 getDirection() {
     return new Vector3(direction);
   }
 
   /**
-   * Get a point at a distance along the ray.
-   *
-   * @param distance distance along the ray of the point
-   * @return a new vector that represents a point at a distance along the ray.
+   * 获取指定距离的空间位置
+   * @param distance 距离
+   * @return 空间位置
    */
   public Vector3 getPoint(float distance) {
     return Vector3.add(origin, direction.scaled(distance));

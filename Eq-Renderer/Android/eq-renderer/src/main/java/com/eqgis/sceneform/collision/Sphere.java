@@ -8,8 +8,8 @@ import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Mathematical representation of a sphere. Used to perform intersection and collision tests against
- * spheres.
+ * 球体对象
+ * <p>碰撞检测时用到的球体对象</p>
  */
 public class Sphere extends CollisionShape {
   private static final String TAG = Sphere.class.getSimpleName();
@@ -17,13 +17,12 @@ public class Sphere extends CollisionShape {
   private final Vector3 center = new Vector3();
   private float radius = 1.0f;
 
-  /** Create a sphere with a center of (0,0,0) and a radius of 1. */
+  /** 构造函数 */
   public Sphere() {}
 
   /**
-   * Create a sphere with a center of (0,0,0) and a specified radius.
-   *
-   * @param radius the radius of the sphere
+   * 构造函数
+   * @param radius 球体对象的半径
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Sphere(float radius) {
@@ -31,10 +30,9 @@ public class Sphere extends CollisionShape {
   }
 
   /**
-   * Create a sphere with a specified center and radius.
-   *
-   * @param radius the radius of the sphere
-   * @param center the center of the sphere
+   * 构造函数
+   * @param radius 球体对象的半径
+   * @param center 球体对象的中心位置
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Sphere(float radius, Vector3 center) {
@@ -45,10 +43,9 @@ public class Sphere extends CollisionShape {
   }
 
   /**
-   * Set the center of this sphere.
-   *
+   * 设置球体对象的中心位置.
    * @see #getCenter()
-   * @param center the new center of the sphere
+   * @param center 球体对象的中心位置
    */
   public void setCenter(Vector3 center) {
     Preconditions.checkNotNull(center, "Parameter \"center\" was null.");
@@ -57,20 +54,18 @@ public class Sphere extends CollisionShape {
   }
 
   /**
-   * Get a copy of the sphere's center.
-   *
+   * 获取球体对象的中心位置
    * @see #setCenter(Vector3)
-   * @return a new vector that represents the sphere's center
+   * @return 中心位置
    */
   public Vector3 getCenter() {
     return new Vector3(center);
   }
 
   /**
-   * Set the radius of the sphere.
-   *
+   * 设置球体对象的半径
    * @see #getRadius()
-   * @param radius the new radius of the sphere
+   * @param radius 球体半径
    */
   public void setRadius(float radius) {
     this.radius = radius;
@@ -78,10 +73,9 @@ public class Sphere extends CollisionShape {
   }
 
   /**
-   * Get the radius of the sphere.
-   *
+   * 获取球体对象的半径
    * @see #setRadius(float)
-   * @return the radius of the sphere
+   * @return 球体对象的半径
    */
   public float getRadius() {
     return radius;
