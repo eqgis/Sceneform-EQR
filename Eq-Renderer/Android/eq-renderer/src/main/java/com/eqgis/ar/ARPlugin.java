@@ -7,7 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 
-import com.google.ar.sceneform.ARPlatForm;
+import com.eqgis.sceneform.ARPlatForm;
 import com.huawei.hiar.AREnginesApk;
 
 /**

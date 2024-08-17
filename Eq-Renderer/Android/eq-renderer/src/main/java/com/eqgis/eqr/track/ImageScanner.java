@@ -5,13 +5,11 @@ import android.graphics.Bitmap;
 
 import com.eqgis.ar.ARFrame;
 import com.eqgis.eqr.layout.ARSceneLayout;
-import com.google.ar.sceneform.FrameTime;
-import com.google.ar.sceneform.Scene;
+import com.eqgis.sceneform.FrameTime;
+import com.eqgis.sceneform.Scene;
 import com.eqgis.ar.ARAugmentedImage;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * 图片扫描器

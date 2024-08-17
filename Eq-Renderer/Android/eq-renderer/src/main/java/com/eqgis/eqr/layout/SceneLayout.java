@@ -10,12 +10,12 @@ import android.widget.FrameLayout;
 import com.eqgis.eqr.core.Eqr;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.exception.NotSupportException;
-import com.google.ar.sceneform.Camera;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.Scene;
-import com.google.ar.sceneform.SceneView;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
+import com.eqgis.sceneform.Camera;
+import com.eqgis.sceneform.Node;
+import com.eqgis.sceneform.Scene;
+import com.eqgis.sceneform.SceneView;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
 
 import java.util.List;
 

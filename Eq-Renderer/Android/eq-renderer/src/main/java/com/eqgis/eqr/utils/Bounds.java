@@ -4,10 +4,10 @@ import android.graphics.Rect;
 import android.view.View;
 
 import com.eqgis.eqr.layout.SceneLayout;
-import com.google.ar.sceneform.AnchorNode;
-import com.google.ar.sceneform.math.Matrix;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.ViewRenderable;
+import com.eqgis.sceneform.AnchorNode;
+import com.eqgis.sceneform.math.Matrix;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.ViewRenderable;
 
 import java.util.ArrayList;
 import java.util.List;

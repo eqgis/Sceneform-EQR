@@ -5,10 +5,9 @@ import android.content.Context;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.view.VelocityTracker;
 
-import com.google.ar.sceneform.Camera;
-import com.google.ar.sceneform.Node;
+import com.eqgis.sceneform.Camera;
+import com.eqgis.sceneform.Node;
 
 /**
  * 节点手势控制器

@@ -1,10 +1,10 @@
 package com.eqgis.ar;
 
 
-import com.google.ar.sceneform.ARPlatForm;
+import com.eqgis.sceneform.ARPlatForm;
 import com.google.ar.core.Pose;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
 
 /**
  * AR位姿数据类
