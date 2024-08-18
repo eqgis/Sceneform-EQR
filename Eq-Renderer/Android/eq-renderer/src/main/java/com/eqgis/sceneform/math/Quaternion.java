@@ -16,7 +16,7 @@ public class Quaternion {
   public float z;
   public float w;
 
-  /** Construct Quaternion and set to Identity */
+  /** 构造函数 */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Quaternion() {
     x = 0;
@@ -26,14 +26,21 @@ public class Quaternion {
   }
 
   /**
-   * Construct Quaternion and set each value. The Quaternion will be normalized during construction
+   * 构造函数
+   * @param x x分量
+   * @param y y分量
+   * @param z z分量
+   * @param w w分量
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Quaternion(float x, float y, float z, float w) {
     set(x, y, z, w);
   }
 
-  /** Construct Quaternion using values from another Quaternion */
+  /**
+   * 构造函数
+   * @param q 四元数
+   * */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Quaternion(Quaternion q) {
     Preconditions.checkNotNull(q, "Parameter \"q\" was null.");
@@ -41,10 +48,9 @@ public class Quaternion {
   }
 
   /**
-   * Construct Quaternion using an axis/angle to define the rotation
-   *
-   * @param axis Sets rotation direction
-   * @param angle Angle size in degrees
+   * 构造函数
+   * @param axis 旋转轴
+   * @param angle 角度，单位：度
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Quaternion(Vector3 axis, float angle) {
@@ -53,10 +59,9 @@ public class Quaternion {
   }
 
   /**
-   * Construct Quaternion based on eulerAngles.
-   *
+   * 构造函数
    * @see #eulerAngles(Vector3 eulerAngles)
-   * @param eulerAngles - the angle in degrees for each axis.
+   * @param eulerAngles 欧拉角，包含每个XYZ三个旋转轴的旋转角度
    */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Quaternion(Vector3 eulerAngles) {
@@ -64,7 +69,9 @@ public class Quaternion {
     set(Quaternion.eulerAngles(eulerAngles));
   }
 
-  /** Copy values from another Quaternion into this one */
+  /**
+   * 更新四元数的值
+   * */
   public void set(Quaternion q) {
     Preconditions.checkNotNull(q, "Parameter \"q\" was null.");
     x = q.x;
@@ -74,13 +81,17 @@ public class Quaternion {
     normalize();
   }
 
-  /** Update this Quaternion using an axis/angle to define the rotation */
+  /**
+   * 通过旋转轴/角度更新四元数
+   * */
   public void set(Vector3 axis, float angle) {
     Preconditions.checkNotNull(axis, "Parameter \"axis\" was null.");
     set(Quaternion.axisAngle(axis, angle));
   }
 
-  /** Set each value and normalize the Quaternion */
+  /**
+   * 更新四元数
+   * */
   public void set(float qx, float qy, float qz, float qw) {
     x = qx;
     y = qy;
@@ -89,7 +100,9 @@ public class Quaternion {
     normalize();
   }
 
-  /** Set the Quaternion to identity */
+  /**
+   * 设置单位初始值
+   * */
   public void setIdentity() {
     x = 0;
     y = 0;
@@ -98,11 +111,9 @@ public class Quaternion {
   }
 
   /**
-   * Rescales the quaternion to the unit length.
-   *
-   * <p>If the Quaternion can not be scaled, it is set to identity and false is returned.
-   *
-   * @return true if the Quaternion was non-zero
+   * 归一化
+   * <p>将四元数各分量缩放成为单位长度，如果四元数不能缩放，则将其设置为identity并返回false。</p>
+   * @return 如果四元数非零，则为true
    */
   public boolean normalize() {
     float normSquared = Quaternion.dot(this, this);
@@ -122,9 +133,8 @@ public class Quaternion {
   }
 
   /**
-   * Get a Quaternion with a matching rotation but scaled to unit length.
-   *
-   * @return the quaternion scaled to the unit length, or zero if that can not be done.
+   * 获取归一化后的四元数
+   * @return 四元数缩放到单位长度，如果不能，则为零。
    */
   public Quaternion normalized() {
     Quaternion result = new Quaternion(this);
@@ -133,18 +143,17 @@ public class Quaternion {
   }
 
   /**
-   * Get a Quaternion with the opposite rotation
-   *
-   * @return the opposite rotation
+   * 获取一个反向旋转的四元数
+   * @return 相反的四元数
    */
   public Quaternion inverted() {
     return new Quaternion(-this.x, -this.y, -this.z, this.w);
   }
 
   /**
-   * Flips the sign of the Quaternion, but represents the same rotation.
-   *
-   * @return the negated Quaternion
+   * 翻转四元数的符号
+   * <p>注意：符号翻转，但表示相同的旋转。</p>
+   * @return 符号翻转后的四元数
    */
   Quaternion negated() {
     return new Quaternion(-this.x, -this.y, -this.z, -this.w);
@@ -156,9 +165,8 @@ public class Quaternion {
   }
 
   /**
-   * Rotates a Vector3 by a Quaternion
-   *
-   * @return The rotated vector
+   * 通过四元数旋转指定向量
+   * @return 旋转后的向量
    */
   public static Vector3 rotateVector(Quaternion q, Vector3 src) {
     Preconditions.checkNotNull(q, "Parameter \"q\" was null.");
@@ -192,6 +200,10 @@ public class Quaternion {
     return result;
   }
 
+  /**
+   * 通过四元数反向旋转指定向量
+   * @return 旋转后的向量
+   */
   public static Vector3 inverseRotateVector(Quaternion q, Vector3 src) {
     Preconditions.checkNotNull(q, "Parameter \"q\" was null.");
     Preconditions.checkNotNull(src, "Parameter \"src\" was null.");
@@ -226,10 +238,12 @@ public class Quaternion {
   }
 
   /**
-   * Create a Quaternion by combining two Quaternions multiply(lhs, rhs) is equivalent to performing
-   * the rhs rotation then lhs rotation Ordering is important for this operation.
-   *
-   * @return The combined rotation
+   * 四元数相乘
+   * <p>
+   * 创建一个四元数通过组合两个四元数相乘(lhs, rhs)相当于执行
+   * rhs旋转然后lhs旋转排序对于这个操作很重要。
+   * </p>
+   * @return 四元数
    */
   public static Quaternion multiply(Quaternion lhs, Quaternion rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -253,9 +267,9 @@ public class Quaternion {
   }
 
   /**
-   * Uniformly scales a Quaternion without normalizing
-   *
-   * @return a Quaternion multiplied by a scalar amount.
+   * 对四元数进行缩放
+   * <p>注意：这不是归一化操作，内部也未进行归一化</p>
+   * @return 一个四元数乘以一个标量得到的结果
    */
   Quaternion scaled(float a) {
     Quaternion result = new Quaternion();
@@ -268,9 +282,9 @@ public class Quaternion {
   }
 
   /**
-   * Adds two Quaternion's without normalizing
-   *
-   * @return The combined Quaternion
+   * 实现两个四元数相加
+   * <p>注意：这不是归一化操作，内部也未进行归一化</p>
+   * @return 四元数
    */
   static Quaternion add(Quaternion lhs, Quaternion rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -283,7 +297,7 @@ public class Quaternion {
     return result;
   }
 
-  /** The dot product of two Quaternions. */
+  /** 求两个四元数的点积 */
   static float dot(Quaternion lhs, Quaternion rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
     Preconditions.checkNotNull(rhs, "Parameter \"rhs\" was null.");
@@ -291,8 +305,7 @@ public class Quaternion {
   }
 
   /**
-   * Returns the linear interpolation between two given rotations by a ratio. The ratio is clamped
-   * between a range of 0 and 1.
+   * 根据比例在两个四元数之间进行线性插值
    */
   static Quaternion lerp(Quaternion a, Quaternion b, float ratio) {
     Preconditions.checkNotNull(a, "Parameter \"a\" was null.");
@@ -304,17 +317,15 @@ public class Quaternion {
         MathHelper.lerp(a.w, b.w, ratio));
   }
 
-  /*
-   * Returns the spherical linear interpolation between two given orientations.
-   *
-   * If t is 0 this returns a.
-   * As t approaches 1 {@link #slerp} may approach either b or -b (whichever is closest
-   * to a)
-   * If t is above 1 or below 0 the result will be extrapolated.
-   * @param a the beginning value
-   * @param b the ending value
-   * @param t the ratio between the two floats
-   * @return interpolated value between the two floats
+  /**
+   * 返回两个给定方向之间的球面线性插值。
+   * 如果t为0，则返回a。
+   * 当t接近1时可能接近b或-b(以最接近a的为准)
+   * 如果t大于1或小于0，结果将被外推。
+   * @param start 起始值
+   * @param end 结束值
+   * @param t 两个浮点数之间的比率
+   * @return 两个浮点数之间的插值值
    */
   public static Quaternion slerp(final Quaternion start, final Quaternion end, float t) {
     Preconditions.checkNotNull(start, "Parameter \"start\" was null.");
@@ -352,10 +363,9 @@ public class Quaternion {
   }
 
   /**
-   * Get a new Quaternion using an axis/angle to define the rotation
-   *
-   * @param axis Sets rotation direction
-   * @param degrees Angle size in degrees
+   * 使用轴/角度来定义旋转，获得一个新的四元数
+   * @param axis 旋转轴
+   * @param degrees 旋转角度，单位：度
    */
   public static Quaternion axisAngle(Vector3 axis, float degrees) {
     Preconditions.checkNotNull(axis, "Parameter \"axis\" was null.");
@@ -372,14 +382,12 @@ public class Quaternion {
   }
 
   /**
-   * Get a new Quaternion using eulerAngles to define the rotation.
-   *
-   * <p>The rotations are applied in Z, Y, X order. This is consistent with other graphics engines.
-   * One thing to note is the coordinate systems are different between Sceneform and Unity, so the
-   * same angles used here will have cause a different orientation than Unity. Carefully check your
-   * parameter values to get the same effect as in other engines.
-   *
-   * @param eulerAngles - the angles in degrees.
+   * 使用eulerAngles获得一个新的四元数来定义旋转。
+   * <pre>
+   *     旋转应用于Z, Y, X顺序。这与其他图形引擎是一致的。
+   *     注意：这里（OpengGL右手坐标系）和Unity（左手坐标系）的坐标系统是不同的
+   * </pre>
+   * @param eulerAngles - 欧拉角
    */
   public static Quaternion eulerAngles(Vector3 eulerAngles) {
     Preconditions.checkNotNull(eulerAngles, "Parameter \"eulerAngles\" was null.");
@@ -389,7 +397,7 @@ public class Quaternion {
     return Quaternion.multiply(Quaternion.multiply(qY, qX), qZ);
   }
 
-  /** Get a new Quaternion representing the rotation from one vector to another. */
+  /** 获取一个新的四元数，表示从一个向量到另一个向量的旋转。 */
   public static Quaternion rotationBetweenVectors(Vector3 start, Vector3 end) {
     Preconditions.checkNotNull(start, "Parameter \"start\" was null.");
     Preconditions.checkNotNull(end, "Parameter \"end\" was null.");
@@ -426,8 +434,8 @@ public class Quaternion {
   }
 
   /**
-   * Get a new Quaternion representing a rotation towards a specified forward direction. If
-   * upInWorld is orthogonal to forwardInWorld, then the Y axis is aligned with desiredUpInWorld.
+   * 获得一个新的四元数，表示向指定的向前方向(目标方向)旋转。
+   * 如果upInWorld与forwardInWorld正交，然后Y轴与desiredUpInWorld对齐。
    */
   public static Quaternion lookRotation(Vector3 forwardInWorld, Vector3 desiredUpInWorld) {
     Preconditions.checkNotNull(forwardInWorld, "Parameter \"forwardInWorld\" was null.");
@@ -449,10 +457,8 @@ public class Quaternion {
   }
 
   /**
-   * Compare two Quaternions
-   *
-   * <p>Tests for equality by calculating the dot product of lhs and rhs. lhs and -lhs will not be
-   * equal according to this function.
+   * 比较两个四元数
+   * <p>通过计算lhs和rhs的点积来检验是否相等</p>
    */
   public static boolean equals(Quaternion lhs, Quaternion rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -462,7 +468,7 @@ public class Quaternion {
   }
 
   /**
-   * Returns true if the other object is a Quaternion and the dot product is 1.0 +/- a tolerance.
+   * 如果另一个对象A是四元数并且点积是1.0 +/- A的公差，则返回true。
    */
   @Override
   @SuppressWarnings("override.param.invalid")
@@ -488,7 +494,7 @@ public class Quaternion {
     return result;
   }
 
-  /** Get a Quaternion set to identity */
+  /** 获取一个单位四元数*/
   public static Quaternion identity() {
     return new Quaternion();
   }
