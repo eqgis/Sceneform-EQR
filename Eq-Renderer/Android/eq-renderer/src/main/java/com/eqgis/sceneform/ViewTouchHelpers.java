@@ -10,12 +10,11 @@ import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.sceneform.rendering.ViewRenderable;
 import com.eqgis.sceneform.utilities.Preconditions;
 
-/** Helper class for utility functions for touching a view rendered in world space. */
+/** 用于触摸在世界空间中呈现的视图的实用函数的Helper类。 */
 
 class ViewTouchHelpers {
   /**
-   * Dispatches a touch event to a node's ViewRenderable if that node has a ViewRenderable by
-   * converting the touch event into the local coordinate space of the view.
+   * 通过将触摸事件转换为视图的本地坐标空间，将一个触摸事件分派给一个节点的ViewRenderable(如果该节点有一个ViewRenderable)。
    */
   static boolean dispatchTouchEventToView(Node node, MotionEvent motionEvent) {
     Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
@@ -47,19 +46,18 @@ class ViewTouchHelpers {
     MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[pointerCount];
 
     /*
-     * Cast a ray against a plane that extends to infinity located where the view is in 3D space
-     * instead of casting against the node's collision shape. This is important for the UX of touch
-     * events after the initial ACTION_DOWN event. i.e. If a user is dragging a slider and their
-     * finger moves beyond the view the position of their finger relative to the slider should still
-     * be respected.
+     * 投射光线到一个平面上，延伸到无限，位于视图在3D空间，而不是投射到节点的碰撞形状。
+     * 这对于初始ACTION_DOWN事件之后的触摸事件的用户体验非常重要。
+     * 例如，如果用户正在拖动滑动条，并且他们的手指移动到视图之外，
+     * 他们的手指相对于滑动条的位置仍然有效。
      */
     Plane plane = new Plane(node.getWorldPosition(), node.getForward());
     RayHit rayHit = new RayHit();
 
-    // Also cast a ray against a back-facing plane because we render the view as double-sided.
+    // 也投射光线到背面的平面上，因为我们渲染的视图是双面的。
     Plane backPlane = new Plane(node.getWorldPosition(), node.getBack());
 
-    // Convert the pointer coordinates for each pointer into the view's local coordinate space.
+    // 将每个指针的指针坐标转换为视图的本地坐标空间。
     for (int i = 0; i < pointerCount; i++) {
       MotionEvent.PointerProperties props = new MotionEvent.PointerProperties();
       MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
@@ -79,7 +77,7 @@ class ViewTouchHelpers {
         Vector3 viewPosition =
             convertWorldPositionToLocalView(node, rayHit.getPoint(), viewRenderable);
 
-        // Flip the x coordinate for the back-facing plane.
+        // 若为背面的平面，则X值翻转
         coords.x = viewRenderable.getView().getWidth() - viewPosition.x;
         coords.y = viewPosition.y;
       } else {
@@ -91,7 +89,7 @@ class ViewTouchHelpers {
       pointerCoords[i] = coords;
     }
 
-    // We must copy the touch event with the new coordinates and dispatch it to the view.
+    // 必须复制带有新坐标的触摸事件，并将它分派给视图。
     MotionEvent me =
         MotionEvent.obtain(
             motionEvent.getDownTime(),
@@ -118,21 +116,21 @@ class ViewTouchHelpers {
     Preconditions.checkNotNull(worldPos, "Parameter \"worldPos\" was null.");
     Preconditions.checkNotNull(viewRenderable, "Parameter \"viewRenderable\" was null.");
 
-    // Find where the view renderable is being touched in local space.
-    // this will be in meters relative to the bottom-middle of the view.
+    // 查找视图可渲染对象在局部空间中被触摸的位置。
+    // 这将以米为单位相对于视图的中下。
     Vector3 localPos = node.worldToLocalPoint(worldPos);
 
-    // Calculate the pixels to meters ratio.
+    // 计算像素与米的比率。
     View view = viewRenderable.getView();
     int width = view.getWidth();
     int height = view.getHeight();
     float pixelsToMetersRatio = getPixelsToMetersRatio(viewRenderable);
 
-    // We must convert the position to pixels
+    // 将位置转换为像素
     int xPixels = (int) (localPos.x * pixelsToMetersRatio);
     int yPixels = (int) (localPos.y * pixelsToMetersRatio);
 
-    // We must convert the coordinates from the renderable's alignment origin to top-left origin.
+    // 将坐标从可渲染对象的对齐原点转换为左上角原点。
 
     int halfWidth = width / 2;
     int halfHeight = height / 2;
