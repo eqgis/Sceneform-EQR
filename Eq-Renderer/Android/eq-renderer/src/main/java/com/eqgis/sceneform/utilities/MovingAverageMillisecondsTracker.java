@@ -4,9 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 /**
- * Used to track a {@link MovingAverage} that represents the number of milliseconds that elapse
- * within the execution of a block of code.
- *
+ * 用于跟踪{@link MovingAverage}，它表示经过的毫秒数在一个代码块的执行过程中。
  * @hide
  */
 public class MovingAverageMillisecondsTracker {

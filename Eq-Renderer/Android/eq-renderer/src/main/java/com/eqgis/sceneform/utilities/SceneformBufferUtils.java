@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
 
 /**
- * A simple class to read InputStreams Once the data is read it can be accessed as a ByteBuffer.
+ * Sceneform的Buffer工具类
  *
  * @hide
  */

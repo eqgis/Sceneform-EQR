@@ -3,19 +3,15 @@ package com.eqgis.sceneform.utilities;
 import androidx.annotation.Nullable;
 
 /**
- * Static convenience methods that help a method or constructor check whether it was invoked
- * correctly.
- *
+ * 条件检查工具类
  * @hide
  */
-// See /third_party/java_src/google_common/java7/java/com/google/common/base/Preconditions.java
-// We have written our own version to avoid adding a dependency on a large library.
+// 参考谷歌：/third_party/java_src/google_common/java7/java/com/google/common/base/Preconditions.java
 public class Preconditions {
   /**
-   * Ensures that an object reference passed as a parameter to the calling method is not null.
-   *
-   * @param reference an object reference
-   * @throws NullPointerException if {@code reference} is null
+   * 非空检查
+   * @param reference 被检查的对象
+   * @throws NullPointerException 若为Null，则抛出异常
    */
   public static <T> T checkNotNull(@Nullable T reference) {
     if (reference == null) {
@@ -26,12 +22,10 @@ public class Preconditions {
   }
 
   /**
-   * Ensures that an object reference passed as a parameter to the calling method is not null.
-   *
-   * @param reference an object reference
-   * @param errorMessage the exception message to use if the check fails; will be converted to a
-   *     string using {@link String#valueOf(Object)}
-   * @throws NullPointerException if {@code reference} is null
+   * 非空检查
+   * @param reference 被检查的对象
+   * @param errorMessage 错误信息
+   * @throws NullPointerException 若为Null，则抛出异常
    */
   public static <T> T checkNotNull(@Nullable T reference, Object errorMessage) {
     if (reference == null) {
@@ -42,27 +36,23 @@ public class Preconditions {
   }
 
   /**
-   * Ensures that {@code index} specifies a valid <i>element</i> in an array, list or string of size
-   * {@code size}. An element index may range from zero, inclusive, to {@code size}, exclusive.
-   *
-   * @param index a user-supplied index identifying an element of an array, list or string
-   * @param size the size of that array, list or string
-   * @throws IndexOutOfBoundsException if {@code index} is negative or is not less than {@code size}
-   * @throws IllegalArgumentException if {@code size} is negative
+   * 索引越界判断
+   * @param index 索引
+   * @param size 字符串长度、数组长度、集合大小
+   * @throws IndexOutOfBoundsException 索引越界抛出异常
+   * @throws IllegalArgumentException size为负时抛出异常
    */
   public static void checkElementIndex(int index, int size) {
     checkElementIndex(index, size, "index");
   }
 
   /**
-   * Ensures that {@code index} specifies a valid <i>element</i> in an array, list or string of size
-   * {@code size}. An element index may range from zero, inclusive, to {@code size}, exclusive.
-   *
-   * @param index a user-supplied index identifying an element of an array, list or string
-   * @param size the size of that array, list or string
-   * @param desc the text to use to describe this index in an error message
-   * @throws IndexOutOfBoundsException if {@code index} is negative or is not less than {@code size}
-   * @throws IllegalArgumentException if {@code size} is negative
+   * 索引越界判断
+   * @param index 索引
+   * @param size 字符串长度、数组长度、集合大小
+   * @param desc 描述错误信息的文本
+   * @throws IndexOutOfBoundsException 索引越界抛出异常
+   * @throws IllegalArgumentException size为负时抛出异常
    */
   public static void checkElementIndex(int index, int size, String desc) {
     // Carefully optimized for execution by hotspot (explanatory comment above)
@@ -72,11 +62,9 @@ public class Preconditions {
   }
 
   /**
-   * Ensures the truth of an expression involving the state of the calling instance, but not
-   * involving any parameters to the calling method.
-   *
-   * @param expression a boolean expression
-   * @throws IllegalStateException if {@code expression} is false
+   * 表达式判断
+   * @param expression 表达式的返回值
+   * @throws IllegalStateException 若表达式的返回值为false，则抛出异常
    */
   public static void checkState(boolean expression) {
     if (!expression) {
@@ -85,13 +73,10 @@ public class Preconditions {
   }
 
   /**
-   * Ensures the truth of an expression involving the state of the calling instance, but not
-   * involving any parameters to the calling method.
-   *
-   * @param expression a boolean expression
-   * @param errorMessage the exception message to use if the check fails; will be converted to a
-   *     string using {@link String#valueOf(Object)}
-   * @throws IllegalStateException if {@code expression} is false
+   * 表达式判断
+   * @param expression 表达式的返回值
+   * @param errorMessage 错误信息
+   * @throws IllegalStateException 若表达式的返回值为false，则抛出异常
    */
   public static void checkState(boolean expression, @Nullable Object errorMessage) {
     if (!expression) {
@@ -110,15 +95,7 @@ public class Preconditions {
   }
 
   /**
-   * Substitutes each {@code %s} in {@code template} with an argument. These are matched by
-   * position: the first {@code %s} gets {@code args[0]}, etc. If there are more arguments than
-   * placeholders, the unmatched arguments will be appended to the end of the formatted message in
-   * square braces.
-   *
-   * @param template a string containing 0 or more {@code %s} placeholders. null is treated as
-   *     "null".
-   * @param args the arguments to be substituted into the message template. Arguments are converted
-   *     to strings using {@link String#valueOf(Object)}. Arguments can be null.
+   * 格式转换
    */
   // Note that this is somewhat-improperly used from Verify.java as well.
   private static String format(String template, Object... args) {

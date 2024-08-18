@@ -1,8 +1,10 @@
 package com.eqgis.sceneform.utilities;
 
 /**
- * Calculates an exponentially weighted moving average for a series of data.
- *
+ * 计算一系列数据的指数加权移动平均线。
+ * <p>
+ *     移动平均：一种通过使用过去若干时间段的平均值计算得出的平均值。移动平均值会定期变化，最早的数值会被基于最新数据的数值所替代。
+ * </p>
  * @hide
  */
 public class MovingAverage {
@@ -12,41 +14,37 @@ public class MovingAverage {
   public static final double DEFAULT_WEIGHT = 0.9f;
 
   /**
-   * Construct an object to track the exponentially weighted moving average for a series of data.
-   * The weight is set to a default of 0.9, which is good for data with lots of samples when the
-   * average should be resistant to spikes (i.e. frame rate).
+   * 构造函数
+   * <p>权重是0和1之间的比率，表示前一个平均值的多少
+   * *与新样品作比较。如果权重为0.9，则保留之前平均值的90%
+   * *新样品的10%加到平均值中。
    *
-   * <p>The weight is a ratio between 0 and 1 that represents how much of the previous average is
-   * kept compared to the new sample. With a weight of 0.9, 90% of the previous average is kept and
-   * 10% of the new sample is added to the average.
-   *
-   * @param initialSample the first sample in the average
+   * @param initialSample 第一个样本的平均值
    */
   public MovingAverage(double initialSample) {
     this(initialSample, DEFAULT_WEIGHT);
   }
 
   /**
-   * Construct an object to track the exponentially weighted moving average for a series of data.
+   * 构造函数
+   * <p>权重是0和1之间的比率，表示前一个平均值的多少
+   * *与新样品作比较。如果权重为0.9，则保留之前平均值的90%
+   * *新样品的10%加到平均值中。
    *
-   * <p>The weight is a ratio between 0 and 1 that represents how much of the previous average is
-   * kept compared to the new sample. With a weight of 0.9, 90% of the previous average is kept and
-   * 10% of the new sample is added to the average.
-   *
-   * @param initialSample the first sample in the average
-   * @param weight the weight to used when adding samples
+   * @param initialSample 第一个样本的平均值
+   * @param weight 添加样品时使用的权重
    */
   public MovingAverage(double initialSample, double weight) {
     average = initialSample;
     this.weight = weight;
   }
 
-  /** Add a sample and calculate a new average. */
+  /** 添加一个样本并计算一个新的平均值。 */
   public void addSample(double sample) {
     average = weight * average + (1.0 - weight) * sample;
   }
 
-  /** Returns the current average for all samples. */
+  /** 返回所有样本的当前平均值。 */
   public double getAverage() {
     return average;
   }

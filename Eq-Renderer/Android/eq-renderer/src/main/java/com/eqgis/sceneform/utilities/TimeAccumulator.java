@@ -1,6 +1,11 @@
 package com.eqgis.sceneform.utilities;
 
-/** Sums time samples together. Used for tracking the time elapsed of a set of code blocks. */
+/**
+ * 时间累加器
+ * <p>
+ *     将时间样本相加。用于跟踪一组代码块的运行时间。
+ * </p>
+ * */
 public class TimeAccumulator {
   private long elapsedTimeMs;
   private long startSampleTimeMs;
