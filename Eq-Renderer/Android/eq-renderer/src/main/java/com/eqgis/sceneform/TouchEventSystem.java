@@ -11,24 +11,20 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 /**
- * Manages propagation of touch events to node's within a scene.
+ * 触摸事件系统
+ * <p>管理场景中的触摸事件</p>
  *
- * <p>The way that touch events are propagated mirrors the way touches are propagated to Android
- * Views.
+ * <p>触摸事件传播的方式反映了触摸传播到Android视图的方式。
  *
- * <p>When an ACTION_DOWN event occurs, that represents that start of a gesture. ACTION_UP or
- * ACTION_CANCEL represents when a gesture ends. When a gesture starts, the following is done:
+ * <p>当ACTION_DOWN事件发生时，它代表一个手势的开始。ACTION_UP或ACTION_CANCEL表示一个手势何时结束。
+ * 当一个手势开始时，完成以下操作:
  *
  * <ul>
- *   <li>Call {@link Node#dispatchTouchEvent(HitTestResult, MotionEvent)} on the node that was
- *       touched as detected by scene.hitTest.
- *   <li>If {@link Node#dispatchTouchEvent(HitTestResult, MotionEvent)} returns false, recurse
- *       upwards through the node's parents and call {@link Node#dispatchTouchEvent(HitTestResult,
- *       MotionEvent)} until one of the node's returns true.
- *   <li>If every node returns false, the gesture is ignored and subsequent events that are part of
- *       the gesture will not be passed to any nodes.
- *   <li>If one of the node's returns true, then that node will receive all future touch events for
- *       the gesture.
+ *   <li>在被scene.hitTest检测到时，调用 {@link Node#dispatchTouchEvent(HitTestResult, MotionEvent)}
+ *   <li>如果 {@link Node#dispatchTouchEvent(HitTestResult, MotionEvent)} 返回 false, 递归向上通过
+ *   节点的父节点并调用{@link Node#dispatchTouchEvent(HitTestResult, MotionEvent)} 直到返回 true。
+ *   <li>如果每个节点都返回false，则忽略手势和后续事件手势不会传递给任何节点。
+ *   <li>如果其中一个节点返回true，那么该节点将接收该手势的所有未来触摸事件。
  * </ul>
  *
  * @hide
@@ -38,35 +34,34 @@ public class TouchEventSystem {
   private final Object[] motionEventSplitParams = new Object[1];
 
   /**
-   * Keeps track of which nodes are handling events for which pointer Id's. Implemented as a linked
-   * list to store an ordered list of touch targets.
+   * 跟踪哪些节点正在处理哪些指针Id的事件。作为一个链表实现，用于存储触摸目标的有序列表。
    */
   private static class TouchTarget {
     public static final int ALL_POINTER_IDS = -1; // all ones
 
-    // The touch target.
+    // 触摸的目标
     public Node node;
 
-    // The combined bit mask of pointer ids for all pointers captured by the target.
+    // 目标捕获的所有指针的指针id的组合位掩码。
     public int pointerIdBits;
 
-    // The next target in the target list.
+    // 目标列表的下一个目标
     @Nullable public TouchTarget next;
   }
 
   @Nullable private Scene.OnTouchListener onTouchListener;
   private final ArrayList<Scene.OnPeekTouchListener> onPeekTouchListeners = new ArrayList<>();
 
-  // The touch listener that is handling the current gesture.
+  // 处理当前手势的触摸监听器。
   @Nullable private Scene.OnTouchListener handlingTouchListener = null;
 
-  // Linked list of nodes that are currently handling touches for a set of pointers.
+  // 当前正在处理一组指针的触摸的节点的链表。
   @Nullable private TouchTarget firstHandlingTouchTarget = null;
 
   public TouchEventSystem() {}
 
   /**
-   * Get the currently registered callback for touch events.
+   * 获取当前为触摸事件注册的回调。
    *
    * @see #setOnTouchListener(Scene.OnTouchListener)
    * @return the attached touch listener
@@ -77,10 +72,9 @@ public class TouchEventSystem {
   }
 
   /**
-   * Register a callback to be invoked when the scene is touched. The callback is invoked before any
-   * node receives the event. If the callback handles the event, then the gesture is never received
-   * by the nodes.
-   *
+   * 注册一个在场景被触摸时调用的回调函数。
+   * 在任何节点接收到事件之前调用回调。
+   * 如果回调处理事件，则节点永远不会接收到手势。
    * @param onTouchListener the touch listener to attach
    */
   public void setOnTouchListener(@Nullable Scene.OnTouchListener onTouchListener) {
@@ -88,12 +82,12 @@ public class TouchEventSystem {
   }
 
   /**
-   * Adds a listener that will be called before the {@link Scene.OnTouchListener} is invoked. This
-   * is invoked even if the gesture was consumed, making it possible to observe all motion events
-   * dispatched to the scene. This is called even if the touch is not over a node, in which case
-   * {@link HitTestResult#getNode()} will be null. The listeners will be called in the order in
-   * which they were added.
-   *
+   * 添加监视器监听事件
+   * 将在{@link Scene.OnTouchListener}被调用。
+   * 即使手势被消耗，也会调用该方法，从而可以观察分派到场景的所有动作事件。
+   * 即使触摸不在节点上，也会调用该方法，
+   * 在这种情况下{@link HitTestResult#getNode()}将为空。
+   * 侦听器将按照它们被添加的顺序调用。
    * @param onPeekTouchListener the peek touch listener to add
    */
   public void addOnPeekTouchListener(Scene.OnPeekTouchListener onPeekTouchListener) {
@@ -103,10 +97,7 @@ public class TouchEventSystem {
   }
 
   /**
-   * Removes a listener that will be called before the {@link Scene.OnTouchListener} is invoked.
-   * This is invoked even if the gesture was consumed, making it possible to observe all motion
-   * events dispatched to the scene. This is called even if the touch is not over a node, in which
-   * case {@link HitTestResult#getNode()} will be null.
+   * 移除监视器事件
    *
    * @param onPeekTouchListener the peek touch listener to remove
    */
@@ -120,18 +111,17 @@ public class TouchEventSystem {
 
     int actionMasked = motionEvent.getActionMasked();
 
-    // This is a brand new gesture, so clear everything.
+    // down的话，清理所有
     if (actionMasked == MotionEvent.ACTION_DOWN) {
       clearTouchTargets();
     }
 
-    // Dispatch touch event to the peek touch listener, which reveives all events even if the
-    // gesture is being consumed.
+    // 将触摸事件分派给peek触摸监听器，它将接收所有事件，即使手势正在被使用。
     for (Scene.OnPeekTouchListener onPeekTouchListener : onPeekTouchListeners) {
       onPeekTouchListener.onPeekTouch(hitTestResult, motionEvent);
     }
 
-    // If the touch listener is already handling the gesture, always dispatch to it.
+    // 如果触摸监听器已经在处理手势，总是分派给它。
     if (handlingTouchListener != null) {
       tryDispatchToSceneTouchListener(hitTestResult, motionEvent);
     } else {
@@ -141,21 +131,21 @@ public class TouchEventSystem {
       boolean alreadyDispatchedToAnyTarget = false;
       Node hitNode = hitTestResult.getNode();
 
-      // New pointer has touched the scene.
-      // Find the appropriate touch target for this pointer.
+      // 场景中有新pointer被触摸
+      // 为这个pointer找到合适的触摸目标。
       if ((actionMasked == MotionEvent.ACTION_DOWN
           || (actionMasked == MotionEvent.ACTION_POINTER_DOWN))) {
         int actionIndex = motionEvent.getActionIndex();
         int idBitsToAssign = 1 << motionEvent.getPointerId(actionIndex);
 
-        // Clean up earlier touch targets for this pointer id in case they have become out of sync.
+        // 清除此指针Pointer id的早期触摸目标，以防它们变得不同步。
         removePointersFromTouchTargets(idBitsToAssign);
 
-        // See if this event occurred on a node that is already a touch target.
+        // 查看此事件是否发生在已经是触摸目标的节点上。
         if (hitNode != null) {
           newTouchTarget = getTouchTargetForNode(hitNode);
           if (newTouchTarget != null) {
-            // Give the existing touch target the new pointer in addition to the one it is handling.
+            // 给现有的触摸目标一个新的pointer，除了它正在处理的那个。
             newTouchTarget.pointerIdBits |= idBitsToAssign;
           } else {
             Node handlingNode =
@@ -169,8 +159,8 @@ public class TouchEventSystem {
         }
 
         if (newTouchTarget == null && firstHandlingTouchTarget != null) {
-          // did not find an existing target to receive the event.
-          // Assign the pointer to the least recently added target.
+          // 没有找到接收事件的现有目标。
+          // 将指针分配给最近最少添加的目标。
           newTouchTarget = firstHandlingTouchTarget;
           while (newTouchTarget.next != null) {
             newTouchTarget = newTouchTarget.next;
@@ -179,7 +169,7 @@ public class TouchEventSystem {
         }
       }
 
-      // Dispatch event to touch targets.
+      // 分发事件给触摸目标
       if (firstHandlingTouchTarget != null) {
         TouchTarget target = firstHandlingTouchTarget;
         while (target != null) {
@@ -206,11 +196,11 @@ public class TouchEventSystem {
 
   private boolean tryDispatchToSceneTouchListener(
       HitTestResult hitTestResult, MotionEvent motionEvent) {
-    // This is a new gesture, give the touch listener a chance to capture the input.
+    //down时，给触摸监听器一个捕获时机。
     if (motionEvent.getActionMasked() == MotionEvent.ACTION_DOWN) {
-      // If the listener handles the gesture, then the event is never propagated to the nodes.
+      // 如果侦听器处理手势，则事件永远不会传播到节点。
       if (onTouchListener != null && onTouchListener.onSceneTouch(hitTestResult, motionEvent)) {
-        // The touch listener is handling the gesture, return early.
+        // 触摸监听器正在处理手势，提前返回。
         handlingTouchListener = onTouchListener;
         return true;
       }
@@ -235,8 +225,7 @@ public class TouchEventSystem {
     try {
       motionEventSplitParams[0] = idBits;
       Object result = motionEventSplitMethod.invoke(motionEvent, motionEventSplitParams);
-      // MotionEvent.split is guaranteed to return a NonNull result, but the null check is required
-      // for static analysis.
+      // MotionEvent——split保证返回NonNull结果，但是需要null检查
       if (result != null) {
         return (MotionEvent) result;
       } else {
@@ -286,18 +275,17 @@ public class TouchEventSystem {
       Node node,
       int desiredPointerIdBits,
       boolean bubble) {
-    // Calculate the number of pointers to deliver.
+    // 计算要传递的指针的数量。
     int eventPointerIdBits = getPointerIdBits(motionEvent);
     int finalPointerIdBits = eventPointerIdBits & desiredPointerIdBits;
 
-    // If for some reason we ended up in an inconsistent state where it looks like we
-    // might produce a motion event with no pointers in it, then drop the event.
+    // 如果由于某种原因，我们最终处于不一致的状态，
+    // 看起来我们可能会产生一个没有指针的运动事件，然后删除该事件。
     if (finalPointerIdBits == 0) {
       return null;
     }
 
-    // Split the motion event if necessary based on the pointer Ids included in the event
-    // compared to the pointer Ids that the node is handling.
+    // 如果需要，根据事件中包含的指针id与节点正在处理的指针id进行比较，拆分运动事件。
     MotionEvent finalEvent = motionEvent;
     boolean needsRecycle = false;
     if (finalPointerIdBits != eventPointerIdBits) {
@@ -305,7 +293,7 @@ public class TouchEventSystem {
       needsRecycle = true;
     }
 
-    // Bubble the event up the hierarchy until a node handles the event, or the root is reached.
+    // 将事件沿层次结构向上冒泡，直到节点处理该事件，或者到达根节点。
     Node resultNode = node;
     while (resultNode != null) {
       if (resultNode.dispatchTouchEvent(hitTestResult, finalEvent)) {
