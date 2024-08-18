@@ -365,14 +365,13 @@ public class Matrix {
   }
 
   /**
-   * Transforms a direction by ignoring any translation.
+   * 方向变换
    *
-   * <p>If the matrix is uniformly (positively) scaled, then the resulting direction will be correct
-   * but scaled by the same factor. If a unit direction is required then the result should be
-   * normalized.
+   * <p>如果矩阵是均匀(正)缩放的，那么结果方向将是正确的
+   * 但按相同的因子进行缩放。如果需要单位方向，那么结果应该归一化处理。
    *
-   * <p>If the scale is non-uniform or negative then the result vector will be distorted. In this
-   * case the matrix used should be the inverse transpose of the incoming matrix.
+   * <p>如果尺度不均匀或为负，则结果向量将被扭曲。
+   * 在这个的情况下，所使用的矩阵应该是输入矩阵的逆转置。
    */
   public Vector3 transformDirection(Vector3 vector) {
     Preconditions.checkNotNull(vector, "Parameter \"vector\" was null.");

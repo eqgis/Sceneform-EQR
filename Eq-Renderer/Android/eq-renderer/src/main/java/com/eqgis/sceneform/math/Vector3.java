@@ -9,20 +9,20 @@ import com.eqgis.sceneform.utilities.Preconditions;
  *     2. 用于表示向量(方向向量、法向量等)
  * </pre>
  * */
-// TODO: Evaluate consolidating internal math. Additional bugs: b/69935335
+//Additional bugs: b/69935335
 public class Vector3 {
   public float x;
   public float y;
   public float z;
 
-  /** Construct a Vector3 and assign zero to all values */
+  /** 构造函数 */
   public Vector3() {
     x = 0;
     y = 0;
     z = 0;
   }
 
-  /** Construct a Vector3 and assign each value */
+  /** 构造函数 */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Vector3(float x, float y, float z) {
     this.x = x;
@@ -30,14 +30,14 @@ public class Vector3 {
     this.z = z;
   }
 
-  /** Construct a Vector3 and copy the values */
+  /** 构造函数 */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Vector3(Vector3 v) {
     Preconditions.checkNotNull(v, "Parameter \"v\" was null.");
     set(v);
   }
 
-  /** Copy the values from another Vector3 to this Vector3 */
+  /** 更新值 */
   public void set(Vector3 v) {
     Preconditions.checkNotNull(v, "Parameter \"v\" was null.");
     x = v.x;
@@ -45,57 +45,83 @@ public class Vector3 {
     z = v.z;
   }
 
-  /** Set each value */
+  /** 更新值 */
   public void set(float vx, float vy, float vz) {
     x = vx;
     y = vy;
     z = vz;
   }
 
-  /** Set each value to zero */
+  /** 更新值为0 */
   void setZero() {
     set(0, 0, 0);
   }
 
-  /** Set each value to one */
+  /** 更新各分量为1 */
   void setOne() {
     set(1, 1, 1);
   }
 
-  /** Forward into the screen is the negative Z direction */
+  /**
+   * 设置向前的方向向量
+   * <p>注意：这跟坐标系有关</p>
+   * */
   void setForward() {
     set(0, 0, -1);
   }
 
-  /** Back out of the screen is the positive Z direction */
+  /**
+   * 设置向后的方向向量
+   * <p>注意：这跟坐标系有关</p>
+   * */
   void setBack() {
     set(0, 0, 1);
   }
 
-  /** Up is the positive Y direction */
+  /**
+   * 设置向上的方向向量
+   * <p>注意：这跟坐标系有关</p>
+   * */
   void setUp() {
     set(0, 1, 0);
   }
 
-  /** Down is the negative Y direction */
+  /**
+   * 设置向下的方向向量
+   * <p>注意：这跟坐标系有关</p>
+   * */
   void setDown() {
     set(0, -1, 0);
   }
 
-  /** Right is the positive X direction */
+  /**
+   * 设置向右的方向向量
+   * <p>注意：这跟坐标系有关</p>
+   *  */
   void setRight() {
     set(1, 0, 0);
   }
 
-  /** Left is the negative X direction */
+  /**
+   * 设置向左的方向向量
+   * <p>注意：这跟坐标系有关</p>
+   * */
   void setLeft() {
     set(-1, 0, 0);
   }
 
+  /**
+   * 获取长度的平方
+   * @return 值
+   */
   public float lengthSquared() {
     return x * x + y * y + z * z;
   }
 
+  /**
+   * 获取长度
+   * @return 值
+   */
   public float length() {
     return (float) Math.sqrt(lengthSquared());
   }
@@ -105,7 +131,9 @@ public class Vector3 {
     return "[x=" + x + ", y=" + y + ", z=" + z + "]";
   }
 
-  /** Scales the Vector3 to the unit length */
+  /**
+   * 归一化
+   * */
   public Vector3 normalized() {
     Vector3 result = new Vector3(this);
     float normSquared = Vector3.dot(this, this);
@@ -120,27 +148,24 @@ public class Vector3 {
   }
 
   /**
-   * Uniformly scales a Vector3
-   *
-   * @return a Vector3 multiplied by a scalar amount
+   * 缩放
+   * @return 缩放后的矢量
    */
   public Vector3 scaled(float a) {
     return new Vector3(x * a, y * a, z * a);
   }
 
   /**
-   * Negates a Vector3
-   *
-   * @return A Vector3 with opposite direction
+   * 取反
+   * @return 相反的矢量
    */
   public Vector3 negated() {
     return new Vector3(-x, -y, -z);
   }
 
   /**
-   * Adds two Vector3's
-   *
-   * @return The combined Vector3
+   * 相加
+   * @return 相加后的矢量
    */
   public static Vector3 add(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -149,9 +174,9 @@ public class Vector3 {
   }
 
   /**
-   * Subtract two Vector3
-   *
-   * @return The combined Vector3
+   * 相减
+   * <p>lhs - rhs</p>
+   * @return 相减后的矢量
    */
   public static Vector3 subtract(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -160,9 +185,8 @@ public class Vector3 {
   }
 
   /**
-   * Get dot product of two Vector3's
-   *
-   * @return The scalar product of the Vector3's
+   * 点乘
+   * @return 点积
    */
   public static float dot(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -171,9 +195,8 @@ public class Vector3 {
   }
 
   /**
-   * Get cross product of two Vector3's
-   *
-   * @return A Vector3 perpendicular to Vector3's
+   * 叉乘
+   * @return 垂直于两个矢量的矢量
    */
   public static Vector3 cross(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
@@ -188,39 +211,38 @@ public class Vector3 {
         lhsY * rhsZ - lhsZ * rhsY, lhsZ * rhsX - lhsX * rhsZ, lhsX * rhsY - lhsY * rhsX);
   }
 
-  /** Get a Vector3 with each value set to the element wise minimum of two Vector3's values */
+  /** 获取一个Vector3，每个值设置为两个Vector3值的元素最小值 */
   public static Vector3 min(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
     Preconditions.checkNotNull(rhs, "Parameter \"rhs\" was null.");
     return new Vector3(Math.min(lhs.x, rhs.x), Math.min(lhs.y, rhs.y), Math.min(lhs.z, rhs.z));
   }
 
-  /** Get a Vector3 with each value set to the element wise maximum of two Vector3's values */
+  /** 获取一个Vector3，每个值设置为两个Vector3值的元素最大值 */
   public static Vector3 max(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
     Preconditions.checkNotNull(rhs, "Parameter \"rhs\" was null.");
     return new Vector3(Math.max(lhs.x, rhs.x), Math.max(lhs.y, rhs.y), Math.max(lhs.z, rhs.z));
   }
 
-  /** Get the maximum value in a single Vector3 */
+  /** 获取XYZ分量中的最大值 */
   static float componentMax(Vector3 a) {
     Preconditions.checkNotNull(a, "Parameter \"a\" was null.");
     return Math.max(Math.max(a.x, a.y), a.z);
   }
 
-  /** Get the minimum value in a single Vector3 */
+  /** 获取XYZ分量重的最小值 */
   static float componentMin(Vector3 a) {
     Preconditions.checkNotNull(a, "Parameter \"a\" was null.");
     return Math.min(Math.min(a.x, a.y), a.z);
   }
 
   /**
-   * Linearly interpolates between a and b.
-   *
-   * @param a the beginning value
-   * @param b the ending value
-   * @param t ratio between the two floats.
-   * @return interpolated value between the two floats
+   * 线性插值
+   * @param a 开始值
+   * @param b 结束值
+   * @param t 比例
+   * @return 插值结果
    */
   public static Vector3 lerp(Vector3 a, Vector3 b, float t) {
     Preconditions.checkNotNull(a, "Parameter \"a\" was null.");
@@ -230,8 +252,8 @@ public class Vector3 {
   }
 
   /**
-   * Returns the shortest angle in degrees between two vectors. The result is never greater than 180
-   * degrees.
+   * 返回两个向量之间的最短角度(以度为单位)
+   * <p>注意：结果永远不会大于180度</p>
    */
   public static float angleBetweenVectors(Vector3 a, Vector3 b) {
     float lengthA = a.length();
@@ -252,7 +274,10 @@ public class Vector3 {
     return (float) Math.toDegrees(angleRadians);
   }
 
-  /** Compares two Vector3's are equal if each component is equal within a tolerance. */
+  /**
+   * 比较两个向量是否相等
+   * <p>注意：是在误差允许范围内的相等</p>
+   * */
   public static boolean equals(Vector3 lhs, Vector3 rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
     Preconditions.checkNotNull(rhs, "Parameter \"rhs\" was null.");
@@ -264,7 +289,8 @@ public class Vector3 {
   }
 
   /**
-   * Returns true if the other object is a Vector3 and each component is equal within a tolerance.
+   * 比较两个向量是否相等
+   * <p>注意：是在误差允许范围内的相等</p>
    */
   @Override
   @SuppressWarnings("override.param.invalid")
@@ -289,54 +315,54 @@ public class Vector3 {
     return result;
   }
 
-  /** Gets a Vector3 with all values set to zero */
+  /** 获取一个所有分量值为0的矢量 */
   public static Vector3 zero() {
     return new Vector3();
   }
 
-  /** Gets a Vector3 with all values set to one */
+  /** 获取一个所有分量值为1的矢量 */
   public static Vector3 one() {
     Vector3 result = new Vector3();
     result.setOne();
     return result;
   }
 
-  /** Gets a Vector3 set to (0, 0, -1) */
+  /** 获取向前的矢量 */
   public static Vector3 forward() {
     Vector3 result = new Vector3();
     result.setForward();
     return result;
   }
 
-  /** Gets a Vector3 set to (0, 0, 1) */
+  /** 获取向后的矢量 */
   public static Vector3 back() {
     Vector3 result = new Vector3();
     result.setBack();
     return result;
   }
 
-  /** Gets a Vector3 set to (0, 1, 0) */
+  /** 获取向上的矢量 */
   public static Vector3 up() {
     Vector3 result = new Vector3();
     result.setUp();
     return result;
   }
 
-  /** Gets a Vector3 set to (0, -1, 0) */
+  /** 获取向下的矢量 */
   public static Vector3 down() {
     Vector3 result = new Vector3();
     result.setDown();
     return result;
   }
 
-  /** Gets a Vector3 set to (1, 0, 0) */
+  /** 获取向右的矢量 */
   public static Vector3 right() {
     Vector3 result = new Vector3();
     result.setRight();
     return result;
   }
 
-  /** Gets a Vector3 set to (-1, 0, 0) */
+  /** 获取向左的矢量 */
   public static Vector3 left() {
     Vector3 result = new Vector3();
     result.setLeft();

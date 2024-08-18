@@ -8,7 +8,6 @@ import com.eqgis.sceneform.utilities.Preconditions;
  *     用于表示旋转姿态，四元数运算是使用右手规则约定的哈密顿运算。
  * </pre>
  */
-// TODO: Evaluate combining with java/com/google/ar/core/Quaternion.java
 public class Quaternion {
   private static final float SLERP_THRESHOLD = 0.9995f;
   public float x;
@@ -297,7 +296,10 @@ public class Quaternion {
     return result;
   }
 
-  /** 求两个四元数的点积 */
+  /**
+   * 点乘
+   * <p>求两个四元数的点积</p>
+   * */
   static float dot(Quaternion lhs, Quaternion rhs) {
     Preconditions.checkNotNull(lhs, "Parameter \"lhs\" was null.");
     Preconditions.checkNotNull(rhs, "Parameter \"rhs\" was null.");
