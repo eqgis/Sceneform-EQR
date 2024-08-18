@@ -9,10 +9,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /**
- * Executes multiple {@link Runnable}s sequentially by appending them to a {@link
- * CompletableFuture}.
- *
- * <p>This should only be modified on the main thread.
+ * 连续任务
+ * <p>
+ *     按序执行多个 {@link Runnable}，并将其加入{@link CompletableFuture}.
+ * </p>
+ * 这通常用于与Engine创建的相同线程，本开源版本的Engine是在UI线程中创建，故而这里多用于UI线程
  */
 @TargetApi(24)
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
@@ -20,9 +21,8 @@ public class SequentialTask {
   @Nullable private CompletableFuture<Void> future;
 
   /**
-   * Appends a new Runnable to the current future, or creates a new one.
-   *
-   * @return The current future.
+   * 向当前future追加新的Runnable，或创建新的Runnable。
+   * @return 当前的CompletableFuture
    */
   @MainThread
   public CompletableFuture<Void> appendRunnable(Runnable action, Executor executor) {
@@ -34,7 +34,7 @@ public class SequentialTask {
     return future;
   }
 
-  /** True if the future is null or done. */
+  /** 任务完成返回True */
   @MainThread
   public boolean isDone() {
     if (future == null) {
