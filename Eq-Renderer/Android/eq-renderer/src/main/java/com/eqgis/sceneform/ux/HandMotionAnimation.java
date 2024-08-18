@@ -19,9 +19,11 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 
 
-/** This drives the AR hand motion animation. */
+/**
+ * 默认的AR平面识别过程中移动手机的动画
+ * */
 
-public class HandMotionAnimation extends Animation {
+class HandMotionAnimation extends Animation {
   private final View handImageView;
   private final View containerView;
   private static final float TWO_PI = (float) Math.PI * 2.0f;

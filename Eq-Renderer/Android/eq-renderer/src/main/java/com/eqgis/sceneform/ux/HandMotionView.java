@@ -25,7 +25,10 @@ import androidx.appcompat.widget.AppCompatImageView;
 import com.eqgis.eqr.R;
 
 
-/** This view contains the hand motion instructions with animation. */
+/**
+ * 默认的"移动手机->识别平面"的动画视图
+ * <p>这个视图包含带有动画的手部动作指令。</p>
+ * */
 
 public class HandMotionView extends AppCompatImageView {
   private HandMotionAnimation animation;
