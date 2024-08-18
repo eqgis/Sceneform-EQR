@@ -1,14 +1,14 @@
 package com.eqgis.sceneform.resources;
 
-/** Pool or cachce for resources */
+/** 资源池 */
 public interface ResourceHolder {
   /**
-   * Polls for garbage collected objects and disposes associated data.
+   * 释放搜集的垃圾对象和数据
    *
-   * @return Count of resources in use.
+   * @return 正在使用的资源计数。
    */
   long reclaimReleasedResources();
 
-  /** Ignores reference count and disposes any associated resources. */
+  /** 忽略引用计数并释放所有相关资源。 */
   void destroyAllResources();
 }

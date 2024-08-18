@@ -1,8 +1,8 @@
 package com.eqgis.sceneform.resources;
 
 /**
- * Used for managing memory of shared object using reference counting.
- *
+ * 共享参考对象
+ * <p>用于使用引用计数管理共享对象的内存。</p>
  * @hide
  */
 public abstract class SharedReference {
