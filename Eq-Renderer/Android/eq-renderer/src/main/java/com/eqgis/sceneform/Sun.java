@@ -11,24 +11,24 @@ import com.eqgis.sceneform.utilities.EnvironmentalHdrParameters;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Represents the "sun" - the default directional light in the scene.
- *
- * <p>The following method will throw {@link UnsupportedOperationException} when called: {@link
- * #setParent(NodeParent)} - Sunlight's parent cannot be changed, it is always the scene.
- *
- * <p>All other functionality in Node is supported. You can access the position and rotation of the
- * sun, assign a collision shape to the sun, or add children to the sun. Disabling the sun turns off
- * the default directional light.
+ * 太阳光对象
+ * <p>场景中默认的Node，并已设置平行光{@link Node#setLight(Light)}</p>
+ * <pre>
+ *     场景中默认的平行光。
+ *     父节点是场景，不可修改
+ *     支持Node中的所有其他功能。您可以访问太阳的位置和旋转，为太阳分配一个碰撞形状，
+ *     或者为太阳添加子节点。禁用太阳会关闭默认的定向光。
+ * </pre>
  */
 public class Sun extends Node {
+  //默认的光照颜色
   public static int DEFAULT_SUNLIGHT_COLOR = 0xffffffff;
 //  @ColorInt static final int DEFAULT_SUNLIGHT_COLOR = 0xfff2d3c4;
+  //默认的平行光方向
   public static Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.0f,0.0f,-1f);
-//  static final Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.3f,-0.2f,-1f);
 //  static final Vector3 DEFAULT_SUNLIGHT_DIRECTION = new Vector3(0.7f, -1.0f, -0.8f);
 
-  // The Light estimate scale and offset allow the final change in intensity to be controlled to
-  // avoid over darkening or changes that are too drastic: appliedEstimate = estimate*scale + offset
+  // 光估计比例和偏移量允许控制强度的最终变化，以避免过度变暗或过于剧烈的变化:appliieestimate =估计*比例+偏移量
   private static final float LIGHT_ESTIMATE_SCALE = 1.8f;
   private static final float LIGHT_ESTIMATE_OFFSET = 0.0f;
   private float baseIntensity = 0.0f;
@@ -52,16 +52,15 @@ public class Sun extends Node {
   }
 
   /**
-   * Applies the Environmental HDR light estimate to the directional light
+   * 将环境HDR光估计应用于平行光
    *
-   * <p>The exposure used here is calculated as 1.0f / (1.2f * aperture^2 / shutter speed * 100.0f /
-   * iso);
+   * <p>曝光计算： 1.0f / (1.2f * aperture^2 / shutter speed * 100.0f / iso);</p>
    *
-   * @param direction directional light orientation as returned from light estimation.
-   * @param color relative color returned from light estimation.
-   * @param environmentalHdrIntensity maximum intensity from light estimation.
-   * @param exposure Exposure value from Filament.
-   * @hide intended for use by other Sceneform packages which update Hdr lighting every frame.
+   * @param direction 从光估计返回的定向光方向
+   * @param color 从光估计返回的相对颜色
+   * @param environmentalHdrIntensity 光估计的最大强度
+   * @param exposure Filament的曝光值
+   * @hide 用于每帧更新Hdr照明
    */
 
   void setEnvironmentalHdrLightEstimate(
@@ -75,7 +74,7 @@ public class Sun extends Node {
       return;
     }
 
-    // Convert from Environmetal hdr's relative value to lux for filament using hard coded value.
+    // 使用硬编码值将环境hdr的相对值转换为filament的lux值。
     float filamentIntensity =
         environmentalHdrIntensity
             * environmentalHdrParameters.getDirectIntensityForFilament()
@@ -84,8 +83,7 @@ public class Sun extends Node {
     light.setColor(color);
     light.setIntensity(filamentIntensity);
 
-    // If light is detected as shining up from below, we flip the Y component so that we always end
-    // up with a shadow on the ground to fulfill UX requirements.
+    //如果检测到光线从下面照射过来，我们翻转Y组件，这样我们总是在地面上留下阴影，以满足用户体验要求。
     Vector3 lookDirection =
         new Vector3(-direction[0], -Math.abs(direction[1]), -direction[2]).normalized();
     Quaternion lookRotation = Quaternion.rotationBetweenVectors(Vector3.forward(), lookDirection);
@@ -98,23 +96,23 @@ public class Sun extends Node {
       return;
     }
 
-    // If we don't know the base intensity of the light, get it now.
+    //若不知光强，这里获取默认值
     if (baseIntensity == 0.0f) {
       baseIntensity = light.getIntensity();
     }
 
-    // Scale and bias the estimate to avoid over darkening.
+    //为了避免比过暗，这里有个scale和偏移设置
     float lightIntensity =
         baseIntensity
             * Math.min(pixelIntensity * LIGHT_ESTIMATE_SCALE + LIGHT_ESTIMATE_OFFSET, 1.0f);
 
-    // Modulates sun color by color correction.
+    //通过色彩校正调节太阳的颜色。
     Color lightColor = new Color(DEFAULT_SUNLIGHT_COLOR);
     lightColor.r *= colorCorrection.r;
     lightColor.g *= colorCorrection.g;
     lightColor.b *= colorCorrection.b;
 
-    // Modifies light color and intensity by light estimate.
+    //通过光估计修改光的颜色和强度。
     light.setColor(lightColor);
     light.setIntensity(lightIntensity);
   }
@@ -128,10 +126,10 @@ public class Sun extends Node {
       throw new AssertionError("Sunlight color is null.");
     }
 
-    // Set the Node direction to point the sunlight in the desired direction.
+    // 设置节点方向，使阳光指向所需的方向。
     setLookDirection(DEFAULT_SUNLIGHT_DIRECTION.normalized());
 
-    // Create and set the directional light.
+    // 创建平行光
     Light sunlight =
         Light.builder(Light.Type.DIRECTIONAL)
             .setColor(sunlightColor)
