@@ -5,11 +5,14 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 /**
- * Utilities for detecting and handling the version of Ar Core.
- *
- * @hide
+ * 用于检测和处理Ar Core版本的实用程序。
+ * <p>
+ *     这是早期scenefrom中判断ARCore Version的工具类。
+ *     现已不再使用，使用{@link com.eqgis.ar.ARPlugin}替代
+ * </p>
  */
-public class ArCoreVersion {
+@Deprecated
+class ArCoreVersion {
   public static final int VERSION_CODE_1_3 = 180604036;
 
   private static final String METADATA_KEY_MIN_APK_VERSION = "com.google.ar.core.min_apk_version";

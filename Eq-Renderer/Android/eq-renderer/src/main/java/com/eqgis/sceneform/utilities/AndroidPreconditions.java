@@ -7,8 +7,8 @@ import android.os.Looper;
 import androidx.annotation.VisibleForTesting;
 
 /**
- * Helper class for common android specific preconditions used inside of RenderCore.
- *
+ * 安卓条件判断工具类
+ * <p>内部使用</p>
  * @hide
  */
 public class AndroidPreconditions {
@@ -17,8 +17,14 @@ public class AndroidPreconditions {
   private static boolean isUnderTesting = false;
 
   /**
-   * Ensure that the code is being executed on Android's UI thread. Null-Op if the Android API isn't
-   * available (i.e. for unit tests.
+   * 检查是否处于UI线程
+   * <pre>
+   *     注意：Engine是在SceneView初始化期间创建，而这是在UI线程中操作的。
+   *     后续诸如资源加载等一切涉及调用filament的Engine的时候，需要确保线程统一
+   *     当然，Engine创建也可以在子线程中操作，这样后续资源加载等操作就可以在子线程操作，
+   *     这能有效的避免阻塞UI线程。但现开源的社区版本暂不提供。
+   *     若需要请联系我（https://github.com/eqgis/Sceneform-EQR）
+   * </pre>
    */
   public static void checkUiThread() {
     if (!isAndroidApiAvailable() || isUnderTesting()) {
@@ -30,31 +36,31 @@ public class AndroidPreconditions {
   }
 
   /**
-   * Enforce the minimum Android api level
+   * 检查所需的最低安卓API
    *
    * @throws IllegalStateException if the api level is not high enough
    */
   public static void checkMinAndroidApiLevel() {
-    Preconditions.checkState(isMinAndroidApiLevel(), "Sceneform requires Android N or later");
+    Preconditions.checkState(isMinAndroidApiLevel(), "Sceneform-EQR requires Android N or later");
   }
 
   /**
-   * Returns true if the Android API is currently available. Useful for branching functionality to
-   * make it testable via junit. The android API is available for Robolectric tests and android
-   * emulator tests.
+   * 判断当前安卓API是否可用
    */
   public static boolean isAndroidApiAvailable() {
     return IS_ANDROID_API_AVAILABLE;
   }
 
+  /**
+   * 判断是否处于测试
+   * <p>内部开发使用，方便调试的</p>
+   */
   public static boolean isUnderTesting() {
     return isUnderTesting;
   }
 
   /**
-   * Returns true if the Android api level is above the minimum or if not on Android.
-   *
-   * <p>Also returns true if not on Android or in a test.
+   * 判断安卓API是否高于所需的最低API
    */
   public static boolean isMinAndroidApiLevel() {
     return isUnderTesting() || IS_MIN_ANDROID_API_LEVEL;

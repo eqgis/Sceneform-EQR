@@ -2,13 +2,12 @@ package com.eqgis.sceneform.utilities;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Buffer助手
+ */
 public class BufferHelper {
     /**
-     * <pre>
-     *     Create a new independent ByteBuffer from a
-     *     source ByteBuffer.
-     * </pre>
-     *
+     * 克隆ByteBuffer
      * @param original {@link ByteBuffer}
      * @return {@link ByteBuffer}
      */

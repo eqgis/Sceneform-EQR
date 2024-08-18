@@ -1,12 +1,11 @@
 package com.eqgis.sceneform.utilities;
 
 /**
- * Provides scaling factors from Environmental Hdr to Filament.
+ * 环境HDR参数类
+ * <p>用于filament中设置环境HDR</p>
  *
- * <p>A conversion is required to convert between Environmental Hdr units and an intensity value
- * Filament can use.
- *
- * @hide This class may be removed eventually.
+ * 这是早期scenefrom中用于转换HDR参数用于filament的类。后续可能移除
+ * @hide
  */
 // TODO: Replace each of these values with principled numbers.
 public class EnvironmentalHdrParameters {
@@ -14,7 +13,7 @@ public class EnvironmentalHdrParameters {
   public static final float DEFAULT_DIRECT_INTENSITY_FOR_FILAMENT = 1.0f;
   public static final float DEFAULT_REFLECTION_SCALE_FOR_FILAMENT = 1.0f;
 
-  /** Builds ViewerConfig, a collection of runtime config options for the viewer. */
+  /** 构建ViewerConfig，这是查看器的运行时配置选项集合。 */
   public static class Builder {
     public Builder() {}
 
@@ -22,19 +21,19 @@ public class EnvironmentalHdrParameters {
       return new EnvironmentalHdrParameters(this);
     }
 
-    /** Conversion factor for directional lighting. */
+    /** 设置定向照明的转换系数 */
     public Builder setDirectIntensityForFilament(float directIntensityForFilament) {
       this.directIntensityForFilament = directIntensityForFilament;
       return this;
     }
 
-    /** Conversion factor for ambient spherical harmonics. */
+    /** 设置环境球谐波的转换系数 */
     public Builder setAmbientShScaleForFilament(float ambientShScaleForFilament) {
       this.ambientShScaleForFilament = ambientShScaleForFilament;
       return this;
     }
 
-    /** Conversion factor for reflections. */
+    /** 设置反射的转换系数*/
     public Builder setReflectionScaleForFilament(float reflectionScaleForFilament) {
       this.reflectionScaleForFilament = reflectionScaleForFilament;
       return this;
@@ -45,7 +44,7 @@ public class EnvironmentalHdrParameters {
     private float reflectionScaleForFilament;
   }
 
-  /** Constructs a builder, all required fields must be specified. */
+  /** 构造构造器时，必须指定所有必需的字段。 */
   public static Builder builder() {
     return new Builder();
   }
@@ -65,23 +64,22 @@ public class EnvironmentalHdrParameters {
   }
 
   /**
-   * A scale factor bridging Environmental Hdr's ambient sh to Filament's ambient sh values.
-   *
-   * <p>This number has been hand tuned by comparing lighting to reference app
-   * /third_party/arcore/unity/apps/whitebox
+   * 获取Filament的 ambient系数
    */
   public float getAmbientShScaleForFilament() {
     return ambientShScaleForFilament;
   }
 
-  /** Environmental Hdr provides a relative intensity, a number above zero and often below 8. */
+  /**
+   * 获取强度值
+   * 环境Hdr提供了一个相对强度，高于零，通常低于8。
+   * */
   public float getDirectIntensityForFilament() {
     return directIntensityForFilament;
   }
 
   /**
-   * A scale factor bridging Environmental Hdr's relative intensity to a lux based intensity for
-   * reflections only.
+   * 获取反射系数
    */
   public float getReflectionScaleForFilament() {
     return reflectionScaleForFilament;

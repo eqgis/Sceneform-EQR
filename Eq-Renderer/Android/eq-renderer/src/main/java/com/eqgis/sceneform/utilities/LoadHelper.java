@@ -29,7 +29,10 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 
 /**
- * Convenience class to parse Uri's.
+ * 加载助手
+ * <p>
+ *     主要用于解析Uri
+ * </p>
  *
  * @hide
  */
@@ -47,16 +50,16 @@ public class LoadHelper {
   // Default cache size of 512MB.
   private static final long DEFAULT_CACHE_SIZE_BYTES = 512 << 20;
 
-  /** Static utility class */
+  /** 静态工具类 */
   private LoadHelper() {}
 
-  /** True if the Uri is an Android resource, false if any other uri. */
+  /** 如果Uri是Android资源则为True，如果是其他Uri则为false。 */
   public static Boolean isAndroidResource(Uri sourceUri) {
     Preconditions.checkNotNull(sourceUri, "Parameter \"sourceUri\" was null.");
     return TextUtils.equals(ContentResolver.SCHEME_ANDROID_RESOURCE, sourceUri.getScheme());
   }
 
-  /** True if the Uri is a filename, false if it is a remote location. */
+  /** 如果Uri是文件名，则为True，如果是远程路径，则为false。 */
   public static Boolean isFileAsset(Uri sourceUri) {
     Preconditions.checkNotNull(sourceUri, "Parameter \"sourceUri\" was null.");
     @Nullable String scheme = sourceUri.getScheme();
@@ -64,8 +67,7 @@ public class LoadHelper {
   }
 
   /**
-   * Normalizes Uri's based on a reference Uri. This function is for convenience only since the Uri
-   * class can do this as well.
+   * 基于引用Uri规范化Uri。这个函数只是为了方便，因为Uri类也可以这样做。
    */
   public static Uri resolveUri(Uri unresolvedUri, @Nullable Uri parentUri) {
 
@@ -77,9 +79,8 @@ public class LoadHelper {
   }
 
   /**
-   * Creates an InputStream from an Android resource ID.
-   *
-   * @throws IllegalArgumentException for resources that can't be loaded.
+   * 从Android资源ID创建InputStream。
+   * @throws IllegalArgumentException 对于无法加载的资源。
    */
   public static Callable<InputStream> fromResource(Context context, int resId) {
     Preconditions.checkNotNull(context, "Parameter \"context\" was null.");
@@ -98,19 +99,19 @@ public class LoadHelper {
   }
 
   /**
-   * Creates different InputStreams depending on the contents of the Uri
+   * 根据Uri的内容创建不同的InputStreams
    *
-   * @throws IllegalArgumentException for Uri's that can't be loaded.
+   * @throws IllegalArgumentException 对于无法加载的Uri。
    */
   public static Callable<InputStream> fromUri(Context context, Uri sourceUri) {
     return fromUri(context, sourceUri, null);
   }
 
   /**
-   * Creates different InputStreams depending on the contents of the Uri.
+   * 根据Uri的内容创建不同的InputStreams。
    *
-   * @param requestProperty Adds connection properties to created input stream.
-   * @throws IllegalArgumentException for Uri's that can't be loaded.
+   * @param requestProperty 向创建的输入流添加连接属性。
+   * @throws IllegalArgumentException 对于无法加载的Uri。
    */
   public static Callable<InputStream> fromUri(
       Context context, Uri sourceUri, @Nullable Map<String, String> requestProperty) {
@@ -129,7 +130,7 @@ public class LoadHelper {
   }
 
   /**
-   * Generates a Uri from an Android resource.
+   * 从Android资源生成一个Uri。
    *
    * @throws Resources.NotFoundException
    */
@@ -143,19 +144,19 @@ public class LoadHelper {
         .build();
   }
 
-  /** Return the integer resource id for the specified resource name. */
+  /** 返回raw路径下指定资源名的整数资源id。 */
   public static int rawResourceNameToIdentifier(Context context, String name) {
     return context.getResources().getIdentifier(name, RAW_RESOURCE_TYPE, context.getPackageName());
   }
 
-  /** Return the integer resource id for the specified resource name. */
+  /** 返回drawable路径下指定资源名的整数资源id。 */
   public static int drawableResourceNameToIdentifier(Context context, String name) {
     return context
         .getResources()
         .getIdentifier(name, DRAWABLE_RESOURCE_TYPE, context.getPackageName());
   }
 
-  /** Return the integer resource id for the specified resource name. */
+  /** 返回layout路径下指定资源名的整数资源id。 */
   public static int layoutResourceNameToIdentifier(Context context, String name) {
     return context
             .getResources()
@@ -163,15 +164,15 @@ public class LoadHelper {
   }
 
   /**
-   * Enables HTTP caching with default settings, remote Uri requests responses are cached to
-   * cacheBaseDir/cacheFolderName
+   * 启用HTTP缓存默认设置，远程Uri请求响应缓存到
+   * cacheBaseDir / cacheFolderName
    */
   public static void enableCaching(Context context) {
     enableCaching(DEFAULT_CACHE_SIZE_BYTES, context.getCacheDir(), "http_cache");
   }
 
   /**
-   * Enables HTTP caching, remote Uri requests responses are cached to cacheBaseDir/cacheFolderName
+   * 启用HTTP缓存，远程Uri请求响应缓存到cacheBaseDir/cacheFolderName
    */
   public static void enableCaching(long cacheByteSize, File cacheBaseDir, String cacheFolderName) {
     // Define the default response cache if it has been previously defined.
@@ -194,7 +195,7 @@ public class LoadHelper {
     }
   }
 
-  /** Creates an inputStream to read from asset file */
+  /** 创建一个从assests中读取文件的inputStream*/
   // TODO: Fix nullness violation: dereference of possibly-null reference
   // sourceUri.getPath()
   @SuppressWarnings("nullness:dereference.of.nullable")
@@ -209,7 +210,7 @@ public class LoadHelper {
       filename = sourceUri.getAuthority() + sourceUri.getPath();
     }
 
-    // Remove "android_asset/" from URI paths like "file:///android_asset/...".
+    // 移除 "android_asset/" from URI paths like "file:///android_asset/...".
     // TODO: Fix nullness violation: incompatible types in argument.
     @SuppressWarnings("nullness:argument.type.incompatible")
     String scrubbedFilename = removeAndroidAssetPath(filename);
@@ -235,9 +236,9 @@ public class LoadHelper {
   }
 
   /**
-   * Creates an inputStream to read from android resource
+   * 创建InputStream
    *
-   * @throws IllegalArgumentException for resources that can't be loaded.
+   * @throws IllegalArgumentException 对于无法加载的Uri。
    */
   // TODO: incompatible types in return.
   @SuppressWarnings("nullness:return.type.incompatible")
@@ -263,9 +264,9 @@ public class LoadHelper {
   }
 
   /**
-   * Creates an inputStream to read from remote URL
+   * 创建InputStream
    *
-   * @throws IllegalArgumentException for URL's that can't be loaded.
+   * @throws IllegalArgumentException 对于无法加载的Uri。
    */
   private static Callable<InputStream> remoteUriToInputStreamCreator(
       Uri sourceUri, @Nullable Map<String, String> requestProperty) {
@@ -348,9 +349,9 @@ public class LoadHelper {
   }
 
   /**
-   * Creates an inputStream to read from a data URI.
+   * 创建InputStream
    *
-   * @throws IllegalArgumentException for URL's that can't be loaded.
+   * @throws IllegalArgumentException 对于无法加载的Uri。
    */
   private static Callable<InputStream> dataUriInputStreamCreator(Uri uri) {
     String data = uri.getSchemeSpecificPart();
