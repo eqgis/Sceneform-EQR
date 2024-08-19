@@ -170,7 +170,7 @@ public class ArSceneView extends SceneView {
      * @throws Exception if the camera can not be opened
      */
     @Override
-    public void resume() throws ARCameraException {
+    public void resume(){
         //更新屏幕旋转角度
         WindowManager wm = (WindowManager) getContext()
                 .getSystemService(Context.WINDOW_SERVICE);
@@ -178,7 +178,11 @@ public class ArSceneView extends SceneView {
         wm.getDefaultDisplay().getMetrics(dm);
         int rotation = wm.getDefaultDisplay().getRotation();
         ARCamera.setSurfaceRotation(rotation);
-        resumeSession();
+        try {
+            resumeSession();
+        } catch (ARCameraException e) {
+            throw new ARCameraException(e);
+        }
         resumeScene();
     }
 
