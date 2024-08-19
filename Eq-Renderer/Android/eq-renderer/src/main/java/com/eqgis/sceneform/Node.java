@@ -29,99 +29,92 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * A Node represents a transformation within the scene graph's hierarchy. It can contain a
- * renderable for the rendering engine to render.
+ * 节点对象
  *
- * <p>Each node can have an arbitrary number of child nodes and one parent. The parent may be
- * another node, or the scene.
+ * <p>
+ *     节点表示场景图的层次结构中的转换。
+ *     它可以包含渲染引擎渲染的可渲染对象，
+ *     也可以设置不同的灯光。
+ * </p>
+ *
+ * 每个节点可以有任意数量的子节点和一个父节点。父节点可以是另一个节点，也可以是场景{@link Scene}或{@link Camera}。
  */
 public class Node extends NodeParent implements TransformProvider {
     /**
-     * Interface definition for a callback to be invoked when a touch event is dispatched to this
-     * node. The callback will be invoked before {@link #onTouchEvent(HitTestResult, MotionEvent)} is
-     * called.
+     * 节点的触摸监听事件
      */
     public interface OnTouchListener {
         /**
-         * Handles when a touch event has been dispatched to a node.
-         *
-         * <p>On {@link MotionEvent#ACTION_DOWN} events, {@link HitTestResult#getNode()} will always be
-         * this node or one of its children. On other events, the touch may have moved causing the
-         * {@link HitTestResult#getNode()} to change (or possibly be null).
-         *
-         * @param hitTestResult represents the node that was touched and information about where it was
-         *     touched
-         * @param motionEvent the MotionEvent object containing full information about the event
-         * @return true if the listener has consumed the event, false otherwise
+         * 触摸回调
+         * @param hitTestResult 碰撞检测结果
+         * @param motionEvent 事件
+         * @return 返回true，则表示事件已消费
          */
         boolean onTouch(HitTestResult hitTestResult, MotionEvent motionEvent);
     }
 
-    /** Interface definition for a callback to be invoked when a node is tapped. */
+    /**
+     * 节点的点击监听事件
+     * */
     public interface OnTapListener {
         /**
-         * Handles when a node has been tapped.
-         *
-         * <p>{@link HitTestResult#getNode()} will always be this node or one of its children.
-         *
-         * @param hitTestResult represents the node that was tapped and information about where it was
-         *     touched
-         * @param motionEvent the {@link MotionEvent#ACTION_UP} MotionEvent that caused the tap
+         * 点击回调
+         * @param hitTestResult 碰撞检测结果
+         * @param motionEvent 事件
          */
         void onTap(HitTestResult hitTestResult, MotionEvent motionEvent);
     }
 
-    /** Interface definition for callbacks to be invoked when node lifecycle events occur. */
+    /** 节点的生命周期的接口回调 */
     public interface LifecycleListener {
         /**
-         * Notifies the listener that {@link #onActivate()} was called.
+         * 节点激活时触发
          *
-         * @param node the node that was activated
+         * @param node 激活的节点对象
          */
         void onActivated(Node node);
 
         /**
-         * Notifies the listener that {@link #onUpdate(FrameTime)} was called.
-         *
-         * @param node the node that was updated
-         * @param frameTime provides time information for the current frame
+         * 节点更新时触发
+         * <p>每帧更新都触发</p>
+         * @param node 更新的节点对象
+         * @param frameTime 提供当前帧的时间信息
          */
         void onUpdated(Node node, FrameTime frameTime);
 
         /**
-         * Notifies the listener that {@link #onDeactivate()} was called.
+         * 节点失活时触发
          *
-         * @param node the node that was deactivated
+         * @param node 失活的节点对象
          */
         void onDeactivated(Node node);
     }
 
     /**
-     * Interface definition for callbacks to be invoked when the transformation of the node changes.
+     * 节点几何变换监听事件
      */
     public interface TransformChangedListener {
 
         /**
-         * Notifies the listener that the transformation of the {@link Node} has changed. Called right
-         * after {@link #onTransformChange(Node)}.
+         * 当节点的Transform发生改变时触发
+         * <p>包含Rotation、Position、Scale</p>
          *
-         * <p>The originating node is the most top-level node in the hierarchy that triggered the node
-         * to change. It will always be either the same node or one of its' parents. i.e. if node A's
-         * position is changed, then that will trigger {@link #onTransformChanged(Node, Node)} to be
-         * called for all of it's descendants with the originatingNode being node A.
+         * <p>原始节点是层次结构中触发节点更改的最高级节点。它将始终是同一个节点或它的父节点之一。
+         * 也就是说，如果节点A的位置发生了变化，那么这将触发{@link #onTransformChanged(Node, Node)}
+         * 对它的所有后代调用，其中originingnode是节点A。
          *
-         * @param node the node that changed
-         * @param originatingNode the node that triggered the transformation to change
+         * @param node 当前发生改变的节点
+         * @param originatingNode 触发变换的原始节点
          */
         void onTransformChanged(Node node, Node originatingNode);
     }
 
-    /** Used to keep track of data for detecting if a tap gesture has occurred on this node. */
+    /** 用于跟踪数据，以检测是否在此节点上发生了点击手势。 */
     private static class TapTrackingData {
-        // The node that was being touched when ACTION_DOWN occurred.
+        // ACTION_DOWN时，点中的节点
         final Node downNode;
 
-        // The screen-space position that was being touched when ACTION_DOWN occurred.
+        //ACTION_DOWN时，点中的屏幕位置
         final Vector3 downPosition;
 
         TapTrackingData(Node downNode, Vector3 downPosition) {
@@ -132,7 +125,7 @@ public class Node extends NodeParent implements TransformProvider {
 
     private static final float DIRECTION_UP_EPSILON = 0.99f;
 
-    // This is the default from the ViewConfiguration class.
+    //默认的视图配置
     private static final int DEFAULT_TOUCH_SLOP = 8;
 
     private static final String DEFAULT_NAME = "Node";
@@ -153,66 +146,64 @@ public class Node extends NodeParent implements TransformProvider {
 
     private static final int LOCAL_DIRTY_FLAGS = LOCAL_TRANSFORM_DIRTY | WORLD_DIRTY_FLAGS;
 
-    // Scene Graph fields.
+    // 场景对象
     @Nullable private Scene scene;
-    // Stores the parent as a node (if the parent is a node) to avoid casting.
+    // 将父节点存储为节点(如果父节点是节点)以避免强制转换。
     @Nullable private Node parentAsNode;
 
-    // the name of the node to identify it in the hierarchy
+    // 节点的名称，以便在层次结构中识别它
     @SuppressWarnings("unused")
     private String name = DEFAULT_NAME;
 
-    // name hash for comparison
+    // 用于比较的名称散列
     private int nameHash = DEFAULT_NAME.hashCode();
 
     /**
-     * WARNING: Do not assign this property directly unless you know what you are doing. Instead, call
-     * setParent. This field is only exposed in the package to be accessible to the class NodeParent.
-     *
-     * <p>In addition to setting this field, setParent will also do the following things:
-     *
+     * 警告:不要直接分配这个属性，除非你知道你在做什么。相反,叫
+     * setParent。该字段仅在包中公开，以便类NodeParent可以访问。
+     * <p>除了设置这个字段，setParent还会做以下事情:
      * <ul>
-     *   <li>Remove this node from its previous parent's children.
-     *   <li>Add this node to its new parent's children.
-     *   <li>Recursively update the node's transformation to reflect the change in parent
-     *   <li>Recursively update the scene field to match the new parent's scene field.
-     * </ul>
+     * <li>从其父节点的子节点中删除该节点。
+     * <li>将该节点添加到其新父节点的子节点。
+     * <li>递归更新节点的转换以反映父节点的变化
+     * <li>递归更新场景字段以匹配新的父场景字段。
+     * </ul >
      */
-    // The node's parent could be a Node or the scene.
+    // 节点的父节点可以是节点或场景。
     @Nullable NodeParent parent;
 
-    // Local transformation fields.
+    // 本地坐标系变换的属性内容
     private final Vector3 localPosition = new Vector3();
     private final Quaternion localRotation = new Quaternion();
     private final Vector3 localScale = new Vector3();
     private final Matrix cachedLocalModelMatrix = new Matrix();
 
-    // World transformation fields.
+    // 世界坐标系变换的属性内容
     private final Vector3 cachedWorldPosition = new Vector3();
     private final Quaternion cachedWorldRotation = new Quaternion();
     private final Vector3 cachedWorldScale = new Vector3();
     private final Matrix cachedWorldModelMatrix = new Matrix();
     private final Matrix cachedWorldModelMatrixInverse = new Matrix();
 
-    /** Determines when various aspects of the node's transform are dirty and must be recalculated. */
+    /**确定何时节点转换的各个方面是修改过时，必须重新计算。*/
     private int dirtyTransformFlags = LOCAL_DIRTY_FLAGS;
 
-    // Status fields.
+    // 状态值
     private boolean enabled = true;
     private boolean active = false;
 
-    // Rendering fields.
+    // 渲染的实体ID对象索引
     private int renderableId = ChangeId.EMPTY_ID;
     @Nullable private RenderableInstance renderableInstance;
     // TODO: Right now, lightInstance can cause leaks because it subscribes to event
-    // listeners on Light that will not be disposed unless setLight(null) is called.
+    // 除非调用setLight(null)，否则不会处理Light上的监听器。
     @Nullable private LightInstance lightInstance;
 
-    // Collision fields.
+    // 碰撞体信息
     @Nullable private CollisionShape collisionShape;
     @Nullable private Collider collider;
 
-    // Listeners.
+    // 监听事件信息
     @Nullable private OnTouchListener onTouchListener;
     @Nullable private OnTapListener onTapListener;
     private final ArrayList<LifecycleListener> lifecycleListeners = new ArrayList<>();
@@ -221,10 +212,13 @@ public class Node extends NodeParent implements TransformProvider {
     private boolean rotateAlwaysToCamera = false;
     private RotateToCameraType mRotateToCameraType=RotateToCameraType.Horizontal_Vertical;
 
-    // Stores data used for detecting when a tap has occurred on this node.
+    // 存储用于检测何时在此节点上发生抽头的数据。
     @Nullable private TapTrackingData tapTrackingData = null;
 
-    /** Creates a node with no parent. */
+    /**
+     * 构造函数
+     * <p>注意：此时未绑定父节点</p>
+     * */
     @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
     public Node() {
         AndroidPreconditions.checkUiThread();
@@ -234,9 +228,9 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the name of this node. Nodes can be found using their names. Multiple nodes may have the
-     * same name, in which case calling {@link NodeParent#findByName(String)} will return the first
-     * node with the given name.
+     * 设置此节点的名称。可以使用名称找到节点。多个节点可能具有
+     * 相同的名称，在这种情况下调用{@link NodeParent#findByName(String)}将返回第一个
+     * 节点使用给定的名称。
      *
      * @param name The name of the node.
      */
@@ -247,24 +241,17 @@ public class Node extends NodeParent implements TransformProvider {
         nameHash = name.hashCode();
     }
 
-    /** Returns the name of the node. The default value is "Node". */
+    /** 获取节点对象的名称 */
     public final String getName() {
         return name;
     }
 
     /**
-     * Changes the parent node of this node. If set to null, this node will be detached from its
-     * parent. The local position, rotation, and scale of this node will remain the same. Therefore,
-     * the world position, rotation, and scale of this node may be different after the parent changes.
-     *
-     * <p>The parent may be another {@link Node} or a {@link Scene}. If it is a scene, then this
-     * {@link Node} is considered top level. {@link #getParent()} will return null, and {@link
-     * #getScene()} will return the scene.
+     * 设置父节点
      *
      * @see #getParent()
      * @see #getScene()
-     * @param parent The new parent that this node will be a child of. If null, this node will be
-     *     detached from its parent.
+     * @param parent 此节点将成为其子节点的新父节点。如果为空，则该节点将与其父节点分离。
      */
     public void setParent(@Nullable NodeParent parent) {
         AndroidPreconditions.checkUiThread();
@@ -289,8 +276,7 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Returns the scene that this node is part of, null if it isn't part of any scene. A node is part
-     * of a scene if its highest level ancestor is a {@link Scene}
+     * 获取场景{@link Scene}对象
      */
     @Nullable
     public final Scene getScene() {
@@ -298,12 +284,8 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Returns the parent of this node. If this {@link Node} has a parent, and that parent is a {@link
-     * Node} or {@link Node} subclass, then this function returns the parent as a {@link Node}.
-     * Returns null if the parent is a {@link Scene}, use {@link #getScene()} to retrieve the parent
-     * instead.
-     *
-     * @return the parent as a {@link Node}, if the parent is a {@link Node}.
+     * 获取父节点
+     * @return 父节点
      */
     @Nullable
     public final Node getParent() {
@@ -311,33 +293,34 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Returns true if this node is top level. A node is considered top level if it has no parent or
-     * if the parent is the scene.
+     * 如果此节点为顶层，则返回true。如果节点没有父节点，或者父节点是场景，则该节点被认为是顶级节点。
+     * <p>
+     *     判断是否是顶级节点
+     * </p>
      *
-     * @return true if the node is top level
+     * @return 若返回ture，则本节点是顶级节点
      */
     public boolean isTopLevel() {
         return parent == null || parent == scene;
     }
 
     /**
-     * Checks whether the given node parent is an ancestor of this node recursively.
+     * 递归地检查给定的节点父节点是否是该节点的先代节点。
      *
-     * @param ancestor the node parent to check
-     * @return true if the node is an ancestor of this node
+     * @param ancestor 被检测的节点对象
+     * @return 若返回true，则被检测的节点是本节点的先代
      */
     public final boolean isDescendantOf(NodeParent ancestor) {
         Preconditions.checkNotNull(ancestor, "Parameter \"ancestor\" was null.");
 
         NodeParent currentAncestor = parent;
 
-        // Used to iterate up through the hierarchy because NodeParent is just a container for children
-        // and doesn't have its own parent.
+        // 用于通过层次结构向上迭代，因为NodeParent只是子节点的容器，没有自己的父节点。
         Node currentAncestorAsNode = parentAsNode;
 
         while (currentAncestor != null) {
-            // Make sure to do the equality check against currentAncestor instead of currentAncestorAsNode
-            // so that this works with any NodeParent and not just Node.
+            // 确保对currentAncestor而不是current祖宗asnode进行相等性检查，
+            // 这样就可以对任何NodeParent而不仅仅是Node工作。
             if (currentAncestor == ancestor) {
                 return true;
             }
@@ -353,11 +336,10 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the enabled state of this node. Note that a Node may be enabled but still inactive if it
-     * isn't part of the scene or if its parent is inactive.
+     * 设置该节点的启用状态。请注意，如果一个节点不是场景的一部分，或者它的父节点处于非活动状态，那么它可能是启用的，但仍然处于非活动状态。
      *
      * @see #isActive()
-     * @param enabled the new enabled status of the node
+     * @param enabled 状态值
      */
     public final void setEnabled(boolean enabled) {
         AndroidPreconditions.checkUiThread();
@@ -371,78 +353,51 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Gets the enabled state of this node. Note that a Node may be enabled but still inactive if it
-     * isn't part of the scene or if its parent is inactive.
+     * 获取此节点的启用状态。请注意，如果一个节点不是场景的一部分，
+     * 或者它的父节点处于非活动状态，那么它可能是启用的，但仍然处于非活动状态。
      *
      * @see #isActive()
-     * @return the node's enabled status.
+     * @return 状态值
      */
     public final boolean isEnabled() {
         return enabled;
     }
 
     /**
-     * Returns true if the node is active. A node is considered active if it meets ALL of the
-     * following conditions:
-     *
+     * 判断节点的激活状态
+     * <br/>
+     * 如果节点是活动的，则返回true。如果一个节点满足所有的条件，则认为它是活动的
+     * 以下条件:
      * <ul>
-     *   <li>The node is part of a scene.
-     *   <li>the node's parent is active.
-     *   <li>The node is enabled.
+     *   <li>节点是场景的一部分。
+     *   <li>节点的父节点是已激活的。
+     *   <li>节点是已启用的。
      * </ul>
-     *
-     * An active Node has the following behavior:
-     *
+     * 已激活的节点有以下行为:
      * <ul>
-     *   <li>The node's {@link #onUpdate(FrameTime)} function will be called every frame.
-     *   <li>The node's {@link #getRenderable()} will be rendered.
-     *   <li>The node's {@link #getCollisionShape()} will be checked in calls to Scene.hitTest.
-     *   <li>The node's {@link #onTouchEvent(HitTestResult, MotionEvent)} function will be called when
-     *       the node is touched.
+     * <li>节点的{@link #onUpdate(FrameTime)}函数将在每帧被调用。
+     * <li>节点的{@link #getRenderable()}将被渲染。
+     * <li>节点的{@link #getCollisionShape()}将在调用Scene.hitTest时进行检查。
+     * <li>节点的{@link #onTouchEvent(HitTestResult, MotionEvent)}函数将被调用节点被触摸。
      * </ul>
      *
      * @see #onActivate()
      * @see #onDeactivate()
-     * @return the node's active status
+     * @return 节点的激活状态
      */
     public final boolean isActive() {
         return active;
     }
 
     /**
-     * Registers a callback to be invoked when a touch event is dispatched to this node. The way that
-     * touch events are propagated mirrors the way touches are propagated to Android Views. This is
-     * only called when the node is active.
-     *
-     * <p>When an ACTION_DOWN event occurs, that represents the start of a gesture. ACTION_UP or
-     * ACTION_CANCEL represents when a gesture ends. When a gesture starts, the following is done:
-     *
-     * <ul>
-     *   <li>Dispatch touch events to the node that was touched as detected by {@link
-     *       Scene#hitTest(MotionEvent)}.
-     *   <li>If the node doesn't consume the event, recurse upwards through the node's parents and
-     *       dispatch the touch event until one of the node's consumes the event.
-     *   <li>If no nodes consume the event, the gesture is ignored and subsequent events that are part
-     *       of the gesture will not be passed to any nodes.
-     *   <li>If one of the node's consumes the event, then that node will consume all future touch
-     *       events for the gesture.
-     * </ul>
-     *
-     * When a touch event is dispatched to a node, the event is first passed to the node's {@link
-     * OnTouchListener}. If the {@link OnTouchListener} doesn't handle the event, it is passed to
-     * {@link #onTouchEvent(HitTestResult, MotionEvent)}.
-     *
-     * @see OnTouchListener
+     * 设置触摸监听事件
      */
     public void setOnTouchListener(@Nullable OnTouchListener onTouchListener) {
         this.onTouchListener = onTouchListener;
     }
 
     /**
-     * Registers a callback to be invoked when this node is tapped. If there is a callback registered,
-     * then touch events will not bubble to this node's parent. If the Node.onTouchEvent is overridden
-     * and super.onTouchEvent is not called, then the tap will not occur.
-     *
+     * 设置点击监听事件
      * @see OnTapListener
      */
     public void setOnTapListener(@Nullable OnTapListener onTapListener) {
@@ -454,8 +409,7 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Adds a listener that will be called when node lifecycle events occur. The listeners will be
-     * called in the order in which they were added.
+     * 添加生命周期的回调
      */
     public void addLifecycleListener(LifecycleListener lifecycleListener) {
         if (!lifecycleListeners.contains(lifecycleListener)) {
@@ -463,19 +417,25 @@ public class Node extends NodeParent implements TransformProvider {
         }
     }
 
-    /** Removes a listener that will be called when node lifecycle events occur. */
+    /**
+     * 移除生命周期的回调事件
+     * */
     public void removeLifecycleListener(LifecycleListener lifecycleListener) {
         lifecycleListeners.remove(lifecycleListener);
     }
 
-    /** Adds a listener that will be called when the node's transformation changes. */
+    /**
+     * 添加几何变换的更新事件
+     * */
     public void addTransformChangedListener(TransformChangedListener transformChangedListener) {
         if (!transformChangedListeners.contains(transformChangedListener)) {
             transformChangedListeners.add(transformChangedListener);
         }
     }
 
-    /** Removes a listener that will be called when the node's transformation changes. */
+    /**
+     * 移除几何变换的更新事件
+     * */
     public void removeTransformChangedListener(TransformChangedListener transformChangedListener) {
         transformChangedListeners.remove(transformChangedListener);
     }
@@ -530,7 +490,7 @@ public class Node extends NodeParent implements TransformProvider {
         }
 
         if (needsRecursion) {
-            // Uses for instead of foreach to avoid unecessary allocations.
+            // 使用for而不是foreach来避免不必要的分配。
             List<Node> children = getChildren();
             for (int i = 0; i < children.size(); i++) {
                 Node node = children.get(i);
@@ -540,74 +500,69 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Gets a copy of the nodes position relative to its parent (local-space). If {@link
-     * #isTopLevel()} is true, then this is the same as {@link #getWorldPosition()}.
-     *
+     * 获取本地坐标系下的相对位置
+     * <p>
+     *     若本节点是顶级节点({@link #isTopLevel()} is true)，则结果与{@link #getWorldPosition()}相同
+     * </p>
      * @see #setLocalPosition(Vector3)
-     * @return a new vector that represents the node's local-space position
+     * @return 位置
      */
     public final Vector3 getLocalPosition() {
         return new Vector3(localPosition);
     }
 
     /**
-     * Gets a copy of the nodes rotation relative to its parent (local-space). If {@link
-     * #isTopLevel()} is true, then this is the same as {@link #getWorldRotation()}.
-     *
+     * 获取本地坐标系下的相对旋转四元数
      * @see #setLocalRotation(Quaternion)
-     * @return a new quaternion that represents the node's local-space rotation
+     * @return 旋转四元数
      */
     public final Quaternion getLocalRotation() {
         return new Quaternion(localRotation);
     }
 
     /**
-     * Gets a copy of the nodes scale relative to its parent (local-space). If {@link #isTopLevel()}
-     * is true, then this is the same as {@link #getWorldScale()}.
-     *
+     * 获取本地坐标系下的相对比例
+     * <p>
+     *     若本节点是顶级节点({@link #isTopLevel()} is true)，则结果与{@link #getWorldScale()}相同
+     * </p>
      * @see #setLocalScale(Vector3)
-     * @return a new vector that represents the node's local-space scale
+     * @return 比例
      */
     public final Vector3 getLocalScale() {
         return new Vector3(localScale);
     }
 
     /**
-     * Get a copy of the nodes world-space position.
-     *
+     * 获取世界坐标系下的绝对位置
      * @see #setWorldPosition(Vector3)
-     * @return a new vector that represents the node's world-space position
+     * @return 位置
      */
     public final Vector3 getWorldPosition() {
         return new Vector3(getWorldPositionInternal());
     }
 
     /**
-     * Gets a copy of the nodes world-space rotation.
-     *
+     * 获取世界坐标系下的旋转四元数
      * @see #setWorldRotation(Quaternion)
-     * @return a new quaternion that represents the node's world-space rotation
+     * @return 旋转四元数
      */
     public final Quaternion getWorldRotation() {
         return new Quaternion(getWorldRotationInternal());
     }
 
     /**
-     * Gets a copy of the nodes world-space scale. Some precision will be lost if the node is skewed.
-     *
+     * 获取世界坐标系下的比例
      * @see #setWorldScale(Vector3)
-     * @return a new vector that represents the node's world-space scale
+     * @return 比例
      */
     public final Vector3 getWorldScale() {
         return new Vector3(getWorldScaleInternal());
     }
 
     /**
-     * Sets the position of this node relative to its parent (local-space). If {@link #isTopLevel()}
-     * is true, then this is the same as {@link #setWorldPosition(Vector3)}.
-     *
+     * 在本地坐标系下设置相抵位置
      * @see #getLocalPosition()
-     * @param position The position to apply.
+     * @param position 位置
      */
     public void setLocalPosition(Vector3 position) {
         Preconditions.checkNotNull(position, "Parameter \"position\" was null.");
@@ -617,11 +572,12 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the rotation of this node relative to its parent (local-space). If {@link #isTopLevel()}
-     * is true, then this is the same as {@link #setWorldRotation(Quaternion)}.
-     *
+     * 在本地坐标系下设置相对的旋转四元数
+     * <p>
+     *     若本节点是顶级节点，则与{@link #setWorldRotation(Quaternion)}同样效果
+     * </p>
      * @see #getLocalRotation()
-     * @param rotation The rotation to apply.
+     * @param rotation 旋转四元数
      */
     public void setLocalRotation(Quaternion rotation) {
         Preconditions.checkNotNull(rotation, "Parameter \"rotation\" was null.");
@@ -631,11 +587,12 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the scale of this node relative to its parent (local-space). If {@link #isTopLevel()} is
-     * true, then this is the same as {@link #setWorldScale(Vector3)}.
-     *
+     * 在本地坐标系下设置相对比例
+     * <p>
+     *     若本节点是顶级节点，则与{@link #setWorldScale(Vector3)}同样效果
+     * </p>
      * @see #getLocalScale()
-     * @param scale The scale to apply.
+     * @param scale 比例
      */
     public void setLocalScale(Vector3 scale) {
         Preconditions.checkNotNull(scale, "Parameter \"scale\" was null.");
@@ -645,10 +602,9 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the world-space position of this node.
-     *
+     * 在世界坐标系下设置绝对位置
      * @see #getWorldPosition()
-     * @param position The position to apply.
+     * @param position 位置信息
      */
     public void setWorldPosition(Vector3 position) {
         Preconditions.checkNotNull(position, "Parameter \"position\" was null.");
@@ -661,17 +617,15 @@ public class Node extends NodeParent implements TransformProvider {
 
         markTransformChangedRecursively(LOCAL_DIRTY_FLAGS, this);
 
-        // We already know the world position, cache it immediately so we don't
-        // need to decompose it.
+        //更新缓存
         cachedWorldPosition.set(position);
         dirtyTransformFlags &= ~WORLD_POSITION_DIRTY;
     }
 
     /**
-     * Sets the world-space rotation of this node.
-     *
+     * 在世界坐标系下设置绝对的旋转四元数
      * @see #getWorldRotation()
-     * @param rotation The rotation to apply.
+     * @param rotation 旋转四元数
      */
     public void setWorldRotation(Quaternion rotation) {
         Preconditions.checkNotNull(rotation, "Parameter \"rotation\" was null.");
@@ -685,17 +639,15 @@ public class Node extends NodeParent implements TransformProvider {
 
         markTransformChangedRecursively(LOCAL_DIRTY_FLAGS, this);
 
-        // We already know the world rotation, cache it immediately so we don't
-        // need to decompose it.
+        //更新缓存
         cachedWorldRotation.set(rotation);
         dirtyTransformFlags &= ~WORLD_ROTATION_DIRTY;
     }
 
     /**
-     * Sets the world-space scale of this node.
-     *
+     * 在世界坐标系下设置比例
      * @see #getWorldScale()
-     * @param scale The scale to apply.
+     * @param scale 比例
      */
     public void setWorldScale(Vector3 scale) {
         Preconditions.checkNotNull(scale, "Parameter \"scale\" was null.");
@@ -703,9 +655,8 @@ public class Node extends NodeParent implements TransformProvider {
         if (parentAsNode != null) {
             Node parentAsNode = this.parentAsNode;
 
-            // Compute local matrix with scale = 1.
-            // Disallow dispatch transform changed here so we don't send the event multiple times
-            // during setWorldScale.
+            // 计算尺度为1的矩阵。
+            // 禁止在这里改变调度变换，这样我们就不会在setWorldScale中多次发送事件
             allowDispatchTransformChangedListeners = false;
             setLocalScale(Vector3.one());
             allowDispatchTransformChangedListeners = true;
@@ -714,7 +665,7 @@ public class Node extends NodeParent implements TransformProvider {
             Matrix.multiply(
                     parentAsNode.getWorldModelMatrixInternal(), localModelMatrix, cachedWorldModelMatrix);
 
-            // Both matrices get recomputed, so we can use them as temporary storage.
+            //这两个矩阵都会被重新计算，因此我们可以将它们用作临时存储。
             Matrix worldS = localModelMatrix;
             worldS.makeScale(scale);
 
@@ -728,17 +679,16 @@ public class Node extends NodeParent implements TransformProvider {
             setLocalScale(scale);
         }
 
-        // We already know the world scale, cache it immediately so we don't
-        // need to decompose it.
+        //更新缓存
         cachedWorldScale.set(scale);
         dirtyTransformFlags &= ~WORLD_SCALE_DIRTY;
     }
 
     /**
-     * Converts a point in the local-space of this node to world-space.
+     * 将本地坐标系下的坐标转换为世界坐标系下的坐标
      *
-     * @param point the point in local-space to convert
-     * @return a new vector that represents the point in world-space
+     * @param point 本地坐标系下的坐标
+     * @return 世界坐标系下的坐标
      */
     public final Vector3 localToWorldPoint(Vector3 point) {
         Preconditions.checkNotNull(point, "Parameter \"point\" was null.");
@@ -747,10 +697,10 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Converts a point in world-space to the local-space of this node.
+     * 将世界坐标系下的坐标转换为本地坐标系下的坐标
      *
-     * @param point the point in world-space to convert
-     * @return a new vector that represents the point in local-space
+     * @param point 世界坐标系下的坐标
+     * @return 本地坐标系下的坐标
      */
     public final Vector3 worldToLocalPoint(Vector3 point) {
         Preconditions.checkNotNull(point, "Parameter \"point\" was null.");
@@ -759,11 +709,10 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Converts a direction from the local-space of this node to world-space. Not impacted by the
-     * position or scale of the node.
+     * 将方向从该节点的本地坐标系转换为世界坐标系。不受节点位置或规模的影响。
      *
-     * @param direction the direction in local-space to convert
-     * @return a new vector that represents the direction in world-space
+     * @param direction 待转换的方向向量
+     * @return 世界坐标系下的方向向量
      */
     public final Vector3 localToWorldDirection(Vector3 direction) {
         Preconditions.checkNotNull(direction, "Parameter \"direction\" was null.");
@@ -772,11 +721,10 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Converts a direction from world-space to the local-space of this node. Not impacted by the
-     * position or scale of the node.
+     * 将方向从该节点的世界坐标系转换为本地坐标系。不受节点位置或规模的影响。
      *
-     * @param direction the direction in world-space to convert
-     * @return a new vector that represents the direction in local-space
+     * @param direction 待转换的方向向量
+     * @return 本地坐标系下的方向向量
      */
     public final Vector3 worldToLocalDirection(Vector3 direction) {
         Preconditions.checkNotNull(direction, "Parameter \"direction\" was null.");
@@ -785,68 +733,59 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Gets the world-space forward vector (-z) of this node.
-     *
-     * @return a new vector that represents the node's forward direction in world-space
+     * 获取该节点的世界空间向前的向量(-z)。
+     * @return Vector3
      */
     public final Vector3 getForward() {
         return localToWorldDirection(Vector3.forward());
     }
 
     /**
-     * Gets the world-space back vector (+z) of this node.
-     *
-     * @return a new vector that represents the node's back direction in world-space
+     * 获取该节点的世界空间向后的向量(+z)。
+     * @return Vector3
      */
     public final Vector3 getBack() {
         return localToWorldDirection(Vector3.back());
     }
 
     /**
-     * Gets the world-space right vector (+x) of this node.
-     *
-     * @return a new vector that represents the node's right direction in world-space
+     * 获取该节点的世界空间向右的向量(+x)。
+     * @return Vector3
      */
     public final Vector3 getRight() {
         return localToWorldDirection(Vector3.right());
     }
 
     /**
-     * Gets the world-space left vector (-x) of this node.
-     *
-     * @return a new vector that represents the node's left direction in world-space
+     * 获取该节点的世界空间向左的向量(-x)。
+     * @return Vector3
      */
     public final Vector3 getLeft() {
         return localToWorldDirection(Vector3.left());
     }
 
     /**
-     * Gets the world-space up vector (+y) of this node.
-     *
-     * @return a new vector that represents the node's up direction in world-space
+     * 获取该节点的世界空间向上的向量(+y)。
+     * @return Vector3
      */
     public final Vector3 getUp() {
         return localToWorldDirection(Vector3.up());
     }
 
     /**
-     * Gets the world-space down vector (-y) of this node.
-     *
-     * @return a new vector that represents the node's down direction in world-space
+     * 获取该节点的世界空间向下的向量(-y)。
+     * @return Vector3
      */
     public final Vector3 getDown() {
         return localToWorldDirection(Vector3.down());
     }
 
     /**
-     * Sets the {@link Renderable} to display for this node. If {@link
-     * Node#setCollisionShape(CollisionShape)} is not set, then {@link Renderable#getCollisionShape()}
-     * is used to detect collisions for this {@link Node}.
-     *
+     * 设置渲染对象
      * @see ModelRenderable
      * @see ViewRenderable
-     * @param renderable Usually a 3D model. If null, this node's current renderable will be removed.
-     * @return the created renderable instance
+     * @param renderable 渲染对象，若为null，则移除已渲染的对象
+     * @return 创建的渲染实例
      */
     public RenderableInstance setRenderable(@Nullable Renderable renderable) {
         AndroidPreconditions.checkUiThread();
@@ -888,9 +827,8 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Gets the renderable to display for this node.
-     *
-     * @return renderable to display for this node
+     * 获取要为此节点显示的渲染对象。
+     * @return 渲染对象
      */
     @Nullable
     public Renderable getRenderable() {
@@ -902,16 +840,16 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the shape to used to detect collisions for this {@link Node}. If the shape is not set and
-     * {@link Node#setRenderable(Renderable)} is set, then {@link Renderable#getCollisionShape()} is
-     * used to detect collisions for this {@link Node}.
-     *
+     * 设置用于检测此{@link Node}的碰撞的形状。
+     * <p>
+     *     如果没有设置形状，并且设置了{@link Node#setRenderable(Renderable)}，
+     *     则使用{@link Renderable#getCollisionShape()}来检测该{@link Node}的碰撞。
+     * </p>
      * @see Scene#hitTest(Ray)
      * @see Scene#hitTestAll(Ray)
      * @see Scene#overlapTest(Node)
      * @see Scene#overlapTestAll(Node)
-     * @param collisionShape represents a geometric shape, i.e. sphere, box, convex hull. If null,
-     *     this node's current collision shape will be removed.
+     * @param collisionShape 表示几何形状，如球体、盒子。如果为空，则该节点的当前碰撞形状将被删除。
      */
     public void setCollisionShape(@Nullable CollisionShape collisionShape) {
         AndroidPreconditions.checkUiThread();
@@ -921,15 +859,12 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Gets the shape to use for collisions with this node. If the shape is null and {@link
-     * Node#setRenderable(Renderable)} is set, then {@link Renderable#getCollisionShape()} is used to
-     * detect collisions for this {@link Node}.
-     *
+     * 获取碰撞体形状
      * @see Scene#hitTest(Ray)
      * @see Scene#hitTestAll(Ray)
      * @see Scene#overlapTest(Node)
      * @see Scene#overlapTestAll(Node)
-     * @return represents a geometric shape, i.e. sphere, box, convex hull.
+     * @return 几何形状，如球体、盒子。如果为空，则该节点的当前碰撞形状将被删除。
      */
     @Nullable
     public CollisionShape getCollisionShape() {
@@ -941,19 +876,19 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the {@link Light} to display. To use, first create a {@link Light} using {@link
-     * Light.Builder}. Set the parameters you care about and then attach it to the node using this
-     * function. A node may have a renderable and a light or just act as a {@link Light}.
-     *
-     * @param light Properties of the {@link Light} to render, pass null to remove the light.
+     * 设置光源信息
+     * <p>
+     *     通过{@link  Light.Builder}创建光源 {@link Light}
+     * </p>
+     * @param light 光源
      */
     public void setLight(@Nullable Light light) {
-        // If this is the same light already set there is nothing to do.
+        //如果这是相同的灯已经设置，直接返回
         if (getLight() == light) {
             return;
         }
 
-        // Null-op if the lightInstance is null
+        //销毁实例
         destroyLightInstance();
 
         if (light != null) {
@@ -961,7 +896,7 @@ public class Node extends NodeParent implements TransformProvider {
         }
     }
 
-    /** Gets the current light, which is mutable. */
+    /** 获取当前的光源 */
     @Nullable
     public Light getLight() {
         if (lightInstance != null) {
@@ -971,13 +906,12 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the direction that the node is looking at in world-space. After calling this, {@link
-     * Node#getForward()} will match the look direction passed in. The up direction will determine the
-     * orientation of the node around the direction. The look direction and up direction cannot be
-     * coincident (parallel) or the orientation will be invalid.
+     * 设置节点在世界空间中看向的方向。
+     * 调用此函数后，{@link Node#getForward()}将匹配传入的查找方向。
+     * 向上方向将决定节点在该方向周围的方向。看向方向和向上方向不能重合(平行)，否则方向无效。
      *
-     * @param lookDirection a vector representing the desired look direction in world-space
-     * @param upDirection a vector representing a valid up vector to use, such as Vector3.up()
+     * @param lookDirection 在世界空间中看向的方向的矢量
+     * @param upDirection 表示要使用的有效向上向量的向量，例如Vector3.up()
      */
     public final void setLookDirection(Vector3 lookDirection, Vector3 upDirection) {
         final Quaternion rotation = Quaternion.lookRotation(lookDirection, upDirection);
@@ -985,25 +919,24 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Sets the direction that the node is looking at in world-space. After calling this, {@link
-     * Node#getForward()} will match the look direction passed in. World-space up (0, 1, 0) will be
-     * used to determine the orientation of the node around the direction.
+     * 设置节点在世界空间中看向的方向。
+     * 调用此方法后，{@link Node#getForward()}将匹配传入的查找方向。
+     * 世界空间向上(0,1,0)将用于确定节点围绕方向的方向。
      *
-     * @param lookDirection a vector representing the desired look direction in world-space
+     * @param lookDirection 在世界空间中表示期望的观看方向的矢量
      */
     public final void setLookDirection(Vector3 lookDirection) {
-        // Default up direction
+        // 默认的向上的方向
         Vector3 upDirection = Vector3.up();
 
-        // First determine if the look direction and default up direction are far enough apart to
-        // produce a numerically stable cross product.
+        // 首先确定看向和默认向上方向是否足够远，以产生一个数值稳定的叉积。
         final float directionUpMatch = Math.abs(Vector3.dot(lookDirection, upDirection));
         if (directionUpMatch > DIRECTION_UP_EPSILON) {
-            // If the direction vector and up vector coincide choose a new up vector.
+            // 如果方向向量和向上向量重合，选择一个新的向上向量。
             upDirection = new Vector3(0.0f, 0.0f, 1.0f);
         }
 
-        // Finally build the rotation with the proper up vector.
+        // 最后用适当的向上向量更新旋转姿态。
         setLookDirection(lookDirection, upDirection);
     }
 
@@ -1014,38 +947,27 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Handles when this node becomes active. A Node is active if it's enabled, part of a scene, and
-     * its parent is active.
-     *
-     * <p>Override to perform any setup that needs to occur when the node is activated.
-     *
+     * 激活时触发，供子类重写时使用
      * @see #isActive()
      * @see #isEnabled()
      */
     public void onActivate() {
-        // Optionally override.
+        // （可选）重写
     }
 
     /**
-     * Handles when this node becomes inactivate. A Node is inactive if it's disabled, not part of a
-     * scene, or its parent is inactive.
-     *
-     * <p>Override to perform any setup that needs to occur when the node is deactivated.
-     *
+     * 失活时触发，供子类重写时使用
      * @see #isActive()
      * @see #isEnabled()
      */
     public void onDeactivate() {
-        // Optionally override.
+        // （可选）重写
     }
 
     /**
-     * Handles when this node is updated. A node is updated before rendering each frame. This is only
-     * called when the node is active.
-     *
-     * <p>Override to perform any updates that need to occur each frame.
-     *
-     * @param frameTime provides time information for the current frame
+     * 更新
+     * <p>每帧更新前调用</p>
+     * @param frameTime 时间信息
      */
     public void onUpdate(FrameTime frameTime) {
         // Optionally override.
@@ -1085,45 +1007,15 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * If this Flag is set to true, the VideoNode will always
-     * point to the Camera (You).
-     *
-     * @param rotateAlwaysToCamera boolean
+     * 设置是否让节点始终朝向相机
+     * @param rotateAlwaysToCamera 启用状态
      */
     public void setRotateAlwaysToCamera(boolean rotateAlwaysToCamera) {
         this.rotateAlwaysToCamera = rotateAlwaysToCamera;
     }
     /**
-     * Handles when this node is touched.
-     *
-     * <p>Override to perform any logic that should occur when this node is touched. The way that
-     * touch events are propagated mirrors the way touches are propagated to Android Views. This is
-     * only called when the node is active.
-     *
-     * <p>When an ACTION_DOWN event occurs, that represents the start of a gesture. ACTION_UP or
-     * ACTION_CANCEL represents when a gesture ends. When a gesture starts, the following is done:
-     *
-     * <ul>
-     *   <li>Dispatch touch events to the node that was touched as detected by {@link
-     *       Scene#hitTest(MotionEvent)}.
-     *   <li>If the node doesn't consume the event, recurse upwards through the node's parents and
-     *       dispatch the touch event until one of the node's consumes the event.
-     *   <li>If no nodes consume the event, the gesture is ignored and subsequent events that are part
-     *       of the gesture will not be passed to any nodes.
-     *   <li>If one of the node's consumes the event, then that node will consume all future touch
-     *       events for the gesture.
-     * </ul>
-     *
-     * When a touch event is dispatched to a node, the event is first passed to the node's {@link
-     * OnTouchListener}. If the {@link OnTouchListener} doesn't handle the event, it is passed to
-     * {@link #onTouchEvent(HitTestResult, MotionEvent)}.
-     *
-     * @param hitTestResult Represents the node that was touched, and information about where it was
-     *     touched. On ACTION_DOWN events, {@link HitTestResult#getNode()} will always be this node or
-     *     one of its children. On other events, the touch may have moved causing the {@link
-     *     HitTestResult#getNode()} to change (or possibly be null).
-     * @param motionEvent The motion event.
-     * @return True if the event was handled, false otherwise.
+     * 分发触摸事件
+     * <p>内部调用</p>
      */
     public boolean onTouchEvent(HitTestResult hitTestResult, MotionEvent motionEvent) {
         Preconditions.checkNotNull(hitTestResult, "Parameter \"hitTestResult\" was null.");
@@ -1131,7 +1023,7 @@ public class Node extends NodeParent implements TransformProvider {
 
         boolean handled = false;
 
-        // Reset tap tracking data if a new gesture has started or if the Node has become inactive.
+        // 重置点击跟踪数据，如果一个新的手势已经开始或如果节点已处于非活动状态。
         int actionMasked = motionEvent.getActionMasked();
         if (actionMasked == MotionEvent.ACTION_DOWN || !isActive()) {
             tapTrackingData = null;
@@ -1139,8 +1031,8 @@ public class Node extends NodeParent implements TransformProvider {
 
         switch (actionMasked) {
             case MotionEvent.ACTION_DOWN:
-                // Only start tacking the tap gesture if there is a tap listener set.
-                // This allows the event to bubble up to the node's parent when there is no listener.
+                // 只有在设置了点击监听器的情况下才开始添加点击手势。
+                // 允许事件在没有侦听器时向上冒泡到节点的父节点。
                 if (onTapListener == null) {
                     break;
                 }
@@ -1154,29 +1046,29 @@ public class Node extends NodeParent implements TransformProvider {
                 tapTrackingData = new TapTrackingData(hitNode, downPosition);
                 handled = true;
                 break;
-            // For both ACTION_MOVE and ACTION_UP, we need to make sure the tap gesture is still valid.
+            //对于ACTION_MOVE和ACTION_UP，我们需要确保点击手势仍然有效。
             case MotionEvent.ACTION_MOVE:
             case MotionEvent.ACTION_UP:
-                // Assign to local variable for static analysis.
+                //分配给局部变量。
                 TapTrackingData tapTrackingData = this.tapTrackingData;
                 if (tapTrackingData == null) {
                     break;
                 }
 
-                // Determine how much the touch has moved.
+                //确定触摸移动了多少。
                 float touchSlop = getScaledTouchSlop();
                 Vector3 upPosition = new Vector3(motionEvent.getX(), motionEvent.getY(), 0.0f);
                 float touchDelta = Vector3.subtract(tapTrackingData.downPosition, upPosition).length();
 
-                // Determine if this node or a child node is still being touched.
+                //确定是否仍在触摸此节点或子节点。
                 hitNode = hitTestResult.getNode();
                 boolean isHitValid = hitNode == tapTrackingData.downNode;
 
-                // Determine if this is a valid tap.
+                //确定这是否是一个有效的点击。
                 boolean isTapValid = isHitValid || touchDelta < touchSlop;
                 if (isTapValid) {
                     handled = true;
-                    // If this is an ACTION_UP event, it's time to call the listener.
+                    //如果这是一个ACTION_UP事件，那么调用此。
                     if (actionMasked == MotionEvent.ACTION_UP && onTapListener != null) {
                         onTapListener.onTap(hitTestResult, motionEvent);
                         this.tapTrackingData = null;
@@ -1193,24 +1085,17 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Handles when this node's transformation is changed.
-     *
-     * <p>The originating node is the most top-level node in the hierarchy that triggered this node to
-     * change. It will always be either the same node or one of its' parents. i.e. if node A's
-     * position is changed, then that will trigger {@link #onTransformChange(Node)} to be called for
-     * all of it's children with the originatingNode being node A.
-     *
-     * @param originatingNode the node that triggered this node's transformation to change
+     * 几何变换更新时触发
+     * <p>供子类重写</p>
      */
     public void onTransformChange(Node originatingNode) {
-        // Optionally Override.
+        //重写
     }
 
     /**
-     * Traverses the hierarchy and call a method on each node (including this node). Traversal is
-     * depth first.
+     * 遍历层次结构并在每个节点(包括此节点)上调用方法。遍历首先是深度。
      *
-     * @param consumer the method to call on each node
+     * @param consumer 要在每个节点上调用的方法
      */
     @SuppressWarnings("AndroidApiChecker")
     @Override
@@ -1220,11 +1105,9 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Traverses the hierarchy to find the first node (including this node) that meets a condition.
-     * Once the predicate is met, the traversal stops. Traversal is depth first.
-     *
-     * @param condition predicate the defines the conditions of the node to search for.
-     * @return the first node that matches the conditions of the predicate, otherwise null is returned
+     * 查找满足条件的节点
+     * @param condition 查找条件
+     * @return 返回匹配条件的第一个节点，否则返回null
      */
     @SuppressWarnings("AndroidApiChecker")
     @Override
@@ -1242,7 +1125,7 @@ public class Node extends NodeParent implements TransformProvider {
         return name + "(" + super.toString() + ")";
     }
 
-    /** Returns the parent of this node. */
+    /** 返回该节点的父节点。 */
     @Nullable
     final NodeParent getNodeParent() {
         return parent;
@@ -1258,20 +1141,18 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Calls onUpdate if the node is active. Used by SceneView to dispatch updates.
-     *
-     * @param frameTime provides time information for the current frame
+     * 如果节点处于活动状态，则调用onUpdate。由SceneView用来调度更新。
+     * @param frameTime 时间信息
      */
     final void dispatchUpdate(FrameTime frameTime) {
         if (!isActive()) {
             return;
         }
 
-        // Update state when the renderable has changed.
+        //当渲染对象发生变化时的更新状态。
         Renderable renderable = getRenderable();
         if (renderable != null && renderable.getId().checkChanged(renderableId)) {
-            // Refresh the collider to ensure it is using the correct collision shape now that the
-            // renderable has changed.
+            // 刷新碰撞器，以确保它使用正确的碰撞形状，现在可渲染的已经改变。
             refreshCollider();
             renderableId = renderable.getId().get();
         }
@@ -1284,14 +1165,7 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Calls onTouchEvent if the node is active. Used by TouchEventSystem to dispatch touch events.
-     *
-     * @param hitTestResult Represents the node that was touched, and information about where it was
-     *     touched. On ACTION_DOWN events, {@link HitTestResult#getNode()} will always be this node or
-     *     one of its children. On other events, the touch may have moved causing the {@link
-     *     HitTestResult#getNode()} to change (or possibly be null).
-     * @param motionEvent The motion event.
-     * @return True if the event was handled, false otherwise.
+     * 分发触摸事件
      */
     boolean dispatchTouchEvent(HitTestResult hitTestResult, MotionEvent motionEvent) {
         Preconditions.checkNotNull(hitTestResult, "Parameter \"hitTestResult\" was null.");
@@ -1301,12 +1175,6 @@ public class Node extends NodeParent implements TransformProvider {
             return false;
         }
 
-        // TODO: It feels wrong to give Node direct knowledge of Views/ViewRenderable.
-        // It also feels wrong to have a 'Renderable' receive touch events. This hints at a larger
-        // API
-        // problem of Renderable representing more than just rendering information (we have this
-        // problem
-        // with collision shapes too). Investigate a way to refactor this.
         if (dispatchToViewRenderable(motionEvent)) {
             return true;
         }
@@ -1324,38 +1192,21 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * WARNING: Do not call this function directly unless you know what you are doing. Sets the scene
-     * field and propagates it to all children recursively. this is called automatically when the node
-     * is added/removed from the scene or its parent changes.
-     *
-     * @param scene The scene to set. If null, the scene is set to null.
+     * 警告:不要直接调用这个函数，除非你知道你在做什么。设置场景
+     * 并将其递归传播给所有子字段。这是自动调用时的节点
+     * 从场景中添加/删除或其父更改。
+     *@param scene 要设置的场景。如果为空，则场景设置为空。
      */
     final void setSceneRecursively(@Nullable Scene scene) {
         AndroidPreconditions.checkUiThread();
 
-        // First, set the scene of this node and all child nodes.
+        //首先，设置此节点和所有子节点的场景。
         setSceneRecursivelyInternal(scene);
 
-        // Then, recursively update the active status of this node and all child nodes.
+        //然后，递归地更新此节点和所有子节点的活动状态。
         updateActiveStatusRecursively();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // TODO: Gltf animation api should be consistent with Sceneform.
     @Nullable
     public RenderableInstance getRenderableInstance() {
         return renderableInstance;
@@ -1372,8 +1223,7 @@ public class Node extends NodeParent implements TransformProvider {
 
     Matrix getWorldModelMatrixInverseInternal() {
         if ((dirtyTransformFlags & WORLD_INVERSE_TRANSFORM_DIRTY) == WORLD_INVERSE_TRANSFORM_DIRTY) {
-            // Cache the inverse of the world model matrix.
-            // Used for converting from world-space to local-space.
+            //求逆矩阵，用于世界坐标系到本地坐标系的转换
             Matrix.invert(getWorldModelMatrixInternal(), cachedWorldModelMatrixInverse);
             dirtyTransformFlags &= ~WORLD_INVERSE_TRANSFORM_DIRTY;
         }
@@ -1423,9 +1273,7 @@ public class Node extends NodeParent implements TransformProvider {
         AndroidPreconditions.checkUiThread();
 
         if (active) {
-            // This should NEVER be thrown because updateActiveStatusRecursively checks to make sure
-            // that the active status has changed before calling this. If this exception is thrown, a bug
-            // was introduced.
+            //这应该永远不会被抛出
             throw new AssertionError("Cannot call activate while already active.");
         }
 
@@ -1454,9 +1302,7 @@ public class Node extends NodeParent implements TransformProvider {
         AndroidPreconditions.checkUiThread();
 
         if (!active) {
-            // This should NEVER be thrown because updateActiveStatusRecursively checks to make sure
-            // that the active status has changed before calling this. If this exception is thrown, a bug
-            // was introduced.
+            //这应该永远不会被抛出
             throw new AssertionError("Cannot call deactivate while already inactive.");
         }
 
@@ -1492,28 +1338,27 @@ public class Node extends NodeParent implements TransformProvider {
     private void refreshCollider() {
         CollisionShape finalCollisionShape = collisionShape;
 
-        // If no collision shape has been set, fall back to the collision shape from the renderable, if
-        // there is a renderable.
+        //如果没有设置碰撞形状，则从可渲染对象返回到碰撞形状(如果有可渲染对象)。
         Renderable renderable = getRenderable();
         if (finalCollisionShape == null && renderable != null) {
             finalCollisionShape = renderable.getCollisionShape();
         }
 
         if (finalCollisionShape != null) {
-            // Create the collider if it doesn't already exist.
+            //如果碰撞体还不存在，就创建。
             if (collider == null) {
                 collider = new Collider(this, finalCollisionShape);
 
-                // Attach the collider to the collision system if the node is already active.
+                //如果节点已经激活，则将碰撞体附加到碰撞系统。
                 if (active && scene != null) {
                     collider.setAttachedCollisionSystem(scene.collisionSystem);
                 }
             } else if (collider.getShape() != finalCollisionShape) {
-                // Set the collider's shape to the new shape if needed.
+                //如果需要，将碰撞体的形状设置为新的形状。
                 collider.setShape(finalCollisionShape);
             }
         } else if (collider != null) {
-            // Dispose of the old collider.
+            //处理旧的碰撞体
             collider.setAttachedCollisionSystem(null);
             collider = null;
         }
@@ -1550,11 +1395,9 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Internal Convenience function for accessing cachedWorldPosition that ensures the cached value
-     * is updated before it is accessed. Used internally instead of getWorldPosition because
-     * getWorldPosition is written to be immutable and therefore requires allocating a new Vector for
-     * each use.
-     *
+     * 内部方便函数，用于访问cachedWorldPosition，确保缓存的值
+     * 在被访问之前被更新。内部使用，而不是getWorldPosition，因为
+     * getWorldPosition是不可变的，因此需要分配一个新的Vector每次使用。
      * @return The cachedWorldPosition.
      */
     private Vector3 getWorldPositionInternal() {
@@ -1571,11 +1414,9 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Internal Convenience function for accessing cachedWorldRotation that ensures the cached value
-     * is updated before it is accessed. Used internally instead of getWorldRotation because
-     * getWorldRotation is written to be immutable and therefore requires allocating a new Quaternion
-     * for each use.
-     *
+     * 内部方便函数访问cachedworldrotion，确保缓存的值
+     * 在被访问之前被更新。在内部使用，而不是getworldrotion，因为
+     * getworldrotion被写为不可变的，因此需要分配一个新的四元数用于每次使用。
      * @return The cachedWorldRotation.
      */
     private Quaternion getWorldRotationInternal() {
@@ -1593,10 +1434,9 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     /**
-     * Internal Convenience function for accessing cachedWorldScale that ensures the cached value is
-     * updated before it is accessed. Used internally instead of getWorldScale because getWorldScale
-     * is written to be immutable and therefore requires allocating a new Vector3 for each use.
-     *
+     * 内部方便函数访问cachedWorldScale，确保缓存的值是
+     * 在被访问前更新。内部使用，而不是getWorldScale，因为getWorldScale
+     * 被写为不可变的，因此需要为每次使用分配一个新的Vector3。
      * @return The cachedWorldScale.
      */
     private Vector3 getWorldScaleInternal() {
@@ -1623,7 +1463,7 @@ public class Node extends NodeParent implements TransformProvider {
     }
 
     private void destroyLightInstance() {
-        // If the light instance is already null, then there is nothing to do so just return.
+        //如果light实例已经为空，那么就不需要做任何事情，只需返回即可。
         if (lightInstance == null) {
             return;
         }

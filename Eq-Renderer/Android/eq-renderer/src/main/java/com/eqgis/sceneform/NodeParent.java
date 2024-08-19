@@ -13,43 +13,45 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * Base class for all classes that can contain a set of nodes as children.
+ * 节点对象基类
  *
- * <p>The classes {@link Node} and {@link Scene} are both NodeParents. To make a {@link Node} the
- * child of another {@link Node} or a {@link Scene}, use {@link Node#setParent(NodeParent)}.
+ * <p>
+ *     类{@link Node}和{@link Scene}都是nodeparent。
+ *     要使{@link Node}成为另一个{@link Node}或{@link Scene}的子节点，
+ *     请使用{@link Node#setParent(NodeParent)}。
+ * </p>
  */
 public abstract class NodeParent {
   private final ArrayList<Node> children = new ArrayList<>();
   private final List<Node> unmodifiableChildren = Collections.unmodifiableList(children);
 
-  // List of children that can be iterated over
+  // 子节点集合
   private final ArrayList<Node> iterableChildren = new ArrayList<>();
 
-  // True if the list of children has changed since the last time iterableChildren was updated.
+  // 如果子节点集合自上次更新iterableChildren以来发生了变化，则为True。
   private boolean isIterableChildrenDirty;
 
-  // Used to track if the list of iterableChildren is currently being iterated over.
-  // This is an integer instead of a boolean to handle re-entrance (iteration inside of iteration).
+  // 用于跟踪iterableChildren列表当前是否正在迭代。
+  // 迭代计数，用于处理重入口(迭代中的迭代)。
   private int iteratingCounter;
 
-  /** Returns an immutable list of this parent's children. */
+  /** 返回父节点的子节点的不可变列表。 */
   public final List<Node> getChildren() {
     return unmodifiableChildren;
   }
 
   /**
-   * Adds a node as a child of this NodeParent. If the node already has a parent, it is removed from
-   * its old parent. If the node is already a direct child of this NodeParent, no change is made.
+   * 添加节点作为此NodeParent的子节点。如果节点已经有父节点，则从旧的父节点中删除该节点。
+   * 如果该节点已经是该NodeParent的直接子节点，则不会进行任何更改。
    *
-   * @param child the node to add as a child
-   * @throws IllegalArgumentException if the child is the same object as the parent, or if the
-   *     parent is a descendant of the child
+   * @param child 子节点
+   * @throws IllegalArgumentException 如果子对象与父对象相同或者父对象是子对象的后代，则抛出异常
    */
   public final void addChild(Node child) {
     Preconditions.checkNotNull(child, "Parameter \"child\" was null.");
     AndroidPreconditions.checkUiThread();
 
-    // Return early if the parent hasn't changed.
+    // 父节点未变，提前返回
     if (child.parent == this) {
       return;
     }
@@ -63,10 +65,10 @@ public abstract class NodeParent {
   }
 
   /**
-   * Removes a node from the children of this NodeParent. If the node is not a direct child of this
-   * NodeParent, no change is made.
+   * 从这个NodeParent的子节点中删除一个节点。
+   * 如果该节点不是该NodeParent的直接子节点，则不会进行任何更改。
    *
-   * @param child the node to remove from the children
+   * @param child 要删除的子节点
    */
   public final void removeChild(Node child) {
     Preconditions.checkNotNull(child, "Parameter \"child\" was null.");
@@ -86,11 +88,10 @@ public abstract class NodeParent {
   }
 
   /**
-   * Traverse the hierarchy and call a method on each node. Traversal is depth first. If this
-   * NodeParent is a Node, traversal starts with this NodeParent, otherwise traversal starts with
-   * its children.
+   * 遍历层次结构并在每个节点上调用一个方法。遍历首先是深度。
+   * 如果这个NodeParent是一个Node，遍历从这个NodeParent开始，否则遍历从它的子节点开始。
    *
-   * @param consumer The method to call on each node.
+   * @param consumer 每个节点都触发
    */
   @SuppressWarnings("AndroidApiChecker")
   public void callOnHierarchy(Consumer<Node> consumer) {
@@ -106,12 +107,12 @@ public abstract class NodeParent {
   }
 
   /**
-   * Traverse the hierarchy to find the first node that meets a condition. Traversal is depth first.
-   * If this NodeParent is a Node, traversal starts with this NodeParent, otherwise traversal starts
-   * with its children.
+   * 遍历层次结构以查找满足条件的第一个节点。
+   * 遍历首先是深度。如果这个NodeParent是一个Node，
+   * 遍历从这个NodeParent开始，否则遍历从它的子节点开始。
    *
-   * @param condition predicate the defines the conditions of the node to search for.
-   * @return the first node that matches the conditions of the predicate, otherwise null is returned
+   * @param condition 检索条件
+   * @return 返回符合条件的第一个节点，否则返回null
    */
   @SuppressWarnings("AndroidApiChecker")
   @Nullable
@@ -133,12 +134,14 @@ public abstract class NodeParent {
   }
 
   /**
-   * Traverse the hierarchy to find the first node with a given name. Traversal is depth first. If
-   * this NodeParent is a Node, traversal starts with this NodeParent, otherwise traversal starts
-   * with its children.
+   * 遍历层次结构以查找具有给定名称的第一个节点。
    *
-   * @param name The name of the node to find
-   * @return the node if it's found, otherwise null
+   * <p>
+   *     遍历首先是深度。如果这个NodeParent是一个Node，遍历从这个NodeParent开始，否则遍历从它的子节点开始。
+   * </p>
+   *
+   * @param name 要查找的节点名称
+   * @return 如果找到该节点，则为该节点，否则为空
    */
   @SuppressWarnings("AndroidApiChecker")
   @Nullable
