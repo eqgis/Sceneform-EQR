@@ -300,13 +300,14 @@ class RenderableInternalData implements IRenderableInternalData {
   /** @hide */
   @Override
   protected void finalize() throws Throwable {
-    try {
-      ThreadPools.getMainExecutor().execute(() -> dispose());
-    } catch (Exception e) {
-      Log.e(TAG, "Error while Finalizing Renderable Internal Data.", e);
-    } finally {
-      super.finalize();
-    }
+    //2024年8月19日21:29:17 Ikkyu备注：渲染的自定义Mesh不再在此处执行销毁操作
+//    try {
+//      ThreadPools.getMainExecutor().execute(() -> dispose());
+//    } catch (Exception e) {
+//      Log.e(TAG, "Error while Finalizing Renderable Internal Data.", e);
+//    } finally {
+//      super.finalize();
+//    }
   }
 
   /**
