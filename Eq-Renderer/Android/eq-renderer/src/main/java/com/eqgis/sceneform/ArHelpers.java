@@ -5,23 +5,25 @@ import com.eqgis.sceneform.math.Vector3;
 import com.google.ar.core.Pose;
 import com.eqgis.ar.ARPose;
 
-/** Helper class for utility functions for interacting with the ARCore API. */
+/**
+ * AR助手
+ * <p>用于从ARCore或AREngine的Pose中提取姿态数据</p>
+ * */
 public class ArHelpers {
-  /** Returns a Sceneform {@link Vector3} representing the position from an ARCore {@link Pose}. */
+  /** 从{@link Pose}中提取位置 */
   static Vector3 extractPositionFromPose(Pose pose) {
     return new Vector3(pose.tx(), pose.ty(), pose.tz());
   }
 
   /**
-   * Returns a Sceneform {@link Quaternion} representing the rotation from an ARCore {@link Pose}.
+   * 从{@link Pose}中提取旋转四元数
    */
   static Quaternion extractRotationFromPose(Pose pose) {
     return new Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw());
   }
 
   /**
-   * @param pose
-   * @return
+   * 从{@link Pose}中提取位置
    */
   public static Vector3 extractPositionFromPose(ARPose pose) {
     return new Vector3(pose.tx(), pose.ty(), pose.tz());
@@ -29,7 +31,7 @@ public class ArHelpers {
   }
 
   /**
-   * Returns a Sceneform {@link Quaternion} representing the rotation from an ARCore {@link Pose}.
+   * 从{@link Pose}中提取旋转四元数
    */
   public static Quaternion extractRotationFromPose(ARPose pose) {
     return new Quaternion(pose.qx(), pose.qy(), pose.qz(), pose.qw());

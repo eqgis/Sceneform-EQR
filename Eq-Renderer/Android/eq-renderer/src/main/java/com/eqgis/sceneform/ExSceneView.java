@@ -11,10 +11,7 @@ import com.eqgis.sceneform.rendering.CameraStream;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * ExternalTexture SceneView
- * <pre>SampleCode:
- * </pre>
- *
+ * 扩展纹理场景视图
  * @author ikkyu 2022/4/29 update 2022/07/19
  * @version 1.0
  **/
@@ -31,9 +28,9 @@ public class ExSceneView extends SceneView{
     }
 
     /**
-     * Constructs a SceneView object and binds it to an Android Context.
+     * 构造函数
      *
-     * @param context the Android Context to use
+     * @param context 安卓上下文
      */
     public ExSceneView(Context context) {
         super(context);
@@ -41,9 +38,9 @@ public class ExSceneView extends SceneView{
     }
 
     /**
-     * Constructs a SceneView object and binds it to an Android Context.
+     * 构造函数
      *
-     * @param context the Android Context to use
+     * @param context 安卓上下文
      * @see #ExSceneView(Context, AttributeSet)
      */
     public ExSceneView(Context context, AttributeSet attrs) {
@@ -61,27 +58,27 @@ public class ExSceneView extends SceneView{
 
     private void initBaseParameter() {
         renderer = Preconditions.checkNotNull(getRenderer());
-        // Initialize Plane Renderer
+        // 背景平面初始化
         cameraStream = new CameraStream(-1,renderer);
         externalTexture = new ExternalTexture();
     }
 
     /**
-     * Update view-specific logic before for each display frame.
+     * 每帧渲染前触发
      *
-     * @return true if the scene should be updated before rendering.
+     * @return 如果场景在渲染前需要更新，则为True。
      * @hide
      */
     @Override
     public boolean onBeginFrame(long frameTimeNanos) {
         if (externalTexture == null)return true;
 
-        // Setup Camera Stream if needed.
+        // 初始化默认的纹理
         if (!cameraStream.isTextureInitialized()) {
             cameraStream.initializeTexture(externalTexture);
         }
 
-        //update depthImage
+        //更新深度图
         if (ARPlatForm.OCCLUSION_MODE == ARPlatForm.OcclusionMode.OCCLUSION_ENABLED && super.customDepthImage != null){
             cameraStream.recalculateOcclusion(customDepthImage);//use
         }
@@ -93,7 +90,7 @@ public class ExSceneView extends SceneView{
     }
 
     /**
-     * get ExternalTexture
+     * 获取拓展纹理
      * @return {@link ExternalTexture}
      */
     @Nullable

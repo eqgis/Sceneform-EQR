@@ -38,7 +38,14 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 /**
- * A SurfaceView that integrates with ARCore and renders a scene.
+ * AR模式的场景视图
+ * <p>
+ *     当前支持ARCore和AREngine。
+ *     默认底层自动根据设备型号判断使用ARCore还是AREngine
+ * </p>
+ * 对于2020年之前发布的部分华为手机，既支持ARCore，也支持AREngine。
+ * 默认使用AREngine，若要强制使用ARCore，
+ * 需在初始化前执行{@link ARPlugin#enforceARCore()}
  */
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
 public class ArSceneView extends SceneView {
@@ -48,8 +55,7 @@ public class ArSceneView extends SceneView {
     private static final Color DEFAULT_COLOR_CORRECTION = new Color(1, 1, 1);
 
     /**
-     * When the camera has moved this distance, we create a new anchor to which we attach the Hdr
-     * Lighting scene.
+     * 当相机移动了这个距离，我们创建一个新的锚，我们连接Hdr灯光
      */
     private static final float RECREATE_LIGHTING_ANCHOR_DISTANCE = 0.5f;
     private final Color lastValidColorCorrection = new Color(DEFAULT_COLOR_CORRECTION);
@@ -76,10 +82,7 @@ public class ArSceneView extends SceneView {
     @Nullable private float[] lastValidEnvironmentalHdrMainLightIntensity;
 
     /**
-     * Constructs a ArSceneView object and binds it to an Android Context.
-     *
-     * <p>In order to have rendering work correctly, {#setupSession(Session)} must be called.
-     *
+     * 构造函数
      * @param context the Android Context to use
      * @see #ArSceneView(Context, AttributeSet)
      */
@@ -93,10 +96,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Constructs a ArSceneView object and binds it to an Android Context.
-     *
-     * <p>In order to have rendering work correctly, {#setupSession(Session)} must be called.
-     *
+     * 构造函数
      * @param context the Android Context to use
      * @param attrs   the Android AttributeSet to associate with
      */
@@ -117,14 +117,8 @@ public class ArSceneView extends SceneView {
             ARSession session, String engineType, String engineVersion);
 
     /**
-     * Setup the view with an AR Session. This method must be called once to supply the ARCore
-     * session. The session is needed for any rendering to occur.
-     *
-     * <p>The session is expected to be configured with the update mode of LATEST_CAMERA_IMAGE.
-     * Without this configuration, the updating of the ARCore session could block the UI Thread
-     * causing poor UI experience.
-     *
-     * @param session the ARCore session to use for this view
+     * 配置ARSession
+     * @param session ARSession
      * @see #ArSceneView(Context, AttributeSet)
      */
     public void setupSession(ARSession session) {
@@ -144,7 +138,6 @@ public class ArSceneView extends SceneView {
             session.setDisplayGeometry(display.getRotation(), width, height);
         }
 
-        // Feature config, therefore facing direction, can only be configured once per session.
 //        initializeFacingDirection(session);//AREngine的cameraConfig不支持获取朝向，暂时注释掉
 
         // Set the correct Texture configuration on the camera stream
@@ -163,10 +156,7 @@ public class ArSceneView extends SceneView {
 //    }
 
     /**
-     * Resumes the rendering thread and ARCore session.
-     *
-     * <p>This must be called from onResume().
-     *
+     * 对ARSession执行resume操作
      * @throws Exception if the camera can not be opened
      */
     @Override
@@ -187,15 +177,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Non blocking call to resume the rendering thread and ARCore session in the background
-     *
-     * <p>This must be called from onResume().
-     *
-     * <p>If called while another pause or resume is in progress, the resume will be enqueued and
-     * happen after the current operation completes.
-     *
-     * @return A CompletableFuture completed on the main thread once the resume has completed. The
-     * future will be completed exceptionally if the resume can not be done.
+     * 通过异步的方式对ARSession执行resume操作
      */
     public CompletableFuture<Void> resumeAsync(Executor executor) {
         final WeakReference<ArSceneView> currentSceneView = new WeakReference<>(this);
@@ -225,7 +207,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Resumes the session without starting the scene.
+     * 恢复ARSession
      */
     private void resumeSession() throws ARCameraException {
         ARSession session = this.session;
@@ -236,7 +218,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Resumes the scene without starting the session
+     * 恢复场景
      */
     private void resumeScene() {
         try {
@@ -248,9 +230,10 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Pauses the rendering thread and ARCore session.
-     *
-     * <p>This must be called from onPause().
+     * 暂停场景
+     * <p>
+     *     暂停渲染和ARSession
+     * </p>
      */
     @Override
     public void pause() {
@@ -259,15 +242,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Non blocking call to pause the rendering thread and ARCore session.
-     *
-     * <p>This should be called from onPause().
-     *
-     * <p>If pauseAsync is called while another pause or resume is in progress, the pause will be
-     * enqueued and happen after the current operation completes.
-     *
-     * @return A {@link CompletableFuture} completed on the main thread on the pause has completed.
-     * The future Will will be completed exceptionally if the resume can not be done.
+     * 通过异步的方式暂停场景
      */
     public CompletableFuture<Void> pauseAsync(Executor executor) {
         final WeakReference<ArSceneView> currentSceneView = new WeakReference<>(this);
@@ -299,7 +274,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Pause the session without touching the scene
+     * 暂停ARSession
      */
     private void pauseSession() {
         if (session != null) {
@@ -308,7 +283,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Pause the scene without touching the session
+     * 暂停场景
      */
     private void pauseScene() {
         super.pause();
@@ -333,19 +308,18 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * @return returns true if light estimation is enabled.
+     * @return 如果启用了光线估计，则返回true。
      */
     public boolean isLightEstimationEnabled() {
         return lightEstimationEnabled;
     }
 
     /**
-     * Enable Light Estimation based on the camera feed. The color and intensity of the sun's indirect
-     * light will be modulated by values provided by ARCore's light estimation. Lit objects in the
-     * scene will be affected.
-     *
-     * @param enable set to true to enable Light Estimation or false to use the default estimate,
-     *               which is a pixel intensity of 1.0 and color correction value of white (1.0, 1.0, 1.0).
+     * 启用基于相机馈送的光线估计。太阳的颜色和强度是间接的
+     * 光将由ARCore的光估计提供的值调制。中的点亮对象
+     * 场景将受到影响。
+     * @param enable 设置为true以启用光估计或false使用默认估计，
+     *               表示像素强度为1.0，颜色校正值为白色(1.0,1.0,1.0)。
      */
     public void setLightEstimationEnabled(boolean enable) {
         lightEstimationEnabled = enable;
@@ -358,7 +332,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Returns the ARCore Session used by this view.
+     * 获取AR会话
      */
     @Nullable
     public ARSession getSession() {
@@ -366,9 +340,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Returns the most recent ARCore Frame if it is available. The frame is updated at the beginning
-     * of each drawing frame. Callers of this method should not retain a reference to the return
-     * value, since it will be invalid to use the ARCore frame starting with the next frame.
+     * 获取AR帧
      */
     @Nullable
     @UiThread
@@ -377,23 +349,20 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Returns PlaneRenderer, used to control plane visualization.
+     * 获取平面渲染对象
      */
     public PlaneRenderer getPlaneRenderer() {
         return planeRenderer;
     }
 
     /**
-     * Returns the CameraStream, used to control if the occlusion should be enabled or disabled.
+     * 返回CameraStream，用于控制是否启用或禁用遮挡。
+     * <p>内部方法</p>
      */
     public CameraStream getCameraStream() { return cameraStream; }
 
     /**
-     * Before the render call occurs, update the ARCore session to grab the latest frame and update
-     * listeners.
-     *
-     * @return true if the session updated successfully and a new frame was obtained. Update the scene
-     * before rendering.
+     * 渲染前触发
      * @hide
      */
     @SuppressWarnings("AndroidApiChecker")
@@ -411,7 +380,7 @@ public class ArSceneView extends SceneView {
 
         ensureUpdateMode();
 
-        // Before doing anything update the Frame from ARCore.
+        //从ARCore更新Frame。
         boolean updated = true;
         try {
             ARFrame frame = session.update();
@@ -420,12 +389,12 @@ public class ArSceneView extends SceneView {
                 return false;
             }
 
-            // Setup Camera Stream if needed.
+            //配置相机纹理
             if (!cameraStream.isTextureInitialized()) {
                 cameraStream.initializeTexture(frame);
             }
 
-            // Recalculate camera Uvs if necessary.
+            //重新计算UV
             if (shouldRecalculateCameraUvs(frame)) {
                 cameraStream.recalculateCameraUvs(frame);
             }
@@ -447,10 +416,9 @@ public class ArSceneView extends SceneView {
             return false;
         }
 
-        // If ARCore session has changed, update listeners.
+        //如果ARCore会话已更改，则更新
         if (updated) {
-            // At the start of the frame, update the tracked pose of the camera
-            // to use in any calculations during the frame.
+            //更新相机跟踪姿态
             //todo
 //            getScene().getCamera().updateTrackedPose(currentArCamera);
             //updated by Ikkyu(tanyx)
@@ -486,9 +454,9 @@ public class ArSceneView extends SceneView {
                     }
                 }
 
-                // Update the light estimate.
+                //更新光照估计
                 updateLightEstimate(frame);
-                // Update the plane renderer.
+                //更新平面渲染对象
                 if (planeRenderer.isEnabled()) {
                     planeRenderer.update(frame, getWidth(), getHeight());
                 }
@@ -529,7 +497,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Get the AR light estimate from the frame and then update the scene.
+     * 从帧中获得AR光估计，然后更新场景。
      */
     private void updateLightEstimate(ARFrame frame) {
         // Just return if Light Estimation is disabled.
@@ -551,8 +519,7 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Checks whether the sunlight is being updated every frame based on the Environmental HDR
-     * lighting estimate.
+     * 根据环境HDR照明估算，检查每一帧的阳光是否被更新。
      *
      * @return true if the sunlight direction is updated every frame, false otherwise.
      */
@@ -562,13 +529,11 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Sets whether the sunlight direction generated from Environmental HDR lighting should be updated
-     * every frame. If false the light direction will be updated a single time and then no longer
-     * change.
-     *
-     * <p>This may be used to turn off shadow direction updates when they are distracting or unwanted.
-     *
-     * <p>The default state is true, with sunlight direction updated every frame.
+     * 设置环境HDR照明产生的阳光方向是否更新
+     * 每帧。如果为false，则光照方向将更新一次，然后不再更新
+     * 改变。
+     * <p>这可用于关闭阴影方向更新时，他们分散或不需要的。
+     * <p>默认状态为true，每帧更新阳光方向。
      */
 
     public void setLightDirectionUpdateEnabled(boolean isLightDirectionUpdateEnabled) {
@@ -576,12 +541,10 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Returns true if the ARCore camera is configured with
-     * Config.LightEstimationMode.ENVIRONMENTAL_HDR. When Environmental HDR lighting mode is enabled,
-     * the resulting light estimates will be applied to the Sceneform Scene.
-     *
-     * @return true if HDR lighting is enabled in Sceneform because ARCore HDR lighting estimation is
-     * enabled.
+     * 如果ARCore相机配置了
+     * Config.LightEstimationMode.ENVIRONMENTAL_HDR。当环境HDR照明模式启用时，
+     * 产生的光线估计将应用于Sceneform场景。
+     * @return true如果HDR照明在Sceneform中启用，因为ARCore HDR照明估计是启用。
      */
 
     public boolean isEnvironmentalHdrLightingAvailable() {
@@ -589,11 +552,9 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * Causes a serialized version of the next captured light estimate to be saved to disk.
-     *
+     * 捕获光估计的值
      * @hide
      */
-
     public void captureLightingValues(
             Consumer<EnvironmentalHdrLightEstimate> onNextHdrLightingEstimate) {
         this.onNextHdrLightingEstimate = onNextHdrLightingEstimate;
@@ -606,12 +567,12 @@ public class ArSceneView extends SceneView {
         }
         getScene().setUseHdrLightEstimate(true);
 
-        // Updating the direction shouldn't be skipped if it hasn't ever been acquired yet.
+        //如果还没有获得方向，就不应该跳过更新方向。
         if (isLightDirectionUpdateEnabled || lastValidEnvironmentalHdrMainLightDirection == null) {
             boolean needsNewAnchor = false;
 
-            // If the current anchor for the hdr light direction is not tracking, or we have moved too far
-            // then we need a new anchor on which to base our light direction.
+            //如果当前的锚为hdr光方向没有跟踪，或者我们已经移动太远
+            //那么我们就需要一个新的锚来确定光的方向。
             if (lastValidEnvironmentalHdrAnchor == null
                     || lastValidEnvironmentalHdrAnchor.getTrackingState() != TrackingState.TRACKING) {
                 needsNewAnchor = true;
@@ -625,9 +586,8 @@ public class ArSceneView extends SceneView {
                                 > RECREATE_LIGHTING_ANCHOR_DISTANCE;
             }
 
-            // If we need a new anchor we destroy the current anchor and try to create a new one. If the
-            // ARCore session is tracking this will succeed, and if not we will stop updating the
-            // deeplight estimate until we begin tracking again.
+            //如果我们需要一个新的锚点，我们就会破坏当前的锚点，并尝试创建一个新的锚点。如果
+            //ARCore会话正在跟踪，如果失败，我们将停止更新深度估计，直到我们再次开始跟踪。
             if (needsNewAnchor) {
                 if (lastValidEnvironmentalHdrAnchor != null) {
                     lastValidEnvironmentalHdrAnchor.detach();
@@ -644,8 +604,7 @@ public class ArSceneView extends SceneView {
                 }
             }
 
-            // If we have a valid anchor, we update the anchor-relative local direction based on the
-            // current light estimate.
+            //如果我们有一个有效的锚点，我们根据当前的光估计更新锚点相关的局部方向。
             try {
                 if (lastValidEnvironmentalHdrAnchor != null) {
                     float[] mainLightDirection = estimate.getEnvironmentalHdrMainLightDirection();
@@ -700,8 +659,7 @@ public class ArSceneView extends SceneView {
         try {
             Image[] cubeMap = estimate.acquireEnvironmentalHdrCubeMap();
 
-            // We calculate the world-space direction relative to the current position of the tracked
-            // anchor.
+            //我们计算相对于跟踪锚的当前位置的世界空间方向。
             ARPose anchorPose = Preconditions.checkNotNull(lastValidEnvironmentalHdrAnchor).getPose();
             float[] currentLightDirection =
                     anchorPose.rotateVector(
@@ -737,7 +695,7 @@ public class ArSceneView extends SceneView {
 
     private void updateNormalLightEstimate(ARLightEstimate estimate) {
         getScene().setUseHdrLightEstimate(false);
-        // Verify that the estimate is valid
+        //验证估计是否有效
         float pixelIntensity = lastValidPixelIntensity;
         // Only update the estimate if it is valid.
         if (estimate.getState() == ARLightEstimate.State.VALID) {
@@ -748,9 +706,9 @@ public class ArSceneView extends SceneView {
                     colorCorrectionPixelIntensity[1],
                     colorCorrectionPixelIntensity[2]);
         }
-        // Update the light probe with the current best light estimate.
+        //用当前最佳光估计更新光探针数据。
         getScene().setLightEstimate(lastValidColorCorrection, pixelIntensity);
-        // Update the last valid estimate.
+        //更新最后的有效估计。
         lastValidPixelIntensity = pixelIntensity;
     }
 

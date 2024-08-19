@@ -1,9 +1,9 @@
 package com.eqgis.sceneform;
 
 /**
- * CustomDepthImage
+ * 自定义的深度图
  * <p>
- *     JavaBean
+ *     包含深度数据（早期的ARCore采用2个byte表示一个深度，后来改用了4个byte）
  * </p>
  * @author Ikkyu 2022/01/22
  */

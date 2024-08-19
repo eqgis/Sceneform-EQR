@@ -17,27 +17,7 @@ import com.eqgis.sceneform.utilities.Preconditions;
 import com.eqgis.ar.ARPose;
 
 /**
- * Represents a virtual camera, which determines the perspective through which the scene is viewed.
- *
- * <p>If the camera is part of an {@link ArSceneView}, then the camera automatically tracks the
- * camera pose from ARCore. Additionally, the following methods will throw {@link
- * UnsupportedOperationException} when called:
- *
- * <ul>
- *   <li>{@link #setParent(NodeParent)} - Camera's parent cannot be changed, it is always the scene.
- *   <li>{@link #setLocalPosition(Vector3)} - Camera's position cannot be changed, it is controlled
- *       by the ARCore camera pose.
- *   <li>{@link #setLocalRotation(Quaternion)} - Camera's rotation cannot be changed, it is
- *       controlled by the ARCore camera pose.
- *   <li>{@link #setWorldPosition(Vector3)} - Camera's position cannot be changed, it is controlled
- *       by the ARCore camera pose.
- *   <li>{@link #setWorldRotation(Quaternion)} - Camera's rotation cannot be changed, it is
- *       controlled by the ARCore camera pose.
- * </ul>
- *
- * All other functionality in Node is supported. You can access the position and rotation of the
- * camera, assign a collision shape to the camera, or add children to the camera. Disabling the
- * camera turns off rendering.
+ * 场景相机对象
  */
 public class Camera extends Node implements CameraProvider {
   private final Matrix viewMatrix = new Matrix();
@@ -48,7 +28,7 @@ public class Camera extends Node implements CameraProvider {
   private static final int FALLBACK_VIEW_WIDTH = 1920;
   private static final int FALLBACK_VIEW_HEIGHT = 1080;
 
-  // Default vertical field of view for non-ar camera.
+  // 默认的FOV，非AR场景时使用
   private static final float DEFAULT_VERTICAL_FOV_DEGREES = 90.0f;
 
   private float nearPlane = DEFAULT_NEAR_PLANE;
@@ -56,14 +36,12 @@ public class Camera extends Node implements CameraProvider {
 
   private float verticalFov = DEFAULT_VERTICAL_FOV_DEGREES;
 
-  // isArCamera will be true if the Camera is part of an ArSceneView, false otherwise.
+  // ar场景相机标记，若使用AR，则为true
   private final boolean isArCamera;
   private boolean areMatricesInitialized;
 
   /**
-   * Constructor just for testing. When testing the Camera directly it is not part of any View, so
-   * the isArCamera flag must be set explicitly.
-   *
+   * 构造函数
    * @hide
    */
   @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -91,8 +69,7 @@ public class Camera extends Node implements CameraProvider {
   public void setNearClipPlane(float nearPlane) {
     this.nearPlane = nearPlane;
 
-    // If this is an ArCamera, the projection matrix gets re-created when updateTrackedPose is
-    // called every frame. Otherwise, update it now.
+    // 如果这是一个ArCamera，当每一帧调用updateTrackedPose时，投影矩阵被重新创建。否则，现在更新它。
     if (!isArCamera) {
       refreshProjectionMatrix();
     }
@@ -107,19 +84,15 @@ public class Camera extends Node implements CameraProvider {
   public void setFarClipPlane(float farPlane) {
     this.farPlane = farPlane;
 
-    // If this is an ArCamera, the projection matrix gets re-created when updateTrackedPose is
-    // called every frame. Otherwise, update it now.
+    // 如果这是一个ArCamera，当每一帧调用updateTrackedPose时，投影矩阵被重新创建。否则，现在更新它。
     if (!isArCamera) {
       refreshProjectionMatrix();
     }
   }
 
   /**
-   * Sets the vertical field of view for the non-ar camera in degrees. If this is an AR camera, then
-   * the fov comes from ARCore and cannot be set so an exception is thrown. The default is 90
-   * degrees.
-   *
-   * @throws UnsupportedOperationException if this is an AR camera
+   * 设置垂直视场角
+   * @throws UnsupportedOperationException 若为AR模式，则抛出异常
    */
   
   public void setVerticalFovDegrees(float verticalFov) {
@@ -133,16 +106,8 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Gets the vertical field of view for the camera.
-   *
-   * <p>If this is an AR camera, then it is calculated based on the camera information from ARCore
-   * and can vary between device. It can't be calculated until the first frame after the ARCore
-   * session is resumed, in which case an IllegalStateException is thrown.
-   *
-   * <p>Otherwise, this will return the value set by {@link #setVerticalFovDegrees(float)}, with a
-   * default of 90 degrees.
-   *
-   * @throws IllegalStateException if called before the first frame after ARCore is resumed
+   * 获取垂直视场角
+   * @throws IllegalStateException 若为AR模式，则抛出异常
    */
   
   public float getVerticalFovDegrees() {
@@ -165,34 +130,37 @@ public class Camera extends Node implements CameraProvider {
     return farPlane;
   }
 
-  /** @hide Used internally (b/113516741) */
+  /**
+   * 获取视图矩阵
+   *  @hide Used internally (b/113516741) */
   @Override
   public Matrix getViewMatrix() {
     return viewMatrix;
   }
 
-  /** @hide Used internally (b/113516741) and within rendering package */
+  /**
+   * 获取投影矩阵
+   * @hide Used internally (b/113516741) and within rendering package */
   @Override
   public Matrix getProjectionMatrix() {
     return projectionMatrix;
   }
 
   /**
-   * Updates the pose and projection of the camera to match the tracked pose from ARCore.
-   *
+   * 更新跟踪姿态数据
    * @hide Called internally as part of the integration with ARCore, should not be called directly.
    */
   @Override
   public void updateTrackedPose(ARCamera camera) {
     Preconditions.checkNotNull(camera, "Parameter \"camera\" was null.");
 
-    // Update the projection matrix.
+    //更新投影矩阵
     camera.getProjectionMatrix(projectionMatrix.data, 0, nearPlane, farPlane);
 
-    // Update the view matrix.
+    //更新视图矩阵
     camera.getViewMatrix(viewMatrix.data, 0);
 
-    // Update the node's transformation properties to match the tracked pose.
+    //更新节点的几何变换属性（模型矩阵）以匹配跟踪的姿态。
     ARPose pose = camera.getDisplayOrientedPose();
     Vector3 position = ArHelpers.extractPositionFromPose(pose);
     Quaternion rotation = ArHelpers.extractRotationFromPose(pose);
@@ -216,10 +184,10 @@ public class Camera extends Node implements CameraProvider {
   public void updateTrackedPose(ARCamera camera, Vector3 position, Quaternion rotation) {
     Preconditions.checkNotNull(camera, "Parameter \"camera\" was null.");
 
-    // Update the projection matrix.
+    //更新投影矩阵
     camera.getProjectionMatrix(projectionMatrix.data, 0, nearPlane, farPlane);
 
-    // Update the view matrix.
+    //更新视图矩阵
     camera.getViewMatrix(viewMatrix.data, 0);
 
     super.setWorldPosition(position);
@@ -268,13 +236,9 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Calculates a ray in world space going from the near-plane of the camera and going through a
-   * point in screen space. Screen space is in Android device screen coordinates: TopLeft = (0, 0)
-   * BottomRight = (Screen Width, Screen Height) The device coordinate space is unaffected by the
-   * orientation of the device.
-   *
-   * @param x X position in device screen coordinates.
-   * @param y Y position in device screen coordinates.
+   * 屏幕坐标转射线
+   * @param x 屏幕坐标的X值
+   * @param y 屏幕坐标的Y值
    */
   public Ray screenPointToRay(float x, float y) {
     Vector3 startPoint = new Vector3();
@@ -289,20 +253,9 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Convert a point from world space into screen space.
-   *
-   * <p>The X value is negative when the point is left of the viewport, between 0 and the width of
-   * the {@link SceneView} when the point is within the viewport, and greater than the width when
-   * the point is to the right of the viewport.
-   *
-   * <p>The Y value is negative when the point is below the viewport, between 0 and the height of
-   * the {@link SceneView} when the point is within the viewport, and greater than the height when
-   * the point is above the viewport.
-   *
-   * <p>The Z value is always 0 since the return value is a 2D coordinate.
-   *
-   * @param point the point in world space to convert
-   * @return a new vector that represents the point in screen-space.
+   * 世界坐标转屏幕坐标
+   * @param point 世界坐标系下的空间坐标位置
+   * @return 屏幕坐标
    */
   public Vector3 worldToScreenPoint(Vector3 point) {
     Matrix m = new Matrix();
@@ -315,27 +268,27 @@ public class Camera extends Node implements CameraProvider {
     float z = point.z;
     float w = 1.0f;
 
-    // Multiply the world point.
+    //乘以世界坐标
     Vector3 screenPoint = new Vector3();
     screenPoint.x = x * m.data[0] + y * m.data[4] + z * m.data[8] + w * m.data[12];
     screenPoint.y = x * m.data[1] + y * m.data[5] + z * m.data[9] + w * m.data[13];
     w = x * m.data[3] + y * m.data[7] + z * m.data[11] + w * m.data[15];
 
-    // To clipping space.
+    //转至裁剪平面
     screenPoint.x = ((screenPoint.x / w) + 1.0f) * 0.5f;
     screenPoint.y = ((screenPoint.y / w) + 1.0f) * 0.5f;
 
-    // To screen space.
+    //转至屏幕空间
     screenPoint.x = screenPoint.x * viewWidth;
     screenPoint.y = screenPoint.y * viewHeight;
 
-    // Invert Y because screen Y points down and Sceneform Y points up.
+    //反转Y，因为屏幕Y向下，3D场景Y向上。
     screenPoint.y = viewHeight - screenPoint.y;
 
     return screenPoint;
   }
 
-  /** Unsupported operation. Camera's parent cannot be changed, it is always the scene. */
+  /** 不支持的操作。摄像机的父级是无法改变的，它始终是场景。*/
   @Override
   public void setParent(@Nullable NodeParent parent) {
     throw new UnsupportedOperationException(
@@ -343,11 +296,7 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Set the position of the camera. The camera always {@link #isTopLevel()}, therefore this behaves
-   * the same as {@link #setWorldPosition(Vector3)}.
-   *
-   * <p>If the camera is part of an {@link ArSceneView}, then this is an unsupported operation.
-   * Camera's position cannot be changed, it is controlled by the ARCore camera pose.
+   * 设置本地坐标系下的位置
    */
   @Override
   public void setLocalPosition(Vector3 position) {
@@ -361,11 +310,7 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Set the rotation of the camera. The camera always {@link #isTopLevel()}, therefore this behaves
-   * the same as {@link #setWorldRotation(Quaternion)}.
-   *
-   * <p>If the camera is part of an {@link ArSceneView}, then this is an unsupported operation.
-   * Camera's rotation cannot be changed, it is controlled by the ARCore camera pose.
+   * 设置本地坐标系下的旋转四元数
    */
   @Override
   public void setLocalRotation(Quaternion rotation) {
@@ -379,11 +324,7 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Set the position of the camera. The camera always {@link #isTopLevel()}, therefore this behaves
-   * the same as {@link #setLocalPosition(Vector3)}.
-   *
-   * <p>If the camera is part of an {@link ArSceneView}, then this is an unsupported operation.
-   * Camera's position cannot be changed, it is controlled by the ARCore camera pose.
+   * 设置世界坐标系下的位置
    */
   @Override
   public void setWorldPosition(Vector3 position) {
@@ -397,11 +338,7 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Set the rotation of the camera. The camera always {@link #isTopLevel()}, therefore this behaves
-   * the same as {@link #setLocalRotation(Quaternion)}.
-   *
-   * <p>If the camera is part of an {@link ArSceneView}, then this is an unsupported operation.
-   * Camera's rotation cannot be changed, it is controlled by the ARCore camera pose.
+   * 设置世界坐标系下的旋转四元数
    */
   @Override
   public void setWorldRotation(Quaternion rotation) {
@@ -414,7 +351,7 @@ public class Camera extends Node implements CameraProvider {
     }
   }
 
-  /** @hide Used to explicitly set the projection matrix for testing. */
+  /** @hide 调测时使用，设置投影矩阵 */
   @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
   public void setProjectionMatrix(Matrix matrix) {
     projectionMatrix.set(matrix.data);
@@ -472,7 +409,7 @@ public class Camera extends Node implements CameraProvider {
     return scene.getView().getHeight();
   }
 
-  // Only used if this camera is not controlled by ARCore.
+  //仅在非AR下，生效，刷新投影矩阵
   private void refreshProjectionMatrix() {
     if (isArCamera) {
       return;
@@ -495,15 +432,14 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Set the camera perspective based on the field of view, aspect ratio, near and far planes.
-   * verticalFovInDegrees must be greater than zero and less than 180 degrees. far - near must be
-   * greater than zero. aspect must be greater than zero. near and far must be greater than zero.
+   * 根据视野、长宽比、近平面和远平面设置相机视场角。
+   * verticalFovInDegrees必须大于0且小于180°。远-近必须大于零。Aspect必须大于零。近和远必须大于零。
    *
-   * @param verticalFovInDegrees vertical field of view in degrees.
-   * @param aspect aspect ratio of the viewport, which is widthInPixels / heightInPixels.
-   * @param near distance in world units from the camera to the near plane, default is 0.1f
-   * @param far distance in world units from the camera to the far plane, default is 100.0f
-   * @throws IllegalArgumentException if any of the following preconditions are not met:
+   * @param verticalFovInDegrees 垂直FOV
+   * @param aspect viewport的宽高比，即widthInPixels / hightinpixels。
+   * @param near 近裁剪平面
+   * @param far 远裁剪屏幕
+   * @throws IllegalArgumentException 如果不满足以下任何一个前提条件:
    *     <ul>
    *       <li>0 < verticalFovInDegrees < 180
    *       <li>aspect > 0
@@ -550,17 +486,17 @@ public class Camera extends Node implements CameraProvider {
   }
 
   /**
-   * Set the camera perspective projection in terms of six clip planes. right - left must be greater
-   * than zero. top - bottom must be greater than zero. far - near must be greater than zero. near
-   * and far must be greater than zero.
+   * 根据六个剪辑平面设置摄像机透视投影。左右必须更大
+   * 大于0。Top - bottom必须大于零。远-近必须大于零。附近
+   * 和far必须大于零。
    *
-   * @param left offset in world units from the camera to the left plane, at the near plane.
-   * @param right offset in world units from the camera to the right plane, at the near plane.
-   * @param bottom offset in world units from the camera to the bottom plane, at the near plane.
-   * @param top offset in world units from the camera to the top plane, at the near plane.
-   * @param near distance in world units from the camera to the near plane, default is 0.1f
-   * @param far distance in world units from the camera to the far plane, default is 100.0f
-   * @throws IllegalArgumentException if any of the following preconditions are not met:
+   * @param left 在近平面从相机到左平面的世界单位偏移量。
+   * @param right 在近平面上，从相机到右平面的世界单位偏移量。
+   * @param bottom 在近平面上，从相机到底平面的世界单位偏移量。
+   * @param top 在近平面上，从摄像机到顶平面的世界单位偏移量。
+   * @param near 近裁剪平面
+   * @param far 远裁剪屏幕
+   * @throws IllegalArgumentException 如果不满足以下任何一个前提条件:
    *     <ul>
    *       <li>left != right
    *       <li>bottom != top
@@ -582,7 +518,7 @@ public class Camera extends Node implements CameraProvider {
     final float reciprocalHeight = 1.0f / (top - bottom);
     final float reciprocalDepthRange = 1.0f / (far - near);
 
-    // Right-handed, column major 4x4 matrix.
+    //右手坐标系，4X4矩阵
     data[0] = 2.0f * near * reciprocalWidth;
     data[1] = 0.0f;
     data[2] = 0.0f;
@@ -619,7 +555,7 @@ public class Camera extends Node implements CameraProvider {
     //由于vFov具有get方法，因此这里需要同步更新一下
     verticalFov = (float) Math.toDegrees((2.0 * Math.atan(1.0 / projectionMatrix.data[5])));
     horizontalFOV = (float) Math.toDegrees((2.0 * Math.atan(1.0 / projectionMatrix.data[0])));
-    this.nearPlane =nearClipPlane;
+    this.nearPlane = nearClipPlane;
     this.farPlane = farClipPlane;
     areMatricesInitialized = true;
   }

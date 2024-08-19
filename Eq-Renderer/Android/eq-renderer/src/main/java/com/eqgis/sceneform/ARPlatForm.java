@@ -47,13 +47,12 @@ public class ARPlatForm {
     public static OcclusionMode OCCLUSION_MODE = OcclusionMode.OCCLUSION_DISABLED;
     public enum OcclusionMode {
         /**
-         * Set the occlusion material.
+         * 启用遮挡
+         * <p>AR实挡虚时启用，需要结合深度API</p>
          */
         OCCLUSION_ENABLED,
         /**
-         * <pre>
-         * This is the default value
-         * </pre>
+         * 禁用遮挡
          */
         OCCLUSION_DISABLED
     }
