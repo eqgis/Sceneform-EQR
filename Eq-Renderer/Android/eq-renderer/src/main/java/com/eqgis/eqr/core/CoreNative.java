@@ -16,4 +16,6 @@ class CoreNative {
     public native static String jni_GetVersion();
 
     public native static boolean jni_CheckCoreStatus();
+
+    public native static String jni_GetFilamentVersion();
 }

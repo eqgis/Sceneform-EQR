@@ -4,8 +4,8 @@ using namespace std;
 
 
 //版本信息
-string EQR_CORE_VERSION = "EQ-Renderer_v1.0.6";
-string FILAMENT_VERSION = "v1.12.0";
+string EQR_CORE_VERSION = "EQ-Renderer_v1.0.7";
+string FILAMENT_VERSION = "v1.53.4";
 
 //更新核心模块状态值
 void UpdateStatus();
@@ -49,4 +49,10 @@ Java_com_eqgis_eqr_core_CoreNative_jni_1CheckCoreStatus(JNIEnv *env, jclass claz
 void UpdateStatus() {
     //开源后不设置权限校验，默认为true
     EQR::CORE_STATUS = true;
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_eqgis_eqr_core_CoreNative_jni_1GetFilamentVersion(JNIEnv *env, jclass clazz) {
+    return env->NewStringUTF(FILAMENT_VERSION.c_str());
 }

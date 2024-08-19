@@ -22,6 +22,14 @@ public class Eqr {
     }
 
     /**
+     * 获取当前使用的Filament版本信息
+     * @return
+     */
+    public static String getFilamentVersion(){
+        return CoreNative.jni_GetFilamentVersion();
+    }
+
+    /**
      * 获取核心库的状态
      * @return boolean
      */
