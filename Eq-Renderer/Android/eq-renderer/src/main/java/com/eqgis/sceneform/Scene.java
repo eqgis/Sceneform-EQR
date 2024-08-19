@@ -21,62 +21,59 @@ import com.eqgis.sceneform.utilities.Preconditions;
 import java.util.ArrayList;
 
 /**
- * The Sceneform Scene maintains the scene graph, a hierarchical organization of a scene's content.
- * A scene can have zero or more child nodes and each node can have zero or more child nodes.
- *
- * <p>The Scene also provides hit testing, a way to detect which node is touched by a MotionEvent or
- * Ray.
+ * Scene场景
+ * <p>场景为Node对象，采用树状结构</p>
  */
 public class Scene extends NodeParent {
   /**
-   * Interface definition for a callback to be invoked when a touch event is dispatched to a scene.
-   * The callback will be invoked after the touch event is dispatched to the nodes in the scene if
-   * no node consumed the event.
+   * 当一个触摸事件被分派到一个场景时调用的回调的接口定义。如果没有节点使用该事件，则在将触摸事件分派给场景中的节点后调用回调。
    */
   public interface OnTouchListener {
     /**
-     * Called when a touch event is dispatched to a scene. The callback will be invoked after the
-     * touch event is dispatched to the nodes in the scene if no node consumed the event. This is
-     * called even if the touch is not over a node, in which case {@link HitTestResult#getNode()}
-     * will be null.
+     * 场景触摸回调
+     * <p>会进行射线检测，在HitTestResult中会返回射线检测结果。</p>
+     * <br/>
+     * 当一个触摸事件被分派到一个场景时调用。
+     * 如果没有节点使用该事件，则在将触摸事件分派给场景中的节点后调用回调。
+     * 即使触摸不在节点上，也会调用该方法，
+     * 在这种情况下{@link HitTestResult#getNode()}将为空。
+     * <br/>
+     * 需要注意的是，若SceneView额外添加了onTouchListener，
+     * 在那里使用时需要注意返回值，防止手势不再向场景分发
      *
      * @see Scene#setOnTouchListener(OnTouchListener)
-     * @param hitTestResult represents the node that was touched
-     * @param motionEvent the motion event
-     * @return true if the listener has consumed the event
+     * @param hitTestResult 碰撞检测结果
+     * @param motionEvent 事件
+     * @return 返回true，则表示事件已消费
      */
     boolean onSceneTouch(HitTestResult hitTestResult, MotionEvent motionEvent);
   }
 
   /**
-   * Interface definition for a callback to be invoked when a touch event is dispatched to a scene.
-   * The callback will be invoked before the {@link OnTouchListener} is invoked. This is invoked
-   * even if the gesture was consumed, making it possible to observe all motion events dispatched to
-   * the scene.
+   * 用于监听触摸事件
    */
   public interface OnPeekTouchListener {
     /**
-     * Called when a touch event is dispatched to a scene. The callback will be invoked before the
-     * {@link OnTouchListener} is invoked. This is invoked even if the gesture was consumed, making
-     * it possible to observe all motion events dispatched to the scene. This is called even if the
-     * touch is not over a node, in which case {@link HitTestResult#getNode()} will be null.
+     * 当一个触摸事件被分派到一个场景时调用。回调将在{@link OnTouchListener}被调用之前被调用。
+     * 即使该手势被使用，也会调用该方法，从而可以观察分派到场景的所有运动事件。即使触摸不在节点上，
+     * 也会调用该方法，在这种情况下{@link HitTestResult#getNode()}将为空。
      *
      * @see Scene#setOnTouchListener(OnTouchListener)
-     * @param hitTestResult represents the node that was touched
-     * @param motionEvent the motion event
+     * @param hitTestResult 射线检测结果
+     * @param motionEvent 手势事件
      */
     void onPeekTouch(HitTestResult hitTestResult, MotionEvent motionEvent);
   }
 
   /**
-   * Interface definition for a callback to be invoked once per frame immediately before the scene
-   * is updated.
+   * 场景更新回调
+   * <p>在每帧渲染前执行</p>
    */
   public interface OnUpdateListener {
     /**
-     * Called once per frame right before the Scene is updated.
+     * 每一帧渲染前调用
      *
-     * @param frameTime provides time information for the current frame
+     * @param frameTime 提供当前帧的时间信息
      */
     void onUpdate(FrameTime frameTime);
   }
@@ -117,7 +114,7 @@ public class Scene extends NodeParent {
     isUnderTesting = true;
   }
 
-  /** Create a scene with the given context. */
+  /** 构造函数 */
   @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
   public Scene(SceneView view) {
     Preconditions.checkNotNull(view, "Parameter \"view\" was null.");
@@ -134,7 +131,7 @@ public class Scene extends NodeParent {
     setupLightProbe(view);
   }
 
-  /** Returns the SceneView used to create the scene. */
+  /** 获取场景视图 */
   public SceneView getView() {
     // the view field cannot be marked for the purposes of unit testing.
     // Add this check for static analysis go/nullness.
@@ -146,18 +143,20 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Get the camera that is used to render the scene. The camera is a type of node.
+   * 获取场景中的相机对象
+   * <p>相机是Node的子类</p>
    *
-   * @return the camera used to render the scene
+   * @return 场景中渲染的相机对象
    */
   public Camera getCamera() {
     return camera;
   }
 
   /**
-   * Get the default sunlight node.
+   * 获取太阳光节点
+   * <p>场景中默认的平行光节点</p>
    *
-   * @return the sunlight node used to light the scene
+   * @return 已设置Light的Node对象
    */
   @Nullable
   public Node getSunlight() {
@@ -165,11 +164,11 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Get the Light Probe that defines the lighting environment for the scene.
-   *
-   * @return the light probe used for reflections and indirect lighting.
-   * @hide for 1.0 as we don't yet have tools support
+   * 获取场景中的光照探针
+   * <p>早期scenefrom中用于环境光，现已弃用</p>
+   * @return 光照探针
    */
+  @Deprecated
   public LightProbe getLightProbe() {
     // the lightProbe field cannot be marked for the purposes of unit testing.
     // Add this check for static analysis go/nullness.
@@ -180,10 +179,7 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Set a new Light Probe for the scene, this affects reflections and indirect lighting.
-   *
-   * @param lightProbe the fully loaded LightProbe to be used as the lighting environment.
-   * @hide for 1.0 as we don't yet have tools support
+   * 设置光照探针
    */
   public void setLightProbe(LightProbe lightProbe) {
     Preconditions.checkNotNull(lightProbe, "Parameter \"lightProbe\" was null.");
@@ -199,47 +195,33 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Register a callback to be invoked when the scene is touched. The callback will be invoked after
-   * the touch event is dispatched to the nodes in the scene if no node consumed the event. This is
-   * called even if the touch is not over a node, in which case {@link HitTestResult#getNode()} will
-   * be null.
-   *
-   * @param onTouchListener the touch listener to attach
+   * 设置触摸监听事件
+   * @param onTouchListener 触摸监听事件
    */
   public void setOnTouchListener(@Nullable OnTouchListener onTouchListener) {
     touchEventSystem.setOnTouchListener(onTouchListener);
   }
 
   /**
-   * Adds a listener that will be called before the {@link OnTouchListener} is invoked. This
-   * is invoked even if the gesture was consumed, making it possible to observe all motion events
-   * dispatched to the scene. This is called even if the touch is not over a node, in which case
-   * {@link HitTestResult#getNode()} will be null. The listeners will be called in the order in
-   * which they were added.
-   *
-   * @param onPeekTouchListener the peek touch listener to add
+   * 添加触摸监视器监听事件
+   * @param onPeekTouchListener 监听事件
    */
   public void addOnPeekTouchListener(OnPeekTouchListener onPeekTouchListener) {
     touchEventSystem.addOnPeekTouchListener(onPeekTouchListener);
   }
 
   /**
-   * Removes a listener that will be called before the {@link OnTouchListener} is invoked.
-   * This is invoked even if the gesture was consumed, making it possible to observe all motion
-   * events dispatched to the scene. This is called even if the touch is not over a node, in which
-   * case {@link HitTestResult#getNode()} will be null.
-   *
-   * @param onPeekTouchListener the peek touch listener to remove
+   * 移除监视器事件回调
+   * @param onPeekTouchListener 监听事件
    */
   public void removeOnPeekTouchListener(OnPeekTouchListener onPeekTouchListener) {
     touchEventSystem.removeOnPeekTouchListener(onPeekTouchListener);
   }
 
   /**
-   * Adds a listener that will be called once per frame immediately before the Scene is updated. The
-   * listeners will be called in the order in which they were added.
-   *
-   * @param onUpdateListener the update listener to add
+   * 添加帧更新监听事件
+   * <p>每帧渲染之前回调</p>
+   * @param onUpdateListener 监听事件
    */
   public void addOnUpdateListener(OnUpdateListener onUpdateListener) {
     Preconditions.checkNotNull(onUpdateListener, "Parameter 'onUpdateListener' was null.");
@@ -249,16 +231,15 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Removes a listener that will be called once per frame immediately before the Scene is updated.
-   *
-   * @param onUpdateListener the update listener to remove
+   * 移除帧更新监听事件
+   * @param onUpdateListener 监听事件
    */
   public void removeOnUpdateListener(OnUpdateListener onUpdateListener) {
     Preconditions.checkNotNull(onUpdateListener, "Parameter 'onUpdateListener' was null.");
     onUpdateListeners.remove(onUpdateListener);
   }
   /**
-   * Removes All listener that will be called once per frame immediately before the Scene is updated.
+   * 移除所有帧更新监听事件
    */
   public void clearOnUpdateListener() {
     onUpdateListeners.clear();
@@ -277,13 +258,11 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Tests to see if a motion event is touching any nodes within the scene, based on a ray hit test
-   * whose origin is the screen position of the motion event, and outputs a HitTestResult containing
-   * the node closest to the screen.
+   * 点击测试
+   * <p>通过射线检测的方式实现</p>
    *
-   * @param motionEvent the motion event to use for the test
-   * @return the result includes the first node that was hit by the motion event (may be null), and
-   *     information about where the motion event hit the node in world-space
+   * @param motionEvent 手势事件
+   * @return 结果包括被点击事件击中的第一个节点(可能为null)，以及关于运动事件在世界空间中击中节点的位置的信息
    */
   public HitTestResult hitTest(MotionEvent motionEvent) {
     Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
@@ -297,13 +276,12 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Tests to see if a ray is hitting any nodes within the scene and outputs a HitTestResult
-   * containing the node closest to the ray origin that intersects with the ray.
+   * 点击测试
+   * <p>通过射线检测的方式实现</p>
    *
    * @see Camera#screenPointToRay(float, float)
-   * @param ray the ray to use for the test
-   * @return the result includes the first node that was hit by the ray (may be null), and
-   *     information about where the ray hit the node in world-space
+   * @param ray 射线
+   * @return 结果包括被点击事件击中的第一个节点(可能为null)，以及关于运动事件在世界空间中击中节点的位置的信息
    */
   public HitTestResult hitTest(Ray ray) {
     Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
@@ -318,12 +296,11 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Tests to see if a motion event is touching any nodes within the scene and returns a list of
-   * HitTestResults containing all of the nodes that were hit, sorted by distance.
+   * 点击测试
+   * <p>通过射线检测的方式实现</p>
    *
-   * @param motionEvent The motion event to use for the test.
-   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
-   *     no nodes were hit.
+   * @param motionEvent 手势事件
+   * @return 为每个按距离排序的节点填充一个HitTestResultList。如果没有命中节点，则为空。
    */
   public ArrayList<HitTestResult> hitTestAll(MotionEvent motionEvent) {
     Preconditions.checkNotNull(motionEvent, "Parameter \"motionEvent\" was null.");
@@ -336,13 +313,12 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Tests to see if a ray is hitting any nodes within the scene and returns a list of
-   * HitTestResults containing all of the nodes that were hit, sorted by distance.
+   * 点击测试
+   * <p>通过射线检测的方式实现</p>
    *
    * @see Camera#screenPointToRay(float, float)
-   * @param ray The ray to use for the test.
-   * @return Populated with a HitTestResult for each node that was hit sorted by distance. Empty if
-   *     no nodes were hit.
+   * @param ray 射线
+   * @return 为每个按距离排序的节点填充一个HitTestResultList。如果没有命中节点，则为空。
    */
   public ArrayList<HitTestResult> hitTestAll(Ray ray) {
     Preconditions.checkNotNull(ray, "Parameter \"ray\" was null.");
@@ -359,15 +335,12 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Tests to see if the given node's collision shape overlaps the collision shape of any other
-   * nodes in the scene using {@link Node#getCollisionShape()}. The node used for testing does not
-   * need to be active.
+   * 相交测试
    *
+   * <p>获取当前Node的碰撞体相交的其他Node对象</p>
    * @see #overlapTestAll(Node)
-   * @param node The node to use for the test.
-   * @return A node that is overlapping the test node. If no node is overlapping the test node, then
-   *     this is null. If multiple nodes are overlapping the test node, then this could be any of
-   *     them.
+   * @param node 用于检测的Node对象
+   * @return 与测试节点重叠的节点。如果没有节点与测试节点重叠，则该值为空。如果多个节点与测试节点重叠，则这可以是其中的任何一个。
    */
   @Nullable
   public Node overlapTest(Node node) {
@@ -387,13 +360,12 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Tests to see if a node is overlapping any other nodes within the scene using {@link
-   * Node#getCollisionShape()}. The node used for testing does not need to be active.
+   * 相交测试
    *
-   * @see #overlapTest(Node)
-   * @param node The node to use for the test.
-   * @return A list of all nodes that are overlapping the test node. If no node is overlapping the
-   *     test node, then the list is empty.
+   * <p>获取当前Node的碰撞体相交的其他Node对象</p>
+   * @see #overlapTestAll(Node)
+   * @param node 用于检测的Node对象
+   * @return 与测试节点重叠的节点。如果没有节点与测试节点重叠，则该值为空。如果多个节点与测试节点重叠，返回所有Node的集合。
    */
   public ArrayList<Node> overlapTestAll(Node node) {
     Preconditions.checkNotNull(node, "Parameter \"node\" was null.");
@@ -413,18 +385,15 @@ public class Scene extends NodeParent {
     return results;
   }
 
-  /** Returns true if this Scene was created by a test. */
+  /** 判断是否处于测试阶段，内部调测使用。可将部分功能标记为测试默认，编译调测时能够通过某些方法 */
   boolean isUnderTesting() {
     return isUnderTesting;
   }
 
   /**
-   * Sets whether the Scene should expect to use an Hdr light estimate, so that Filament light
-   * settings can be adjusted appropriately.
-   *
-   * @hide intended for use by other Sceneform packages which update Hdr lighting every frame.
+   * 设置场景是否应该预期使用Hdr光估计，以便filament设置可以适当调整。
+   * @hide
    */
-  
   public void setUseHdrLightEstimate(boolean useHdrLightEstimate) {
     if (view != null) {
       Renderer renderer = Preconditions.checkNotNull(view.getRenderer());
@@ -433,9 +402,8 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Sets the current Hdr Light Estimate state to apply to the Filament scene.
-   *
-   * @hide intended for use by other Sceneform packages which update Hdr lighting every frame.
+   * 设置环境Hdr
+   * @hide
    */
   // incompatible types in argument.
   @SuppressWarnings("nullness:argument.type.incompatible")
@@ -474,18 +442,19 @@ public class Scene extends NodeParent {
   }
 
   /**
-   * Sets light estimate to modulate the scene lighting and intensity. The rendered lights will use
-   * a combination of these values and the color and intensity of the lights. A value of a white
-   * colorCorrection and pixelIntensity of 1 mean that no changes are made to the light settings.
+   * 设置光估计来调节场景照明和强度。渲染的灯光将使用这些值和光的颜色和强度的组合。
+   * 白色校正值和像素强度值为1意味着不改变光线设置。
    *
-   * <p>This is used by AR Sceneform scenes internally to adjust lighting based on values from
-   * ARCore. An AR scene will call this automatically, possibly overriding other settings. In most
-   * cases, you should not need to call this explicitly.
+   * <p>
+   *     内部使用，以根据ARCore的值调整照明。
+   *     AR场景会自动调用它，可能会覆盖其他设置。
+   *     在大多数情况下，不需要显式地调用它。
+   * </p>
    *
-   * @param colorCorrection modulates the lighting color of the scene.
-   * @param pixelIntensity modulates the lighting intensity of the scene.
+   * @param colorCorrection 要被调整的场景光颜色
+   * @param pixelIntensity 要被调整的场景光强
    */
-  public void setLightEstimate(Color colorCorrection, float pixelIntensity) {
+  void setLightEstimate(Color colorCorrection, float pixelIntensity) {
     if (lightProbe != null) {
       lightProbe.setLightEstimate(colorCorrection, pixelIntensity);
       // TODO: The following call is not public (@hide). When public, ensure that it is
