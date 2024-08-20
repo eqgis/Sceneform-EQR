@@ -10,7 +10,7 @@ import com.google.android.filament.Filament;
 import com.google.android.filament.gltfio.Gltfio;
 
 /**
- * Store a single Filament Engine instance.
+ * Filament Engine实例
  *
  * @hide
  */
@@ -33,7 +33,10 @@ public class EngineInstance {
   }
 
   /**
-   * Get the Filament Engine instance, creating it if necessary.
+   * 获取filament引擎实例
+   * <p>
+   *     若没有则创建
+   * </p>
    *
    * @throws IllegalStateException
    */

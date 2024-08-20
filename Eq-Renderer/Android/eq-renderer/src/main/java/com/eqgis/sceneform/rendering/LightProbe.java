@@ -33,11 +33,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 /**
- * Loads "light probe" data needed for Image Based Lighting. This includes a cubemap with mip maps
- * generated to match the lighting model used by Sceneform and Spherical Harmonics coefficients for
- * diffuse image based lighting.
+ * 加载基于图像照明所需的“光探针”数据。
+ * 这包括一个立方体贴图与mip贴图生成匹配的照明模型Sceneform和球面谐波系数漫射图像为基础的照明。
  *
- * @hide for 1.0 as we don't yet have tools support
+ * @hide 早期scenefrom中用到，与”light_probe_xx.sfb“文件配套使用
  */
 public class LightProbe {
   private static final String TAG = LightProbe.class.getSimpleName();

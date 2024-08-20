@@ -1,19 +1,22 @@
 package com.eqgis.sceneform.rendering;
 
 /**
- * Runs a {@link Runnable} when a registered object is destroyed.
+ * 清理项
+ * <p>
+ *     当注册表中以注册的对象被销毁时执行{@link Runnable}
+ * </p>
  *
- * <p>For each object of type {@code T} registered, a {@link CleanupItem} will be created. The
- * registered object's lifecycle will be tracked and when it is disposed the given {@link Runnable}
- * will be run.
+ * <p>对于注册的每个类型为{@code T}的对象，将创建一个{@link CleanupItem}。
+ * 注册对象的生命周期将被跟踪，当它被处置时，将运行给定的{@link Runnable}。
  */
 class CleanupItem<T> extends java.lang.ref.PhantomReference<T> {
   private final Runnable cleanupCallback;
 
   /**
-   * @param trackedObject The object to be tracked until garbage collection
-   * @param referenceQueue The getFilamentEngine reference tracking mechanism
-   * @param cleanupCallback {@link Runnable} to be called once {@code trackedObject} is disposed.
+   * 构造函数
+   * @param trackedObject 在垃圾回收之前要跟踪的对象
+   * @param referenceQueue 用于跟踪的引用队列
+   * @param cleanupCallback {@link Runnable} 回调
    */
   CleanupItem(
       T trackedObject, java.lang.ref.ReferenceQueue<T> referenceQueue, Runnable cleanupCallback) {
@@ -21,7 +24,7 @@ class CleanupItem<T> extends java.lang.ref.PhantomReference<T> {
     this.cleanupCallback = cleanupCallback;
   }
 
-  /** Executes the {@link Runnable}. */
+  /** 执行 {@link Runnable}. */
   void run() {
     cleanupCallback.run();
   }

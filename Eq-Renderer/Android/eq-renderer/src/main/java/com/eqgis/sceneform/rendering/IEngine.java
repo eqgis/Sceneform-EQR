@@ -18,7 +18,7 @@ import com.google.android.filament.TransformManager;
 import com.google.android.filament.VertexBuffer;
 import com.google.android.filament.View;
 
-/** Engine interface to support multiple flavors of the getFilamentEngine filament engine. */
+/** 抽象引擎接口 */
 public interface IEngine {
 
   Engine getFilamentEngine();

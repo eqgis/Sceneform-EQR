@@ -7,7 +7,7 @@ import com.eqgis.sceneform.math.Vector3;
 import com.eqgis.ar.ARCamera;
 
 /**
- * Required interface for a virtual camera.
+ * 相机接口
  *
  * @hide
  */
@@ -24,9 +24,6 @@ public interface CameraProvider extends TransformProvider {
 
   void updateTrackedPose(ARCamera camera);
 
-  /**============（added by Ikkyu(tanyx)）top====================*/
-
   void updateTrackedPose(ARCamera camera,
                          Vector3 position, Quaternion quaternion);
-  /**============（added by Ikkyu(tanyx)）bottom====================*/
 }

@@ -12,30 +12,35 @@ import com.google.android.filament.Colors;
 
 import java.util.ArrayList;
 
-/** Light property store. */
+/**
+ * 光源
+ * */
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class Light {
-  /** Type of Light Source */
+  /** 光源类型 */
   public enum Type {
     /**
-     * Approximates light radiating in all directions from a single point in space, where the
-     * intensity falls off with the inverse square of the distance. Point lights have a position but
-     * no direction. Use {@link #setFalloffRadius} to control the falloff.
+     * 点光源
+     * <pre>
+     *     从空间中一个点向各个方向辐射的光的近似值，其强度随距离的平方成反比而下降。
+     *     光点有位置，但没有方向。使用{@link # setfallloffradius}来控制衰减。
+     * </pre>
      */
     POINT,
-    /** Approximates an infinitely far away, purely directional light */
+    /**
+     * 平行光
+     * */
     DIRECTIONAL,
     /**
-     * Similar to a point light but radiating light in a cone rather than all directions. Note that
-     * as you make the cone wider, the energy is spread causing the lighting to appear dimmer. A
-     * spotlight has a position and a direction. Use {@link #setInnerConeAngle} and {@link
-     * #setOuterConeAngle} to control the cone size.
+     * 射灯
+     * 类似于点光，但在一个锥形而不是所有方向上辐射光。请注意，当你使圆锥体更宽时，能量被扩散，导致照明看起来更暗。
+     * 聚光灯有位置和方向。使用{@link #setInnerConeAngle}和{@link #setOuterConeAngle}来控制锥的大小。
      */
     SPOTLIGHT,
     /**
-     * The same as a spotlight with the exception that the apparent lighting stays the same as the
-     * cone angle changes. A spotlight has a position and a direction. Use {@link
-     * #setInnerConeAngle} and {@link #setOuterConeAngle} to control the cone size.
+     * 聚光灯
+     * 与射灯相同，除了视光随着锥角的变化而保持不变。聚光灯有位置和方向。
+     * 使用{@link #setInnerConeAngle}和{@link #setOuterConeAngle}来控制锥的大小。
      */
     FOCUSED_SPOTLIGHT
   };
@@ -44,7 +49,7 @@ public class Light {
     void onChange();
   };
 
-  /** Minimum accepted light intensity */
+  /** 可接收的最小光强 */
   private static final float MIN_LIGHT_INTENSITY = 0.0001f;
 
   private final Type type;
@@ -60,18 +65,16 @@ public class Light {
 
   private final ArrayList<LightChangedListener> changedListeners = new ArrayList<>();
 
-  /** Constructs a default light, if nothing else is set */
+  /** 光源构造器 */
   public static Builder builder(Type type) {
     AndroidPreconditions.checkMinAndroidApiLevel();
     return new Builder(type);
   }
 
   /**
-   * Sets the "RGB" color of the light. Note that intensity is a separate parameter, so you should
-   * set the pure color (i.e. each channel is in the [0,1] range). However setting values outside
-   * that range is valid.
+   * 设置发光颜色
    *
-   * @param color "RGB" color, the default is 0xffffffff
+   * @param color 颜色, 默认值: 0xffffffff
    */
   public void setColor(Color color) {
     this.color.set(color);
@@ -79,10 +82,9 @@ public class Light {
   }
 
   /**
-   * Sets the "RGB" color of the light based on the desired "color temperature."
-   *
-   * @param temperature color temperature in Kelvin on a scale from 1,000 to 10,000K. Typical
-   *     commercial and residential lighting falls somewhere in the 2000K to 6500K range.
+   * 设置色温值
+   * <p>内部会将色温值转换为颜色值</p>
+   * @param temperature 色温 单位：开尔文，范围从1000到10000 k。典型的商业和住宅照明在2000K到6500K的范围内。
    */
   public void setColorTemperature(float temperature) {
     final float[] rgbColor = Colors.cct(temperature);
@@ -90,15 +92,15 @@ public class Light {
   }
 
   /**
-   * Sets the light intensity which determines how bright the light is in Lux (lx) or Lumens (lm)
-   * (depending on the light type). Larger values produce brighter lights and near zero values
-   * generate very little light. A household light bulb will generally have an intensity between 800
-   * - 2500 lm whereas sunlight will be around 120,000 lx. There is no absolute upper bound but
-   * values larger than sunlight (120,000 lx) are generally not needed.
+   * 设置光强
+   * <pre>
+   *     以勒克斯(lx)或流明(lm)为单位确定光的亮度(取决于光的类型)。
+   *     较大的值产生更亮的光，接近零的值产生很少的光。
+   *     家用灯泡的亮度一般在800 - 2500流明之间，而太阳光的亮度大约在12万流明左右。
+   *     没有绝对上限，但通常不需要大于太阳光(120,000 lx)的值。
+   * </pre>
    *
-   * @param intensity the intensity of the light, values greater than one are valid. The intensity
-   *     will be clamped and cannot be zero or negative. For directional lights the default is 420
-   *     lx. For other other lights the default is 2500 lm.
+   * @param intensity 光照强度
    */
   public void setIntensity(float intensity) {
     this.intensity = Math.max(intensity, MIN_LIGHT_INTENSITY);
@@ -106,10 +108,9 @@ public class Light {
   }
 
   /**
-   * Sets the range that the light intensity falls off to zero. This has no affect on the {@link
-   * Type#DIRECTIONAL} type.
+   * 设置光强度下降到零的范围。这对{@link Type#DIRECTIONAL}类型没有影响。
    *
-   * @param falloffRadius the light radius in world units, default is 10.0
+   * @param falloffRadius 以世界单位表示的光半径，默认为10.0
    */
   public void setFalloffRadius(float falloffRadius) {
     this.falloffRadius = falloffRadius;
@@ -117,12 +118,14 @@ public class Light {
   }
 
   /**
-   * Spotlights shine light in a cone, this value determines the size of the inner part of the cone.
-   * The intensity is interpolated between the inner and outer cone angles - meaning if they are the
-   * same than the cone is perfectly sharp. Generally you will want the inner cone to be smaller
-   * than the outer cone to avoid aliasing.
+   * 设置内锥角度
+   * <pre>
+   *     射灯在一个圆锥体中发光，这个值决定了圆锥体内部部分的大小。
+   *     强度在内外锥角之间进行插值-这意味着如果它们是相同的，
+   *     那么锥体是完全锋利的。一般来说，你会希望内锥比外锥小，以避免混叠。
+   * </pre>
    *
-   * @param coneInner inner cone angle in radians, default 0.5
+   * @param coneInner 内锥角度，默认 0.5
    */
   public void setInnerConeAngle(float coneInner) {
     this.spotlightConeInner = coneInner;
@@ -130,64 +133,66 @@ public class Light {
   }
 
   /**
-   * Spotlights shine light in a cone, this value determines the size of the outer part of the cone.
-   * The intensity is interpolated between the inner and outer cone angles - meaning if they are the
-   * same than the cone is perfectly sharp. Generally you will want the inner cone to be smaller
-   * than the outer cone to avoid aliasing.
+   * 设置外锥角度
+   * <pre>
+   *     射灯在一个圆锥体中发光，这个值决定了圆锥体内部部分的大小。
+   *     强度在内外锥角之间进行插值-这意味着如果它们是相同的，
+   *     那么锥体是完全锋利的。一般来说，你会希望内锥比外锥小，以避免混叠。
+   * </pre>
    *
-   * @param coneOuter outer cone angle in radians, default is 0.6
+   * @param coneOuter 设置外锥角度 默认 0.6
    */
   public void setOuterConeAngle(float coneOuter) {
     this.spotlightConeOuter = coneOuter;
     fireChangedListeners();
   }
 
-  /** Get the light {@link Type}. */
+  /** 获取光源类型 */
   public Type getType() {
     return this.type;
   }
 
-  /** Returns true if the light has shadow casting enabled. */
+  /** 如果灯光启用了阴影投射，则返回true。 */
   public boolean isShadowCastingEnabled() {
     return this.enableShadows;
   }
 
-  /** @hide This is no longer a user facing API. */
+  /** @hide 内部方法 */
   public Vector3 getLocalPosition() {
     return new Vector3(this.position);
   }
 
-  /** @hide This is no longer a user facing API. */
+  /** @hide 内部方法 */
   public Vector3 getLocalDirection() {
     return new Vector3(this.direction);
   }
 
-  /** Get the RGB {@link Color} of the light. */
+  /** 获取光源颜色 */
   public Color getColor() {
     return new Color(this.color);
   }
 
-  /** Get the intensity of the light. */
+  /** 获取光照强度 */
   public float getIntensity() {
     return this.intensity;
   }
 
-  /** Get the falloff radius of the light. */
+  /** 获取衰减半径*/
   public float getFalloffRadius() {
     return this.falloffRadius;
   }
 
-  /** Get the inner cone angle for spotlights. */
+  /** 获取内锥角 */
   public float getInnerConeAngle() {
     return this.spotlightConeInner;
   }
 
-  /** Get the outer cone angle for spotlights. */
+  /** 获取外锥角 */
   public float getOuterConeAngle() {
     return this.spotlightConeOuter;
   }
 
-  /** @hide this functionality is not part of the end-user API */
+  /** @hide 内部使用 */
   public LightInstance createInstance(TransformProvider transformProvider) {
     LightInstance instance = new LightInstance(this, transformProvider);
     if (instance == null) {
@@ -196,7 +201,7 @@ public class Light {
     return instance;
   }
 
-  /** Factory class for {@link Light} */
+  /** Builder */
   public static final class Builder {
     // LINT.IfChange
     public static float DEFAULT_DIRECTIONAL_INTENSITY = 420.0f;
@@ -223,9 +228,8 @@ public class Light {
     }
 
     /**
-     * Determines whether the light casts shadows, or whether synthetic objects can block the light.
-     *
-     * @param enableShadows true to enable to shadows, false to disable; default is false.
+     * 确定光线是否投射阴影，或者合成物体是否会遮挡光线。
+     * @param enableShadows  默认false.
      */
     public Builder setShadowCastingEnabled(boolean enableShadows) {
       this.enableShadows = enableShadows;
@@ -233,11 +237,8 @@ public class Light {
     }
 
     /**
-     * Sets the "RGB" color of the light. Note that intensity if is a separate parameter, so you
-     * should set the pure color (i.e. each channel is in the [0,1] range). However setting values
-     * outside that range is valid.
-     *
-     * @param color "RGB" color, default is (1, 1, 1)
+     * 设置颜色值
+     * @param color 颜色
      */
     public Builder setColor(Color color) {
       this.color = color;
@@ -245,10 +246,9 @@ public class Light {
     }
 
     /**
-     * Sets the "RGB" color of the light based on the desired "color temperature."
-     *
-     * @param temperature color temperature in Kelvin on a scale from 1,000 to 10,000K. Typical
-     *     commercial and residential lighting falls somewhere in the 2000K to 6500K range.
+     * 设置色温
+     * <p>内部自动根据色温转换成颜色值，再设置颜色</p>
+     * @param temperature 色温
      */
     public Builder setColorTemperature(float temperature) {
       final float[] rgbColor = Colors.cct(temperature);
@@ -257,15 +257,8 @@ public class Light {
     }
 
     /**
-     * Sets the light intensity which determines how bright the light is in Lux (lx) or Lumens (lm)
-     * (depending on the light type). Larger values produce brighter lights and near zero values
-     * generate very little light. A household light bulb will generally have an intensity between
-     * 800 - 2500 lm whereas sunlight will be around 120,000 lx. There is no absolute upper bound
-     * but values larger than sunlight (120,000 lx) are generally not needed.
-     *
-     * @param intensity the intensity of the light, values greater than one are valid. The intensity
-     *     will be clamped and cannot be zero or negative. For directional lights the default is 420
-     *     lx. For other other lights the default is 2500 lm.
+     * 设置光强
+     * @param intensity 光强
      */
     public Builder setIntensity(float intensity) {
       this.intensity = intensity;
@@ -273,27 +266,9 @@ public class Light {
     }
 
     /**
-     * Set the falloff distance for point lights and spot lights.
-     *<p>
-     * At the falloff distance, the light has no more effect on objects.
-     *</p>
-     *
-     *<p>
-     * The falloff distance essentially defines a <b>sphere of influence</b> around the light,
-     * and therefore has an impact on performance. Larger falloffs might reduce performance
-     * significantly, especially when many lights are used.
-     *</p>
-     *
-     *<p>
-     * Try to avoid having a large number of light's spheres of influence overlap.
-     *</p>
-     *
-     * The Light's falloff is ignored for directional lights
-     * ({@link LightManager.Type#DIRECTIONAL} or {@link LightManager.Type#SUN})
-     *
-     * @param falloffRadius Falloff distance in world units. Default is 1 meter.
-     *
-     * @return This Builder, for chaining calls.
+     * 设置衰减半径
+     * <p>注意：平行光不会生效</p>
+     * @param falloffRadius 设置衰减半径，默认1米
      */
     public Builder setFalloffRadius(float falloffRadius) {
       this.falloffRadius = falloffRadius;
@@ -301,12 +276,8 @@ public class Light {
     }
 
     /**
-     * Spotlights shine light in a cone, this value determines the size of the inner part of the
-     * cone. The intensity is interpolated between the inner and outer cone angles - meaning if they
-     * are the same than the cone is perfectly sharp. Generally you will want the inner cone to be
-     * smaller than the outer cone to avoid aliasing.
-     *
-     * @param coneInner inner cone angle in radians, default is 0.5
+     * 设置内锥角
+     * @param coneInner 内锥角度
      */
     public Builder setInnerConeAngle(float coneInner) {
       this.spotlightConeInner = coneInner;
@@ -314,19 +285,15 @@ public class Light {
     }
 
     /**
-     * Spotlights shine light in a cone, this value determines the size of the outer part of the
-     * cone. The intensity is interpolated between the inner and outer cone angles - meaning if they
-     * are the same than the cone is perfectly sharp. Generally you will want the inner cone to be
-     * smaller than the outer cone to avoid aliasing.
-     *
-     * @param coneOuter outer cone angle in radians, default is 0.6
+     * 设置外锥角
+     * @param coneOuter 外锥角度
      */
     public Builder setOuterConeAngle(float coneOuter) {
       this.spotlightConeOuter = coneOuter;
       return this;
     }
 
-    /** Creates a new {@link Light} based on the parameters set previously */
+    /** 构建光源 */
     public Light build() {
       Light light = new Light(this);
       if (light == null) {
@@ -337,14 +304,13 @@ public class Light {
   }
 
   /**
-   * package-private function to add listeners so that light instances can be updated when light
-   * parameters change.
+   * 添加监听事件，以便在光照参数改变时更新光照实例。
    */
   void addChangedListener(LightChangedListener listener) {
     changedListeners.add(listener);
   }
 
-  /** package-private function to remove change listeners. */
+  /** 移除监听事件 */
   void removeChangedListener(LightChangedListener listener) {
     changedListeners.remove(listener);
   }

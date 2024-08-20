@@ -17,7 +17,9 @@ import com.google.android.filament.TransformManager;
 import com.google.android.filament.VertexBuffer;
 import com.google.android.filament.View;
 
-/** Wraps calls to Filament engine. */
+/**
+ * Filament引擎包装类
+ * */
 public class FilamentEngineWrapper implements IEngine {
 
   final Engine engine;

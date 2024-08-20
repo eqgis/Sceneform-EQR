@@ -1,8 +1,11 @@
 package com.eqgis.sceneform.rendering;
 
-/** Interface callbacks for events that occur when loading a gltf file into a renderable. */
+/**
+ * 在将gltf文件加载到可渲染对象时发生的事件的接口回调。
+ * todo 需在renderable中实现这个功能，以便于后续使用
+ * */
 public interface LoadGltfListener {
-  /** Defines the current stage of the load operation, each value supersedes the previous. */
+  /** 加载状态值 */
   public enum GltfLoadStage {
     LOAD_STAGE_NONE,
     FETCH_MATERIALS,

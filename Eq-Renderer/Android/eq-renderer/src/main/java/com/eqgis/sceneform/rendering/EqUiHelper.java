@@ -30,12 +30,7 @@ import android.view.TextureView;
 import com.google.android.filament.SwapChainFlags;
 
 /**
- * UiHelper is a simple class that can manage either a SurfaceView, TextureView, or a SurfaceHolder
- * so it can be used to render into with Filament.
- *
- * Here is a simple example with a SurfaceView. The code would be exactly the same with a
- * TextureView:
- *
+ * 参考filament的UiHelper，因这里需要做些修改，所以单拎出来。
  * <pre>
  * public class FilamentActivity extends Activity {
  *     private UiHelper mUiHelper;

@@ -7,9 +7,11 @@ import com.eqgis.sceneform.Scene;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Controls the size of a {@link ViewRenderable} in a {@link Scene} by
- * defining how tall it should be in meters. The width will change to match the aspect ratio of the
- * view.
+ * View高度修改工具
+ * <p>
+ *     控制{@link Scene} by中{@link ViewRenderable}的大小
+ *     定义它的高度，以米为单位。宽度将改变以匹配视图的长宽比。
+ * </p>
  *
  * @see ViewRenderable.Builder#setSizer(ViewSizer)
  * @see ViewRenderable#setSizer(ViewSizer)
@@ -23,10 +25,9 @@ public class FixedHeightViewSizer implements ViewSizer {
   private static final float DEFAULT_SIZE_Z = 0.0f;
 
   /**
-   * Constructor for creating a sizer for controlling the size of a {@link ViewRenderable} by
-   * defining a fixed height.
+   * 构造函数
    *
-   * @param heightMeters a number greater than zero representing the height in meters.
+   * @param heightMeters 高度，单位：米
    */
   public FixedHeightViewSizer(float heightMeters) {
     if (heightMeters <= 0) {
@@ -36,7 +37,7 @@ public class FixedHeightViewSizer implements ViewSizer {
     this.heightMeters = heightMeters;
   }
 
-  /** Returns the height in meters used for controlling the size of a {@link ViewRenderable}. */
+  /** 获取高度值 */
   public float getHeight() {
     return heightMeters;
   }

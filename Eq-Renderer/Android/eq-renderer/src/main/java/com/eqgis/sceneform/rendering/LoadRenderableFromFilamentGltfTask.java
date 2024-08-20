@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
-/** Task for initializing a renderable with glTF data loaded with gltfio. */
+/** 用gltfio加载的glTF数据，并初始化可渲染对象的任务 */
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"}) // CompletableFuture
 public class LoadRenderableFromFilamentGltfTask<T extends Renderable> {
   private static final String TAG = LoadRenderableFromFilamentGltfTask.class.getSimpleName();
@@ -60,7 +60,7 @@ public class LoadRenderableFromFilamentGltfTask<T extends Renderable> {
             ThreadPools.getThreadPoolExecutor())
         .thenApplyAsync(
             gltfByteBuffer -> {
-              // Check for glb header
+              // 判断是否是glb格式
               this.renderableData.isGltfBinary = gltfByteBuffer[0] == 0x67
                       && gltfByteBuffer[1] == 0x6C
                       && gltfByteBuffer[2] == 0x54

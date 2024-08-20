@@ -13,9 +13,9 @@ import com.google.android.filament.EntityManager;
 import com.google.android.filament.LightManager;
 
 /**
- * Wraps a Filament Light.
+ * Filament的光源包装类.
  *
- * @hide This class is not part of the user facing API.
+ * @hide 内部使用
  */
 public class LightInstance {
   private static final String TAG = LightInstance.class.getSimpleName();

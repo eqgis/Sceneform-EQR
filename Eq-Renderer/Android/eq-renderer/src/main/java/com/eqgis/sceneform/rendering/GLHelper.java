@@ -9,7 +9,10 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES30;
 
 /**
- * Convenience class to perform common GL operations
+ * GL助手
+ * <p>
+ *     简化OpenGL的操作
+ * </p>
  *
  * @hide
  */

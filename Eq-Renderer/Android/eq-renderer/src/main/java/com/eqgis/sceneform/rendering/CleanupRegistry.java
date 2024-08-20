@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 /**
- * Maintains a {@link ReferenceQueue} and executes a {@link Runnable} after each object in the queue
- * is garbage collected.
+ * Cleanup注册表
+ * <p>
+ *     通过一个{@link ReferenceQueue}并在队列中的每个对象被垃圾回收后执行一个{@link Runnable}。
+ * </p>
  */
 public class CleanupRegistry<T> implements ResourceHolder {
 
@@ -26,18 +28,17 @@ public class CleanupRegistry<T> implements ResourceHolder {
   }
 
   /**
-   * Adds {@code trackedOBject} to the {@link ReferenceQueue}.
+   * 添加需注册的对象
    *
-   * @param trackedObject The target to be tracked.
-   * @param cleanupCallback Will be called after {@code trackedOBject} is disposed.
+   * @param trackedObject 需被跟踪的对象
+   * @param cleanupCallback 当销毁后需执行的回调
    */
   public void register(T trackedObject, Runnable cleanupCallback) {
     cleanupItemHashSet.add(new CleanupItem<T>(trackedObject, referenceQueue, cleanupCallback));
   }
 
   /**
-   * Polls the {@link ReferenceQueue} for garbage collected objects and runs the associated {@link
-   * Runnable}
+   * 轮询{@link ReferenceQueue}以获取垃圾收集的对象，并运行相关的{@link Runnable}
    *
    * @return count of resources remaining.
    */
@@ -55,7 +56,7 @@ public class CleanupRegistry<T> implements ResourceHolder {
     return cleanupItemHashSet.size();
   }
 
-  /** Ignores reference count and releases any associated resources */
+  /** 忽略引用计数并释放所有关联的资源 */
   @Override
   public void destroyAllResources() {
     Iterator<CleanupItem<T>> iterator = cleanupItemHashSet.iterator();

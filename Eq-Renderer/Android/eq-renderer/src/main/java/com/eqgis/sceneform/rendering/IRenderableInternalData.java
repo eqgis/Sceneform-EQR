@@ -15,8 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-// TODO: Split IRenderableInternalData into RenderableInternalSfbData and
-// RenderableInternalDefinitionData
+// TODO: Split IRenderableInternalData into RenderableInternalSfbData and RenderableInternalDefinitionData
 interface IRenderableInternalData {
 
   void setCenterAabb(Vector3 minAabb);
@@ -79,21 +78,7 @@ interface IRenderableInternalData {
   @NonNull
   List<String> getAnimationNames();
 
-
-
-
-
-
-
-
-
-
-
   void buildInstanceData(RenderableInstance instance, @Entity int renderedEntity);
-  /**
-   * Removes any memory used by the object.
-   *
-   * @hide
-   */
+
   void dispose();
 }

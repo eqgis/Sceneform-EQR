@@ -10,7 +10,10 @@ import com.google.android.filament.SwapChain;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-/** Interface for the swiftshader backed version of the Filament engine. */
+/**
+ * 灯丝引擎的swiftshader支持版本的接口。
+ * 虽现阶段版本不再使用，但是保留接口
+ *  */
 public class HeadlessEngineWrapper extends FilamentEngineWrapper {
   public static final String TAG = HeadlessEngineWrapper.class.getName();
 

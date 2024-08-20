@@ -15,10 +15,9 @@ import com.eqgis.sceneform.utilities.Preconditions;
 import java.nio.ByteBuffer;
 
 /**
+ * 深度图纹理
  * <pre>
- *     The DepthTexture class holds a special Texture to store
- *     information from a DepthImage or RawDepthImage to implement the occlusion of
- *     virtual objects behind real world objects.
+ *     AR模式下获取 DepthImage 或 RawDepthImage
  * </pre>
  */
 public class DepthTexture {
@@ -26,9 +25,9 @@ public class DepthTexture {
     private final Handler handler = new Handler(Looper.myLooper());
 
     /**
+     * 构造函数
      * <pre>
-     *      A call to this constructor creates a new Filament Texture which is
-     *      later used to feed in data from a DepthImage.
+     *      调用这个构造函数会创建一个新的Filament Texture，用于从DepthImage输入数据。
      * </pre>
      *
      * @param width int
@@ -48,9 +47,9 @@ public class DepthTexture {
                 .register(this, new CleanupCallback(filamentTexture));
     }
     /**
+     * 构造函数
      * <pre>
-     *      A call to this constructor creates a new Filament Texture which is
-     *      later used to feed in data from a DepthImage.
+     *      调用这个构造函数会创建一个新的Filament Texture，用于从DepthImage输入数据。
      * </pre>
      *
      * @param width int
@@ -69,21 +68,18 @@ public class DepthTexture {
                 .getDepthTextureCleanupRegistry()
                 .register(this, new CleanupCallback(filamentTexture));
     }
+
+    /**
+     * 获取filament纹理对象
+     * @return 纹理对象
+     */
     public Texture getFilamentTexture() {
         return Preconditions.checkNotNull(filamentTexture);
     }
+
     /**
-     * <pre>
-     *     This is the most important function of this class.
-     *     The Filament Texture is updated based on the newest
-     *     DepthImage. To solve a problem with a to early
-     *     released DepthImage the ByteBuffer which holds all
-     *     necessary data is cloned. The cloned ByteBuffer is unaffected
-     *     of a released DepthImage and therefore produces not
-     *     a flickering result.
-     * </pre>
-     *
-     * @param depthImage {@link Image}
+     * 更新深度图
+     * @param depthImage {@link Image} 安卓Image对象
      */
     public void updateDepthTexture(Image depthImage) {
         if (filamentTexture == null) {
@@ -119,9 +115,10 @@ public class DepthTexture {
     }
 
     /**
-     * update texture
+     * 更新深度图对象
      * @author Ikkyu 2022/01/24
-     * @param depthImage
+     * @param depthImage 自定义的深度图数据对象
+     * @param format 纹理格式
      */
     public void updateDepthTexture(CustomDepthImage depthImage,
                                    Texture.Format format) {
@@ -160,7 +157,7 @@ public class DepthTexture {
     }
 
     /**
-     * Cleanup filament objects after garbage collection
+     * Cleanup回调
      */
     private static final class CleanupCallback implements Runnable {
         @Nullable private final Texture filamentTexture;

@@ -11,8 +11,10 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
- * Serialization structure for saving light estimate state for offline use, e.g. in tests.
- *
+ * 环境HDR光估计的数据
+ * <p>
+ *     用于保存hdr相关数据
+ * </p>
  * @hide
  */
 public class EnvironmentalHdrLightEstimate implements Serializable {

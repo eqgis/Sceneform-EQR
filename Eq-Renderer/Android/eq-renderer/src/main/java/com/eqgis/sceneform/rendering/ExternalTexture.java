@@ -10,14 +10,10 @@ import com.eqgis.sceneform.utilities.Preconditions;
 import com.google.android.filament.Stream;
 import com.google.android.filament.Texture;
 /**
- * Creates an Android {@link SurfaceTexture} and {@link Surface} that can be displayed by Sceneform.
- * Useful for displaying video, or anything else that can be drawn to a {@link SurfaceTexture}.
- *
- * <p>The getFilamentEngine OpenGL ES texture is automatically created by Sceneform. Also, {@link
- * SurfaceTexture#updateTexImage()} is automatically called and should not be called manually.
- *
- * <p>Call {@link Material#setExternalTexture(String, ExternalTexture)} to use an ExternalTexture.
- * The material parameter MUST be of type 'samplerExternal'.
+ * 扩展纹理对象
+ * <p>
+ *     可用于在filament中渲染Android {@link SurfaceTexture} 和 {@link Surface}
+ * </p>
  */
 public class ExternalTexture {
   private static final String TAG = ExternalTexture.class.getSimpleName();
@@ -28,7 +24,7 @@ public class ExternalTexture {
   @Nullable private Texture filamentTexture;
   @Nullable private Stream filamentStream;
 
-  /** Creates an ExternalTexture with a new Android {@link SurfaceTexture} and {@link Surface}. */
+  /** 构造函数 */
   @SuppressWarnings("initialization")
   public ExternalTexture() {
     // Create the Android surface texture.
@@ -47,7 +43,7 @@ public class ExternalTexture {
     initialize(stream);
   }
 
-  /** Gets the surface texture created for this ExternalTexture. */
+  /** 获取SurfaceTexture对象 */
   public SurfaceTexture getSurfaceTexture() {
     return Preconditions.checkNotNull(surfaceTexture);
   }
@@ -76,7 +72,7 @@ public class ExternalTexture {
   }
 
   /**
-   * Gets the surface created for this ExternalTexture that draws to {@link #getSurfaceTexture()}
+   * 获取Surface对象 {@link #getSurfaceTexture()}
    */
   public Surface getSurface() {
     return Preconditions.checkNotNull(surface);
@@ -116,7 +112,7 @@ public class ExternalTexture {
   }
 
 
-  /** Cleanup filament objects after garbage collection */
+  /** Cleanup回调 */
   private static final class CleanupCallback implements Runnable {
     @Nullable private final Texture filamentTexture;
     @Nullable private final Stream filamentStream;

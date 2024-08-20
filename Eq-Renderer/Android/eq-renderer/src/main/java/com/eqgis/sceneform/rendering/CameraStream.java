@@ -31,10 +31,12 @@ import java.nio.ShortBuffer;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Displays the Camera stream using Filament.
+ * 相机视频流对象
+ * <p>
+ *     用于在filament中显示视频背景
+ * </p>
  *
- * @hide Note: The class is hidden because it should only be used by the Filament Renderer and does
- * not expose a user facing API.
+ * @hide 内部使用
  */
 @SuppressWarnings("AndroidApiChecker") // CompletableFuture
 public class CameraStream {
@@ -71,9 +73,9 @@ public class CameraStream {
     private final IEngine engine;
     private int cameraStreamRenderable = UNINITIALIZED_FILAMENT_RENDERABLE;
 
-    /** By default the depthMode is set to {@link DepthMode#NO_DEPTH} */
+    /** 启用深度API的状态，默认不启用{@link DepthMode#NO_DEPTH} */
     public DepthMode depthMode = DepthMode.NO_DEPTH;
-    /** By default the depthOcclusionMode ist set to {@link DepthOcclusionMode#DEPTH_OCCLUSION_DISABLED} */
+    /** 启用深度遮挡 {@link DepthOcclusionMode#DEPTH_OCCLUSION_DISABLED} */
     private DepthOcclusionMode depthOcclusionMode = DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED;
 
     @Nullable private ExternalTexture cameraTexture;
@@ -206,7 +208,7 @@ public class CameraStream {
 
         }
         else{
-            // create screen quad geometry to camera stream to
+            //创建一个矩形对象
             ShortBuffer indexBufferData = ShortBuffer.allocate(HUAWEI_CAMERA_INDICES.length);
             indexBufferData.put(HUAWEI_CAMERA_INDICES);
             final int indexCount = indexBufferData.capacity();
@@ -219,7 +221,7 @@ public class CameraStream {
             Preconditions.checkNotNull(cameraIndexBuffer)
                     .setBuffer(engine.getFilamentEngine(), indexBufferData);
 
-            // Note: ARCore expects the UV buffers to be direct or will assert in transformDisplayUvCoords.
+            // UV
             cameraUvCoords = createCameraUVBuffer();
             transformedCameraUvCoords = createCameraUVBuffer();
 
@@ -318,8 +320,6 @@ public class CameraStream {
         return buffer;
     }
 
-
-
     void setupOcclusionCameraMaterial(Renderer renderer) {
         CompletableFuture<Material> materialFuture =
                 Material.builder()
@@ -364,10 +364,10 @@ public class CameraStream {
         if (cameraMaterial == null)
             return;
 
-        // The ExternalTexture can't be created until we receive the first AR Core Frame so that we
-        // can access the width and height of the camera texture. Return early if the ExternalTexture
-        // hasn't been created yet so we don't start rendering until we have a valid texture. This will
-        // be called again when the ExternalTexture is created.
+        //ExternalTexture不能被创建，直到我们收到第一个ARFrame，以便我们
+        //可以访问相机纹理的宽度和高度。如果ExternalTexture
+        //尚未创建，不开始渲染，直到我们有一个有效的纹理。这将
+        //创建ExternalTexture时再次调用。
         if (!isTextureInitialized()) {
             return;
         }
@@ -382,10 +382,10 @@ public class CameraStream {
         if (occlusionCameraMaterial == null)
             return;
 
-        // The ExternalTexture can't be created until we receive the first AR Core Frame so that we
-        // can access the width and height of the camera texture. Return early if the ExternalTexture
-        // hasn't been created yet so we don't start rendering until we have a valid texture. This will
-        // be called again when the ExternalTexture is created.
+        //ExternalTexture不能被创建，直到我们收到第一个ARFrame，以便我们
+        //可以访问相机纹理的宽度和高度。如果ExternalTexture
+        //尚未创建，不开始渲染，直到我们有一个有效的纹理。这将
+        //创建ExternalTexture时再次调用。
         if (!isTextureInitialized()) {
             return;
         }
@@ -451,13 +451,8 @@ public class CameraStream {
 //    }
 
     /**
-     * <pre>
-     *     The {@link ARSession} holds the information if the
-     *     DepthMode is configured or not. Based on
-     *     that result different materials and textures are
-     *     used for the camera.
-     * </pre>
-     *
+     * 检查深度API启用状态
+     * <p>需要手机支持深度API，请参考ARCore和AREngine的官方文档以查看支持Depth API的设备型号</p>
      * @param session {@link ARSession}
      */
     public void checkIfDepthIsEnabled(ARSession session) {
@@ -520,6 +515,11 @@ public class CameraStream {
     }
 
     /**
+     * 纹理初始化
+     * <p>
+     *     本方法主要用于ExternalTexture做背景的场景，
+     *     通过ExternalTexture的surface，我们可以绘制任何内容作为背景
+     * </p>
      * Init BackgroundTexture , added by ikkyu 2022/04/29
      * @param externalTexture
      */
@@ -529,7 +529,7 @@ public class CameraStream {
         }
         if (externalTexture == null)return;
 
-        // External Camera Texture
+        //用作相机纹理
         cameraTexture = externalTexture;
 
         if (ARPlatForm.OCCLUSION_MODE != ARPlatForm.OcclusionMode.OCCLUSION_DISABLED
@@ -551,10 +551,10 @@ public class CameraStream {
     }
     /**
      * <pre>
-     *      Update the DepthTexture.
+     *      更新深度图
      * </pre>
      *
-     * @param depthImage {@link Image}
+     * @param depthImage {@link Image} 单通道的包含深度数据的安卓Image对象
      */
     public void recalculateOcclusion(Image depthImage) {
         if (occlusionCameraMaterial != null &&
@@ -578,9 +578,10 @@ public class CameraStream {
     }
 
     /**
+     * 更新深度图
      * added by Ikkyu 2022/01/22
      * modified by ikkyu 2022/10/24
-     * @param depthImage
+     * @param depthImage 自定义的深度图数据对象
      */
     public void recalculateOcclusion(CustomDepthImage depthImage) {
         if (occlusionCameraMaterial != null &&
@@ -648,19 +649,17 @@ public class CameraStream {
     }
 
     /**
-     * Gets the currently applied depth mode depending on the device supported modes.
+     * 根据设备支持的模式获取当前应用的深度模式。
      */
     public DepthMode getDepthMode() {
         return depthMode;
     }
 
     /**
-     * Checks whether the provided DepthOcclusionMode is supported on this device with the selected camera configuration and AR config.
-     * The current list of supported devices is documented on the ARCore supported devices page.
+     * 检查所选摄像机配置和AR配置是否支持该设备上提供的DepthOcclusionMode。当前支持的设备列表记录在ARCore支持的设备页面上。
      *
-     * @param depthOcclusionMode The desired depth mode to check.
-     * @return True if the depth mode has been activated on the AR session config
-     * and the provided depth occlusion mode is supported on this device.
+     * @param depthOcclusionMode 需要检查的深度模式。
+     * @return 如果在AR会话配置中激活了深度模式，并且本设备支持提供的深度遮挡模式，则为True。
      */
     public boolean isDepthOcclusionModeSupported(DepthOcclusionMode depthOcclusionMode) {
         switch (depthOcclusionMode) {
@@ -672,11 +671,11 @@ public class CameraStream {
     }
 
     /**
-     * Gets the current Depth Occlusion Mode
+     * 获取当前深度遮挡模式
      *
      * @see #setDepthOcclusionMode
      * @see DepthOcclusionMode
-     * @return the occlusion mode currently defined for the CarmeraStream
+     * @return 当前为camerastream定义的遮挡模式
      */
     public DepthOcclusionMode getDepthOcclusionMode() {
         return depthOcclusionMode;
@@ -684,24 +683,15 @@ public class CameraStream {
 
 
     /**
+     * 设置深度API的调用模式
      * <pre>
-     *     Set the DepthModeUsage to {@link DepthOcclusionMode#DEPTH_OCCLUSION_ENABLED} to set the
-     *     occlusion {@link com.google.android.filament.Material}. This will process the incoming DepthImage to
-     *     occlude virtual objects behind real world objects. If the {@link ARSession} configuration
-     *     for the {@link com.google.ar.core.Config.DepthMode} is set to {@link ARConfig.DepthMode#DISABLED},
-     *     the standard camera {@link Material} is used.
+     *     示例代码：
      *
-     *     Set the DepthModeUsage to {@link DepthOcclusionMode#DEPTH_OCCLUSION_DISABLED} to set the
-     *     standard camera {@link com.google.android.filament.Material}.
+     *     <code>
      *
-     *     A good place to set the DepthModeUsage is inside of the onViewCreated() function call.
-     *     To make sure that this function is called in your code set the correct listener on
-     *     your Ar Fragment
-     *
-     *     <code>public void onAttachFragment(
+     *     public void onAttachFragment(
      *         FragmentManager fragmentManager,
-     *         Fragment fragment
-     *     ) {
+     *         Fragment fragment) {
      *         if (fragment.getId() == R.id.arFragment) {
      *             arFragment = (ArFragment) fragment;
      *             arFragment.setOnViewCreatedListener(this);
@@ -711,8 +701,7 @@ public class CameraStream {
      *
      *     public void onViewCreated(
      *         ArFragment arFragment,
-     *         ArSceneView arSceneView
-     *     ) {
+     *         ArSceneView arSceneView) {
      *         arSceneView
      *            .getCameraStream()
      *            .setDepthModeUsage(CameraStream
@@ -747,61 +736,60 @@ public class CameraStream {
 
 
     /**
-     * The DepthMode Enum is used to reflect the {@link ARSession} configuration
-     * for the DepthMode to decide if the occlusion material should be set and if
-     * frame.acquireDepthImage() or frame.acquireRawDepthImage() should be called to get
-     * the input data for the depth texture.
+     * 深度API的数据类型
      */
     public enum DepthMode {
         /**
+         * 无深度图数据
          * <pre>
-         * The {@link ARSession} is not configured to use the Depth-API
-         *
-         * This is the default value
+         *     设备不支持深度API，或程序无需使用深度API时，使用这种Mode
          * </pre>
          */
         NO_DEPTH,
+
         /**
-         * The {@link ARSession} is configured to use the DepthMode AUTOMATIC
+         * 使用自动获取的深度图数据
+         * <pre>
+         *     {@link ARSession} 配置为 AUTOMATIC
+         * </pre>
          */
         DEPTH,
+
         /**
-         * The {@link ARSession} is configured to use the DepthMode RAW_DEPTH_ONLY
+         * 使用原始的深度图数据
+         * <pre>
+         *     {@link ARSession} 配置为 RAW_DEPTH_ONLY
+         * </pre>
          */
         RAW_DEPTH
     }
 
 
     /**
-     * Independent from the {@link ARSession} configuration, the user can decide with the
-     * DeptModeUsage which {@link com.google.android.filament.Material} should be set to the
-     * CameraStream renderable.
+     * 深度遮挡模式
      */
     public enum DepthOcclusionMode {
         /**
-         * Set the occlusion material. If the {@link ARSession} is not
-         * configured properly the standard camera material is used.
-         * Valid {@link ARSession} configuration for the DepthMode are
-         * {@link ARConfig.DepthMode#AUTOMATIC} and {@link ARConfig.DepthMode#RAW_DEPTH_ONLY}.
+         * 启用深度遮挡
+         * <p>
+         *     这会使用渲染遮挡效果的材质文件，以实现实挡虚的效果
+         * </p>
          */
         DEPTH_OCCLUSION_ENABLED,
         /**
+         * 禁用深度遮挡
          * <pre>
-         * Use this value if the standard camera material should be applied to
-         * the CameraStream Renderable even if the {@link ARSession} configuration has set
-         * the DepthMode to {@link ARConfig.DepthMode#AUTOMATIC} or
-         * {@link ARConfig.DepthMode#RAW_DEPTH_ONLY}. This Option is useful, if you
-         * want to use the DepthImage or RawDepthImage or just the DepthPoints without the
-         * occlusion effect.
-         *
-         * This is the default value
+         *     这是默认模式，无虚实遮挡的效果，仅传入相机视频流数据
          * </pre>
          */
         DEPTH_OCCLUSION_DISABLED
     }
 
     /**
-     * Cleanup filament objects after garbage collection
+     * 清理回调
+     * <p>
+     *     gc后触发以清理filament的Native数据
+     * </p>
      */
     public static final class CleanupCallback implements Runnable {
         private final Scene scene;

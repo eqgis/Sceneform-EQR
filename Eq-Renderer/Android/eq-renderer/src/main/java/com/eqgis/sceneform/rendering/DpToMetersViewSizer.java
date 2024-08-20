@@ -7,9 +7,11 @@ import com.eqgis.sceneform.Scene;
 import com.eqgis.sceneform.utilities.Preconditions;
 
 /**
- * Controls the size of a {@link ViewRenderable} in a {@link Scene} by
- * defining how many dp (density-independent pixels) there are per meter. This is recommended when
- * using an android layout that is built using dp.
+ * View尺寸转换工具
+ * <pre>
+ *     控制{@link Scene} by中{@link ViewRenderable}的大小
+ *     定义每米有多少dp(与密度无关的像素)。当使用使用dp构建的android布局时，建议这样做。
+ * </pre>
  *
  * @see ViewRenderable.Builder#setSizer(ViewSizer)
  * @see ViewRenderable#setSizer(ViewSizer)
@@ -17,6 +19,8 @@ import com.eqgis.sceneform.utilities.Preconditions;
 
 public class DpToMetersViewSizer implements ViewSizer {
   private final int dpPerMeters;
+
+  //默认值转换比例，250dp = 1米
   public static final int DEFAULT_DP_TO_METERS = 250;
 
   // Defaults to zero, Z value of the size doesn't currently have any semantic meaning,
@@ -24,10 +28,8 @@ public class DpToMetersViewSizer implements ViewSizer {
   private static final float DEFAULT_SIZE_Z = 0.0f;
 
   /**
-   * Constructor for creating a sizer for controlling the size of a {@link ViewRenderable} by
-   * defining how many dp there are per meter.
-   *
-   * @param dpPerMeters a number greater than zero representing the ratio of dp to meters
+   * 构造函数
+   * @param dpPerMeters 转换比例（1米表示多少dp值）
    */
   public DpToMetersViewSizer(int dpPerMeters) {
     if (dpPerMeters <= 0) {
@@ -38,8 +40,10 @@ public class DpToMetersViewSizer implements ViewSizer {
   }
 
   /**
-   * Returns the number of dp (density-independent pixels) there are per meter that is used for
-   * controlling the size of a {@link ViewRenderable}.
+   * 获取转换系数
+   * <p>
+   *     世界坐标系下的1米表示的dp值
+   * </p>
    */
   public int getDpPerMeters() {
     return dpPerMeters;
@@ -57,8 +61,8 @@ public class DpToMetersViewSizer implements ViewSizer {
 
   /**
    * 获取二维视图从米到像素的转换
-   * @param width
-   * @param height
+   * @param width_meter 宽度，单位：米
+   * @param height_meter 高度，单位：米
    * @return
    */
   public Vector3 getViewPx(float width_meter,float height_meter){
@@ -69,7 +73,7 @@ public class DpToMetersViewSizer implements ViewSizer {
 
   /**
    * 米转像素
-   * @param px
+   * @param px 像素值
    * @return
    */
   public float convertPxToMeter(int px){
@@ -79,7 +83,7 @@ public class DpToMetersViewSizer implements ViewSizer {
 
   /**
    * 像素转米
-   * @param meter
+   * @param meter 世界坐标系下的长度值
    * @return
    */
   public float convertMeterToPx(float meter){
