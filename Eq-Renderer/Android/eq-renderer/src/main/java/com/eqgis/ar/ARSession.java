@@ -2,7 +2,7 @@ package com.eqgis.ar;
 
 import android.content.Context;
 
-import com.google.ar.sceneform.ARPlatForm;
+import com.eqgis.sceneform.ARPlatForm;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Config;
 import com.google.ar.core.Session;
@@ -11,7 +11,7 @@ import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
-import com.google.ar.sceneform.rendering.CameraStream;
+import com.eqgis.sceneform.rendering.CameraStream;
 import com.eqgis.ar.exceptions.ARCameraException;
 import com.eqgis.ar.exceptions.ARSessionException;
 

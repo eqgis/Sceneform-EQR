@@ -2,3 +2,4 @@
 Eq-Renderer/Android/eq-renderer/libs/arm64-v8a/libeqr-core.so
 Eq-Renderer/Android/eq-renderer/libs/armeabi-v7a/libeqr-core.so
 SampleProj/app/src/main/assets/gltf/test3.glb
+*.glb

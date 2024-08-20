@@ -68,32 +68,33 @@ public class SwapChain {
     private final Object mSurface;
     private long mNativeObject;
 
-    public static final long CONFIG_DEFAULT = 0x0;
-
-    /**
-     * This flag indicates that the <code>SwapChain</code> must be allocated with an
-     * alpha-channel.
-     */
-    public static final long CONFIG_TRANSPARENT = 0x1;
-
-    /**
-     * This flag indicates that the <code>SwapChain</code> may be used as a source surface
-     * for reading back render results.  This config must be set when creating
-     * any <code>SwapChain</code>  that will be used as the source for a blit operation.
-     *
-     * @see Renderer#copyFrame
-     */
-    public static final long CONFIG_READABLE = 0x2;
-
-    /**
-     * Indicates that the native X11 window is an XCB window rather than an XLIB window.
-     * This is ignored on non-Linux platforms and in builds that support only one X11 API.
-     */
-    public static final long CONFIG_ENABLE_XCB = 0x4;
-
     SwapChain(long nativeSwapChain, Object surface) {
         mNativeObject = nativeSwapChain;
         mSurface = surface;
+    }
+
+    /**
+     * Return whether createSwapChain supports the CONFIG_PROTECTED_CONTENT flag.
+     * The default implementation returns false.
+     *
+     * @param engine A reference to the filament Engine
+     * @return true if CONFIG_PROTECTED_CONTENT is supported, false otherwise.
+     * @see SwapChainFlags#CONFIG_PROTECTED_CONTENT
+     */
+    public static boolean isProtectedContentSupported(@NonNull Engine engine) {
+        return nIsProtectedContentSupported(engine.getNativeObject());
+    }
+
+    /**
+     * Return whether createSwapChain supports the CONFIG_SRGB_COLORSPACE flag.
+     * The default implementation returns false.
+     *
+     * @param engine A reference to the filament Engine
+     * @return true if CONFIG_SRGB_COLORSPACE is supported, false otherwise.
+     * @see SwapChainFlags#CONFIG_SRGB_COLORSPACE
+     */
+    public static boolean isSRGBSwapChainSupported(@NonNull Engine engine) {
+        return nIsSRGBSwapChainSupported(engine.getNativeObject());
     }
 
     /**
@@ -111,10 +112,6 @@ public class SwapChain {
      * <p>
      * Use setFrameCompletedCallback to set a callback on an individual SwapChain. Each time a frame
      * completes GPU rendering, the callback will be called.
-     * </p>
-     *
-     * <p>
-     * The FrameCompletedCallback is guaranteed to be called on the main Filament thread.
      * </p>
      *
      * <p>
@@ -141,4 +138,6 @@ public class SwapChain {
     }
 
     private static native void nSetFrameCompletedCallback(long nativeSwapChain, Object handler, Runnable callback);
+    private static native boolean nIsSRGBSwapChainSupported(long nativeEngine);
+    private static native boolean nIsProtectedContentSupported(long nativeEngine);
 }

@@ -5,7 +5,7 @@ import android.util.Log;
 /**
  * AR相机异常
  **/
-public class ARCameraException extends Exception{
+public class ARCameraException extends RuntimeException{
     public ARCameraException() {
         super();
     }

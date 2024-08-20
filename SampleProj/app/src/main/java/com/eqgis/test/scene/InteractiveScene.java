@@ -9,14 +9,14 @@ import android.widget.Toast;
 
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
-import com.google.ar.sceneform.HitTestResult;
-import com.google.ar.sceneform.Node;
-import com.google.ar.sceneform.math.Quaternion;
-import com.google.ar.sceneform.math.Vector3;
-import com.google.ar.sceneform.rendering.Color;
-import com.google.ar.sceneform.rendering.Light;
-import com.google.ar.sceneform.rendering.ModelRenderable;
-import com.google.ar.sceneform.rendering.ViewRenderable;
+import com.eqgis.sceneform.HitTestResult;
+import com.eqgis.sceneform.Node;
+import com.eqgis.sceneform.math.Quaternion;
+import com.eqgis.sceneform.math.Vector3;
+import com.eqgis.sceneform.rendering.Color;
+import com.eqgis.sceneform.rendering.Light;
+import com.eqgis.sceneform.rendering.ModelRenderable;
+import com.eqgis.sceneform.rendering.ViewRenderable;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
