@@ -38,8 +38,10 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 /**
- * Controls how a {@link Renderable} is displayed. There can be multiple RenderableInstances
- * displaying a single Renderable.
+ * 渲染实例
+ * <p>
+ *     一个Renderable可以有多个RenderableInstances
+ * </p>
  *
  * @hide
  */
@@ -50,17 +52,15 @@ public class RenderableInstance implements AnimatableModel {
     private AssetLoader loader;//若加载gltf资源，会使用到该类
 
     /**
-     * Interface for modifying the bone transforms for this specific RenderableInstance. Used by
-     * SkeletonNode to make it possible to control a bone by moving a
-     * node.
+     * 为这个特定的RenderableInstance修改骨骼转换的接口。
+     * 由SkeletonNode使用，可以通过移动节点来控制骨骼。
      */
     public interface SkinningModifier {
 
         /**
-         * Takes the original boneTransforms and output new boneTransforms used to render the mesh.
+         * 获取原始的boneTransforms并输出用于渲染网格的新boneTransforms。
          *
-         * @param originalBuffer contains the bone transforms from the current animation state of the
-         *                       skeleton, buffer is read only
+         * @param originalBuffer 包含骨架从当前动画状态转换而来的骨架，缓冲区为只读
          */
         FloatBuffer modifyMaterialBoneTransformsBuffer(FloatBuffer originalBuffer);
 
@@ -111,18 +111,18 @@ public class RenderableInstance implements AnimatableModel {
         this.materialNames = new ArrayList<>(renderable.getMaterialNames());
         entity = createFilamentEntity(EngineInstance.getEngine());
 
-        // SFB's can be imported with re-centering or scaling; rather than perform those operations to
-        // the vertices (and bones, &c) at import time, we keep vertex data in the same unit as the
-        // source asset and apply at runtime to a child entity via this relative transform.  If we get
-        // back null, the relative transform is identity and the child entity path can be skipped.
-        @Nullable Matrix relativeTransform = getRelativeTransform();
-        if (relativeTransform != null) {
-            childEntity =
-                    createFilamentChildEntity(EngineInstance.getEngine(), entity, relativeTransform);
-        }
+        // SFB可以通过重新定心或缩放来导入;而不是执行这些操作
+        // 导入时的顶点(和骨骼，&c)，我们将顶点数据保存在同一个单元中
+        // 源资源，并在运行时通过此相对转换应用于子实体。如果我们得到
+        // 返回null时，相对转换为identity，子实体路径可以跳过。
+//        @Nullable Matrix relativeTransform = getRelativeTransform();
+//        if (relativeTransform != null) {
+//            childEntity =
+//                    createFilamentChildEntity(EngineInstance.getEngine(), entity, relativeTransform);
+//        }
 
-        createGltfModelInstance();
-
+        //源模型->SFA->SFB这种加载方式，为早期scenefrom(1.15以及以前的版本使用)，现不再使用了
+        //当前版本，仅支持通过gltfio库导入gltf2.0格式的模型
         createFilamentAssetModelInstance();
 
         ResourceManager.getInstance()
@@ -131,7 +131,9 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Gets the status of an asynchronous resource load as a percentage in [0,1].
+     * 获取异步资源加载进度
+     * <p>以[0,1]中的百分比表示</p>
+     * @return 进度值
      */
     public float getResourceLoadProgress(){
         if (renderable.getRenderableData() instanceof  RenderableInternalFilamentAssetData){
@@ -155,6 +157,7 @@ public class RenderableInstance implements AnimatableModel {
                             RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
                             EntityManager.get());
 
+            //当前版本，不用再判断是否是glb了，直接通过createAssets即可创建。因此isGltfBinary的set方法，后续版本会删除。
             FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
 //            FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
 //                    : loader.createAssetFromJson(renderableData.gltfByteBuffer);
@@ -234,12 +237,9 @@ public class RenderableInstance implements AnimatableModel {
                         filamentAnimator.getAnimationDuration(i),
                         getRenderable().getAnimationFrameRate()));
             }
+            //释放源数据，主要包含一些URI信息
             createdAsset.releaseSourceData();//added by ikkyu 2024/07/30
         }
-    }
-
-    void createGltfModelInstance() {
-        return;
     }
 
     @Nullable
@@ -248,11 +248,13 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * <p>Animator is owned by <code>FilamentAsset</code> and can be used for two things:
-     * <ul>
-     * <li>Updating matrices in <code>TransformManager</code> components according to glTF <code>animation</code> definitions.</li>
-     * <li>Updating bone matrices in <code>RenderableManager</code> components according to glTF <code>skin</code> definitions.</li>
-     * </ul>
+     * 获取filament的动画对象
+     * <p>
+     *     Animator由<code>FilamentAsset</code>拥有，可以用于两件事:
+     *     <ul>
+     *         <li>根据glTF <code>动画</code>定义更新<code>TransformManager</code>组件中的矩阵。
+     *         <li>根据lTF <code>skin</code>定义更新<code>RenderableManager</code>组件中的骨矩阵。</li>
+     *     </ul>
      * </p>
      */
     @Nullable
@@ -261,9 +263,8 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Get the {@link Renderable} to display for this {@link RenderableInstance}.
-     *
-     * @return {@link Renderable} asset, usually a 3D model.
+     * 获取渲染对象
+     * @return {@link Readable}
      */
     public Renderable getRenderable() {
         return renderable;
@@ -287,16 +288,15 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Get the render priority that controls the order of rendering. The priority is between a range
-     * of 0 (rendered first) and 7 (rendered last). The default value is 4.
+     * 获取渲染优先级
+     * <p>默认值为4</p>
      */
     public int getRenderPriority() {
         return renderPriority;
     }
 
     /**
-     * Set the render priority to control the order of rendering. The priority is between a range of 0
-     * (rendered first) and 7 (rendered last). The default value is 4.
+     * 设置渲染优先级
      */
     public void setRenderPriority(@IntRange(from = Renderable.RENDER_PRIORITY_FIRST, to = Renderable.RENDER_PRIORITY_LAST) int renderPriority) {
         int[] entities = getFilamentAsset().getEntities();
@@ -311,7 +311,8 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns true if configured to cast shadows on other renderables.
+     * 如果支持阴影投射，则返回true。
+     * <p>将阴影投射到其他网格上</p>
      */
     public boolean isShadowCaster() {
         return isShadowCaster;
@@ -338,14 +339,14 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns true if configured to receive shadows cast by other renderables.
+     * 若支持其他对象投射的阴影，则返回true
      */
     public boolean isShadowReceiver() {
         return isShadowReceiver;
     }
 
     /**
-     * Sets whether the renderable receives shadows cast by other renderables in the scene.
+     * 设置可渲染对象是否接收场景中其他可渲染对象投射的阴影。
      */
     public void setShadowReceiver(boolean isShadowReceiver) {
         this.isShadowReceiver = isShadowReceiver;
@@ -372,21 +373,21 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns the material bound to the first submesh.
+     * 获取第一个子网格的材质
      */
     public Material getMaterial() {
         return getMaterial(0);
     }
 
     /**
-     * Returns the number of materials.
+     * 获取材质的数量
      */
     public int getMaterialsCount() {
         return materialBindings.size();
     }
 
     /**
-     * Returns the material bound to the specified index.
+     * 获取指定索引的网格的材质
      */
     public Material getMaterial(int index) {
         if (index < materialBindings.size()) {
@@ -396,7 +397,7 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns the material bound to the specified name.
+     * 根据名称获取材质
      */
     public Material getMaterial(String name) {
         for(int i=0;i<materialBindings.size();i++) {
@@ -408,14 +409,14 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Sets the material bound to the first index.
+     * 给第一个子网格设置材质
      */
     public void setMaterial(Material material) {
         setMaterial(0, material);
     }
 
     /**
-     * Sets the material bound to the specified index.
+     * 给指定索引的网格设置材质
      */
     public void setMaterial(@IntRange(from = 0) int primitiveIndex, Material material) {
         for (int i = 0; i < getFilamentAsset().getEntities().length; i++) {
@@ -424,7 +425,7 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Sets the material bound to the specified index and entityIndex
+     * 设置绑定到指定索引和entityIndex的材质
      */
     public void setMaterial(int entityIndex, @IntRange(from = 0) int primitiveIndex, Material material) {
         int[] entities = getFilamentAsset().getEntities();
@@ -439,7 +440,7 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns the name associated with the specified index.
+     * 获取指定索引的材质名称
      */
     public String getMaterialName(int index) {
         Preconditions.checkState(materialNames.size() == materialBindings.size());
@@ -461,10 +462,8 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Get the associated {@link ModelAnimation} at the given index or throw
-     * an {@link IndexOutOfBoundsException}.
-     *
-     * @param animationIndex Zero-based index for the animation of interest.
+     * 获取模型动画
+     *  @param animationIndex 从0开始的索引值
      */
     @Override
     public ModelAnimation getAnimation(int animationIndex) {
@@ -473,7 +472,7 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns the number of {@link ModelAnimation} definitions in the model.
+     * 获取模型动画的数量
      */
     @Override
     public int getAnimationCount() {
@@ -503,12 +502,10 @@ public class RenderableInstance implements AnimatableModel {
             setupSkeleton(renderableInternalData);
             renderableInternalData.buildInstanceData(this, getRenderedEntity());
             renderableId = changeId.get();
-            // First time we're rendering, so always update the skinning even if we aren't animating and
-            // there is no skinModifier.
+            // 第一次渲染，所以总是更新蒙皮skinning，即使我们没有动画和没有skinModifier
             updateSkinning();
         } else {
-            // Will only update the skinning if the renderable is animating or there is a skinModifier
-            // that has been changed since the last draw.
+            // 如果渲染是动画或有一个皮肤修改器已经改变了，只更新蒙皮skinning
             if (updateAnimations(false)) {
                 updateSkinning();
             }
@@ -649,57 +646,10 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * Returns the transform of this renderable relative to it's node. This will be non-null if the
-     * .sfa file includes a scale other than 1 or has recentering turned on.
+     * 应用动画更改<code>如果fore==true</code>或动画被修改
      *
-     * @hide
-     */
-    @Nullable
-    public Matrix getRelativeTransform() {
-        if (cachedRelativeTransform != null) {
-            return cachedRelativeTransform;
-        }
-
-        IRenderableInternalData renderableData = renderable.getRenderableData();
-        float scale = renderableData.getTransformScale();
-        Vector3 offset = renderableData.getTransformOffset();
-        if (scale == 1f && Vector3.equals(offset, Vector3.zero())) {
-            return null;
-        }
-
-        cachedRelativeTransform = new Matrix();
-        cachedRelativeTransform.makeScale(scale);
-        cachedRelativeTransform.setTranslation(offset);
-        return cachedRelativeTransform;
-    }
-
-    /**
-     * Returns the inverse transform of this renderable relative to it's node. This will be non-null
-     * if the .sfa file includes a scale other than 1 or has recentering turned on.
-     *
-     * @hide
-     */
-    @Nullable
-    public Matrix getRelativeTransformInverse() {
-        if (cachedRelativeTransformInverse != null) {
-            return cachedRelativeTransformInverse;
-        }
-
-        Matrix relativeTransform = getRelativeTransform();
-        if (relativeTransform == null) {
-            return null;
-        }
-
-        cachedRelativeTransformInverse = new Matrix();
-        Matrix.invert(relativeTransform, cachedRelativeTransformInverse);
-        return cachedRelativeTransformInverse;
-    }
-
-    /**
-     * Apply animations changes <code>if fore==true</code> or the animation has dirty values.
-     *
-     * @param force Update even if the animation time position didn't changed.
-     * @return true if any animation update has been made.
+     * @param force 强制更新，即使动画时间位置没有改变。
+     * @return 如果进行了动画更新操作，则为True。
      */
     public boolean updateAnimations(boolean force) {
         boolean hasUpdate = false;
@@ -718,10 +668,10 @@ public class RenderableInstance implements AnimatableModel {
 
 
     /**
-     * Computes root-to-node transforms for all bone nodes.
-     * Uses <code>TransformManager</code> and <code>RenderableManager</code>.
+     * 计算所有骨节点的根到节点转换。
+     * 用例 <code>TransformManager</code> and <code>RenderableManager</code>.
      *
-     * <p>NOTE: this operation is independent of <code>animation</code>.</p>
+     * <p>NOTE: 这个操作与 <code>animation</code>不同</p>
      */
     private void updateSkinning() {
         if (getFilamentAnimator() != null) {
@@ -744,19 +694,8 @@ public class RenderableInstance implements AnimatableModel {
         return entity;
     }
 
-    @Entity
-    private static int createFilamentChildEntity(
-            IEngine engine, @Entity int entity, Matrix relativeTransform) {
-        EntityManager entityManager = EntityManager.get();
-        @Entity int childEntity = entityManager.create();
-        TransformManager transformManager = engine.getTransformManager();
-        transformManager.create(
-                childEntity, transformManager.getInstance(entity), relativeTransform.data);
-        return childEntity;
-    }
-
     /**
-     * Releases resources held by a {@link RenderableInstance}
+     * Cleanup回调
      */
     private static final class CleanupCallback implements Runnable {
         private final int childEntity;

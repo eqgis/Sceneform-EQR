@@ -10,23 +10,14 @@ import com.eqgis.sceneform.utilities.AndroidPreconditions;
 
 
 /**
- * Renders a 3D Model by attaching it to a {@link Node} with {@link
- * Node#setRenderable(Renderable)}.
- *
- * <pre>{@code
- * future = ModelRenderable.builder().setSource(context, R.raw.renderable).build();
- * renderable = future.thenAccept(...);
- * }</pre>
+ * 通过使用{@link Node#setRenderable(Renderable)}将其附加到{@link Node}来渲染3D模型。
+ * <code>
+ *     future = ModelRenderable.builder().setSource(context, R.raw.renderable).build();
+ *     renderable = future.thenAccept(...);
+ * </code>
  */
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class ModelRenderable extends Renderable {
-  
-
-
-
-  
-
-
 
   private ModelRenderable(Builder builder) {
     super(builder);
@@ -39,145 +30,27 @@ public class ModelRenderable extends Renderable {
     copyAnimationFrom(other);
   }
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  
   private void copyAnimationFrom(ModelRenderable other) {return ;}
 
-
-
-
-
-
-
-
   /**
-   * Creates a new instance of this ModelRenderable.
+   * 创建ModelRenderable实例
    *
-   * <p>The new renderable will have unique copy of all mutable state. All materials referenced by
-   * the ModelRenderable will also be instanced. Immutable data will be shared between the
-   * instances.
+   * <p>
+   *     创建一个拷贝对象
+   * </p>
    */
   @Override
   public ModelRenderable makeCopy() {
     return new ModelRenderable(this);
   }
 
-  /** Constructs a {@link ModelRenderable}. */
+  /** 创建{@link ModelRenderable} */
   public static Builder builder() {
     AndroidPreconditions.checkMinAndroidApiLevel();
     return new Builder();
   }
 
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-  
-
-
-
-
-  /** Factory class for {@link ModelRenderable}. */
+  /** 构建者模式 {@link ModelRenderable}. */
   public static final class Builder extends Renderable.Builder<ModelRenderable, Builder> {
 
     /** @hide */

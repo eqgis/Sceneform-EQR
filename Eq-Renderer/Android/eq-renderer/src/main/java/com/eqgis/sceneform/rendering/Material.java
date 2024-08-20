@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 /**
- * Represents a reference to a material.
+ * 材质对象
  */
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class Material {
@@ -35,11 +35,10 @@ public class Material {
     final IMaterialInstance internalMaterialInstance;
 
     /**
-     * Creates a new instance of this Material.
-     *
-     * <p>The new material will have a unique copy of the material parameters that can be changed
-     * independently. The getFilamentEngine material resource is immutable and will be shared between
-     * instances.
+     * 创建一个材质克隆对象
+     * <p>
+     *     新材料将具有可独立更改的材料参数的唯一副本。getFilamentEngine材质资源是不可变的，将在实例之间共享。
+     * </p>
      */
     public Material makeCopy() {
         return new Material(this);
@@ -158,12 +157,12 @@ public class Material {
     }
 
     /**
-     * <pre>
-     *     Sets a {@link DepthTexture} to a parameter of the type 'sampler2d' on this material.
-     * </pre>
-     *
-     * @param name         the name of the parameter in the material
-     * @param depthTexture the texture to set
+     * 传入深度图
+     * <p>
+     *     filament的材质文件中使用的是'sampler2d'类型
+     * </p>
+     * @param name         参数名称
+     * @param depthTexture 深度图
      */
     public void setDepthTexture(String name, DepthTexture depthTexture) {
         materialParameters.setDepthTexture(name, depthTexture);
@@ -173,8 +172,10 @@ public class Material {
     }
 
     /**
-     * Sets an {@link ExternalTexture} to a parameter of type 'samplerExternal' on this material.
-     *
+     * 传入扩展纹理
+     * <p>
+     *     filament的材质文件中使用的是'samplerExternal'类型
+     * </p>
      * @param name            the name of the parameter in the material
      * @param externalTexture the texture to set
      */
@@ -191,10 +192,9 @@ public class Material {
     }
 
     /**
-     * Constructs a {@link Material}
+     * {@link Material}构建器
      *
-     * @hide We do not support custom materials in version 1.0 and use a Material Factory to create
-     * new materials, so there is no need to expose a builder.
+     * @hide 在scenefrom的1.0版本中，不再支持自定义材质，而是使用材质工厂来创建新材质，因此不需要公开构建器。
      */
     public static Builder builder() {
         AndroidPreconditions.checkMinAndroidApiLevel();
@@ -284,8 +284,7 @@ public class Material {
     /**
      * Builder for constructing a {@link Material}
      *
-     * @hide We do not support custom materials in version 1.0 and use a Material Factory to create
-     * new materials, so there is no need to expose a builder.
+     * @hide 在scenefrom的1.0版本中，不再支持自定义材质，而是使用材质工厂来创建新材质，因此不需要公开构建器。
      */
     public static final class Builder {
         /**

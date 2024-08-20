@@ -20,7 +20,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-/** Represents the data used by a {@link Renderable} for rendering natively loaded glTF data. */
+/**
+ * Filament资产数据
+ * <p>
+ *     表示{@link Renderable}用于渲染glTF的数据。
+ * </p>
+ * */
 @SuppressWarnings("AndroidJdkLibsChecker")
 public class RenderableInternalFilamentAssetData implements IRenderableInternalData {
 
@@ -210,26 +215,6 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
     // Not Implemented
     return new ArrayList<>();
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   @Override
   public void buildInstanceData(RenderableInstance instance, int renderedEntity) {

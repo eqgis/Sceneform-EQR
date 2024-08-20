@@ -1,7 +1,5 @@
 package com.eqgis.sceneform.rendering;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -22,30 +20,29 @@ import java.util.List;
 
 
 /**
- * Represents the data used by a {@link Renderable} for rendering. All filament resources and
- * materials contained here will be disposed when the {@link RenderableInternalData#dispose()}
- * function is called.
+ * 表示{@link Renderable}用于渲染的数据。
+ * 当调用{@link RenderableInternalData#dispose()}函数时，这里包含的所有灯丝资源和材料将被销毁。
  */
 class RenderableInternalData implements IRenderableInternalData {
   private static final String TAG = RenderableInternalData.class.getSimpleName();
 
-  /** Represents the data used to render each mesh of the renderable. */
+  /** 表示用于渲染可渲染对象的每个网格的数据。 */
   static class MeshData {
-    // The start index into the triangle indices buffer for this mesh.
+    // 当前Mesh的indices的起始索引
     int indexStart;
-    // The end index into the triangle indices buffer for this mesh.
+    // 当前Mesh的indices的结束索引
     int indexEnd;
   }
 
-  // Geometry data.
+  // Geometry
   private final Vector3 centerAabb = Vector3.zero();
   private final Vector3 extentsAabb = Vector3.zero();
 
-  // Transform data.
+  // Transform
   private float transformScale = 1f;
   private final Vector3 transformOffset = Vector3.zero();
 
-  // Raw buffers.
+  // Raw
   @Nullable private IntBuffer rawIndexBuffer;
   @Nullable private FloatBuffer rawPositionBuffer;
   @Nullable private FloatBuffer rawTangentsBuffer;
@@ -56,12 +53,8 @@ class RenderableInternalData implements IRenderableInternalData {
   @Nullable private IndexBuffer indexBuffer;
   @Nullable private VertexBuffer vertexBuffer;
 
-  // Represents the set of meshes to render.
+  // Mesh数据集
   private final ArrayList<MeshData> meshes = new ArrayList<>();
-
-
-
-
 
   @Override
   public void setCenterAabb(Vector3 minAabb) {
@@ -205,16 +198,16 @@ class RenderableInternalData implements IRenderableInternalData {
     RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
     @EntityInstance int renderableInstance = renderableManager.getInstance(renderedEntity);
 
-    // Determine if a new filament Renderable needs to be created.
+    // 判断是否需要创建新的实例
     int meshCount = renderableData.getMeshes().size();
     if (renderableInstance == 0
             || renderableManager.getPrimitiveCount(renderableInstance) != meshCount) {
-      // Destroy the old one if it exists.
+      // 销毁旧实例
       if (renderableInstance != 0) {
         renderableManager.destroy(renderedEntity);
       }
 
-      // Build the filament renderable.
+      // 创建新实例
       RenderableManager.Builder builder =
               new RenderableManager.Builder(meshCount)
                       .priority(renderable.getRenderPriority())
@@ -235,7 +228,7 @@ class RenderableInternalData implements IRenderableInternalData {
       renderableManager.setReceiveShadows(renderableInstance, renderable.isShadowReceiver());
     }
 
-    // Update the bounding box.
+    //更新bounds
     Vector3 extents = renderableData.getExtentsAabb();
     Vector3 center = renderableData.getCenterAabb();
     Box filamentBox = new Box(center.x, center.y, center.z, extents.x, extents.y, extents.z);
@@ -245,10 +238,10 @@ class RenderableInternalData implements IRenderableInternalData {
       throw new AssertionError("Material Bindings are out of sync with meshes.");
     }
 
-    // Update the geometry and material instances.
+    // 更新几何信息和材质
     final RenderableManager.PrimitiveType primitiveType = RenderableManager.PrimitiveType.TRIANGLES;
     for (int mesh = 0; mesh < meshCount; ++mesh) {
-      // Update the geometry assigned to the filament renderable.
+      // 更新mesh
       MeshData meshData = renderableData.getMeshes().get(mesh);
       @Nullable VertexBuffer vertexBuffer = renderableData.getVertexBuffer();
       @Nullable IndexBuffer indexBuffer = renderableData.getIndexBuffer();
@@ -264,7 +257,7 @@ class RenderableInternalData implements IRenderableInternalData {
               meshData.indexStart,
               meshData.indexEnd - meshData.indexStart);
 
-      // Update the material instances assigned to the filament renderable.
+      //更新材质
       Material material = materialBindings.get(mesh);
       renderableManager.setMaterialInstanceAt(
               renderableInstance, mesh, material.getFilamentMaterialInstance());

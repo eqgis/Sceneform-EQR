@@ -8,9 +8,10 @@ import com.eqgis.sceneform.resources.ResourceRegistry;
 import java.util.ArrayList;
 
 /**
- * Minimal resource manager. Maintains mappings from ids to created resources and a task executor
- * dedicated to loading resources asynchronously.
- *
+ * 资源管理器。
+ * <p>
+ *     从id到已创建资源和专用于异步加载资源的任务执行器的映射。
+ * </p>
  * @hide
  */
 @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
@@ -83,7 +84,7 @@ public class ResourceManager {
     return resourcesInUse;
   }
 
-  /** Forcibly deletes all tracked references */
+  /** 强制销毁所有资源 */
   public void destroyAllResources() {
     for (ResourceHolder resourceHolder : resourceHolders) {
       resourceHolder.destroyAllResources();

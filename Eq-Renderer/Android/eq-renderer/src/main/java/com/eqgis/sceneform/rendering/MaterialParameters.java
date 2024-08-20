@@ -11,7 +11,7 @@ import com.google.ar.core.annotations.UsedByNative;
 import java.util.HashMap;
 import java.util.Optional;
 
-/** Material property store. */
+/** 材质属性对象 */
 @UsedByNative("material_java_wrappers.h")
 final class MaterialParameters {
   private final HashMap<String, Parameter> namedParameters = new HashMap<>();

@@ -14,9 +14,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * Helper functions for loading and processing rendercore bundles.
- *
- * @hide
+ * SFB资源加载器
+ * <p>
+ *     由于加载SFB资源
+ * </p>
+ * 由于当前版本仅在加载光照探针时使用到了sfb资源，后续将不再使用这种方式。这个类将在后续版本中删除。
+ * @hide 内部使用
  */
 public final class SceneformBundle {
   private static final String TAG = SceneformBundle.class.getSimpleName();

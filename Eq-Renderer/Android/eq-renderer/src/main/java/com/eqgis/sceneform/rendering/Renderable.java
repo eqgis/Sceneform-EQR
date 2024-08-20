@@ -17,6 +17,7 @@ import com.eqgis.sceneform.utilities.AndroidPreconditions;
 import com.eqgis.sceneform.utilities.ChangeId;
 import com.eqgis.sceneform.utilities.LoadHelper;
 import com.eqgis.sceneform.utilities.Preconditions;
+import com.google.android.filament.gltfio.FilamentAsset;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,25 +29,24 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * Base class for rendering in 3D space by attaching to a {@link Node} with
- * {@link Node#setRenderable(Renderable)}.
+ * 渲染对象的抽象基类
  */
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"}) // CompletableFuture
 public abstract class Renderable {
-    // Data that can be shared between Renderables with makeCopy()
+    // Renderable之间共享的数据，这是由于scenefrom中常用的copy机制，虽可共享数据，但不恰当的调用，容易导致内存泄漏
     private final IRenderableInternalData renderableData;
 
     protected boolean asyncLoadEnabled;
 
     private final Object registryId;
 
-    // Data that is unique per-Renderable.
+    // 每个渲染对象对应的数据
     private final ArrayList<Material> materialBindings = new ArrayList<>();
     private final ArrayList<String> materialNames = new ArrayList<>();
     private int renderPriority = RENDER_PRIORITY_DEFAULT;
     private boolean isShadowCaster = true;
     private boolean isShadowReceiver = true;
-    //The number of frames per seconds defined in the asset
+    //Assets中访问到的动画FPS
     private int animationFrameRate;
     @Nullable
     protected CollisionShape collisionShape;
@@ -56,9 +56,9 @@ public abstract class Renderable {
     public static final int RENDER_PRIORITY_DEFAULT = 4;
     public static final int RENDER_PRIORITY_FIRST = 0;
     public static final int RENDER_PRIORITY_LAST = 7;
-    // Allow stale data two weeks old by default.
+    // 数据的过期时间，缓存机制时用到
     private static final long DEFAULT_MAX_STALE_CACHE = TimeUnit.DAYS.toSeconds(14);
-    // The default number of frames per seconds for this renderable animation
+    // 默认的动画FPS
     public static final int DEFAULT_ANIMATION_FRAME_RATE = 24;
 
     /**
@@ -88,11 +88,11 @@ public abstract class Renderable {
             throw new AssertionError("Cannot copy uninitialized Renderable.");
         }
 
-        // Share renderableData with the original Renderable.
+        // 从other获取数据
         renderableData = other.renderableData;
         registryId = other.registryId;
 
-        // Copy materials.
+        //cp材质
         Preconditions.checkState(other.materialNames.size() == other.materialBindings.size());
         for (int i = 0; i < other.materialBindings.size(); i++) {
             Material otherMaterial = other.materialBindings.get(i);
@@ -104,7 +104,7 @@ public abstract class Renderable {
         isShadowCaster = other.isShadowCaster;
         isShadowReceiver = other.isShadowReceiver;
 
-        // Copy collision shape.
+        //cp碰撞体
         if (other.collisionShape != null) {
             collisionShape = other.collisionShape.makeCopy();
         }
@@ -116,7 +116,7 @@ public abstract class Renderable {
     }
 
     /**
-     * Get the {@link CollisionShape} used for collision detection with this {@link Renderable}.
+     * 获取碰撞体形状
      */
     public @Nullable
     CollisionShape getCollisionShape() {
@@ -124,7 +124,7 @@ public abstract class Renderable {
     }
 
     /**
-     * Set the {@link CollisionShape} used for collision detection with this {@link Renderable}.
+     * 设置碰撞体形状
      */
     public void setCollisionShape(@Nullable CollisionShape collisionShape) {
         this.collisionShape = collisionShape;
@@ -132,14 +132,14 @@ public abstract class Renderable {
     }
 
     /**
-     * Returns the material bound to the first submesh.
+     * 返回绑定到第一个子网格的材质
      */
     public Material getMaterial() {
         return getMaterial(0);
     }
 
     /**
-     * Returns the material bound to the specified submesh.
+     * 返回指定子索引的网格的材质
      */
     public Material getMaterial(int submeshIndex) {
         if (submeshIndex < materialBindings.size()) {
@@ -150,14 +150,14 @@ public abstract class Renderable {
     }
 
     /**
-     * Sets the material bound to the first submesh.
+     * 给第一个子网格设置材质
      */
     public void setMaterial(Material material) {
         setMaterial(0, material);
     }
 
     /**
-     * Sets the material bound to the specified submesh.
+     * 设置绑定到子网格的材质
      */
     public void setMaterial(int submeshIndex, Material material) {
         if (submeshIndex < materialBindings.size()) {
@@ -169,9 +169,8 @@ public abstract class Renderable {
     }
 
     /**
-     * Returns the name associated with the specified submesh.
-     *
-     * @throws IllegalArgumentException if the index is out of range
+     * 返回与指定子网格关联的名称
+     * @throws IllegalArgumentException 若索引不正确，则抛出此异常
      */
     public String getSubmeshName(int submeshIndex) {
         Preconditions.checkState(materialNames.size() == materialBindings.size());
@@ -183,16 +182,16 @@ public abstract class Renderable {
     }
 
     /**
-     * Get the render priority that controls the order of rendering. The priority is between a range
-     * of 0 (rendered first) and 7 (rendered last). The default value is 4.
+     * 获取渲染优先级
+     * <p>优先级在0(首先呈现)和7(最后呈现)之间。默认值为4。</p>
      */
     public int getRenderPriority() {
         return renderPriority;
     }
 
     /**
-     * Set the render priority to control the order of rendering. The priority is between a range of 0
-     * (rendered first) and 7 (rendered last). The default value is 4.
+     * 设置渲染优先级
+     * <p>优先级在0(首先呈现)和7(最后呈现)之间。默认值为4。</p>
      */
     public void setRenderPriority(
             @IntRange(from = RENDER_PRIORITY_FIRST, to = RENDER_PRIORITY_LAST) int renderPriority) {
@@ -202,14 +201,14 @@ public abstract class Renderable {
     }
 
     /**
-     * Returns true if configured to cast shadows on other renderables.
+     * 如果配置为在其他可渲染对象上投射阴影，则返回true。
      */
     public boolean isShadowCaster() {
         return isShadowCaster;
     }
 
     /**
-     * Sets whether the renderable casts shadow on other renderables in the scene.
+     * 设置渲染对象是否在场景中的其他渲染对象上投射阴影。
      */
     public void setShadowCaster(boolean isShadowCaster) {
         this.isShadowCaster = isShadowCaster;
@@ -217,14 +216,14 @@ public abstract class Renderable {
     }
 
     /**
-     * Returns true if configured to receive shadows cast by other renderables.
+     * 如果配置为接收其他可渲染对象投射的阴影，则返回true。
      */
     public boolean isShadowReceiver() {
         return isShadowReceiver;
     }
 
     /**
-     * Sets whether the renderable receives shadows cast by other renderables in the scene.
+     * 设置可渲染对象是否接收场景中其他可渲染对象投射的阴影。
      */
     public void setShadowReceiver(boolean isShadowReceiver) {
         this.isShadowReceiver = isShadowReceiver;
@@ -232,14 +231,16 @@ public abstract class Renderable {
     }
 
     /**
-     * Gets the number of frames per seconds defined in the asset animation.
+     * 获取动画每秒播放的帧数
+     * <p>默认使用Assets中访问得到的结果</p>
      */
     public int getAnimationFrameRate() {
         return animationFrameRate;
     }
 
     /**
-     * Returns the number of submeshes that this renderable has. All Renderables have at least one.
+     * 返回子网格数量
+     * <p>至少有1个</p>
      */
     public int getSubmeshCount() {
         return renderableData.getMeshes().size();
@@ -270,10 +271,7 @@ public abstract class Renderable {
     }
 
     /**
-     * Creates a new instance of this Renderable.
-     *
-     * <p>The new renderable will have unique copy of all mutable state. All materials referenced by
-     * the Renderable will also be instanced. Immutable data will be shared between the instances.
+     * 创建一个克隆对象
      */
     public abstract Renderable makeCopy();
 
@@ -290,16 +288,15 @@ public abstract class Renderable {
     }
 
     /**
-     * Optionally override in subclasses for work that must be done each frame for specific types of
-     * Renderables. For example, ViewRenderable uses this to prevent the renderable from being visible
-     * until the view has been successfully drawn to an external texture, and initializing material
-     * parameters.
+     * 子类重写
+     * <p>针对View的渲染，需要重新</p>
+     * <p>针对gltf模型的渲染，这里需要处理resource异步加载的更新操作</p>
      */
     void prepareForDraw() {
         if (getRenderableData() instanceof RenderableInternalFilamentAssetData) {
             RenderableInternalFilamentAssetData renderableData =
                     (RenderableInternalFilamentAssetData) getRenderableData();
-            // Allow the resource loader to finalize textures that have become ready.
+            // 资源加载器异步更新，下面的方法配合resourceLoader.asyncBeginLoad方法使用
             renderableData.resourceLoader.asyncUpdateLoad();
         }
     }
@@ -311,10 +308,9 @@ public abstract class Renderable {
     }
 
     /**
-     * Gets the final model matrix to use for rendering this {@link Renderable} based on the matrix
-     * passed in. Default implementation simply passes through the original matrix. WARNING: Do not
-     * modify the originalMatrix! If the final matrix isn't the same as the original matrix, then a
-     * new instance must be returned.
+     * 根据传入的矩阵获取用于渲染{@link Renderable}的最终模型矩阵。
+     * 默认实现只是简单地遍历原始矩阵。
+     * 警告:不要修改原始矩阵!如果最终矩阵与原始矩阵不相同，则必须返回一个新实例。
      *
      * @hide
      */
@@ -349,8 +345,7 @@ public abstract class Renderable {
     }
 
     /**
-     * Used to programmatically construct a {@link Renderable}. Builder data is stored, not copied. Be
-     * careful when modifying the data before or between build calls.
+     * 用于以编程方式构造{@link Renderable}。生成器数据是存储的，而不是复制的。在构建调用之前或之间修改数据时要小心。
      */
     @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"}) // CompletableFuture
     abstract static class Builder<T extends Renderable, B extends Builder<T, B>> {
@@ -384,7 +379,7 @@ public abstract class Renderable {
         private int animationFrameRate = DEFAULT_ANIMATION_FRAME_RATE;
 
         /**
-         * Used to programmatically construct a {@link Renderable}.
+         * 构造函数
          */
         protected Builder() {
         }
@@ -418,7 +413,7 @@ public abstract class Renderable {
         }
 
         /**
-         * Build a {@link Renderable} from a {@link RenderableDefinition}.
+         * 设置自定义渲染对象{@link RenderableDefinition}.
          */
         public B setSource(RenderableDefinition definition) {
             this.definition = definition;
@@ -432,14 +427,22 @@ public abstract class Renderable {
             return getSelf();
         }
 
+        /**
+         * 设置当前渲染对象为gltf
+         * @param isFilamentGltf 若需要渲染gltf，则需要设置为true
+         * @return this
+         */
         public B setIsFilamentGltf(boolean isFilamentGltf) {
             this.isFilamentAsset = isFilamentGltf;
             return getSelf();
         }
 
         /**
-         * Enable textures async loading after first rendering.
-         * Default is false.
+         * 启用异步的方式加载资源
+         * <p>
+         *     注意：虽然设置异步，但是仍会阻塞一会儿UI线程。比起不启用异步，阻塞UI线程的时间大大缩短
+         *     这是{@link com.google.android.filament.gltfio.ResourceLoader#asyncBeginLoad(FilamentAsset)}仍会阻塞UI线程
+         * </p>
          */
         public B setAsyncLoadEnabled(boolean asyncLoadEnabled) {
             this.asyncLoadEnabled = asyncLoadEnabled;
@@ -447,9 +450,8 @@ public abstract class Renderable {
         }
 
         /**
-         * Sets the number of frames per seconds defined in the asset.
-         *
-         * @param frameRate The number of frames during one second
+         * 设置动画每秒播放的帧数
+         * @param frameRate 每秒帧数
          */
         public B setAnimationFrameRate(int frameRate) {
             this.animationFrameRate = frameRate;
@@ -457,8 +459,7 @@ public abstract class Renderable {
         }
 
         /**
-         * True if a source function will be called during build
-         *
+         * 判断是否已传入资源
          * @hide
          */
         public Boolean hasSource() {
@@ -466,9 +467,8 @@ public abstract class Renderable {
         }
 
         /**
-         * Constructs a {@link Renderable} with the parameters of the builder.
-         *
-         * @return the constructed {@link Renderable}
+         * 创建{@link Renderable}
+         * @return {@link Renderable}
          */
         public CompletableFuture<T> build() {
             try {
@@ -483,7 +483,7 @@ public abstract class Renderable {
                 return result;
             }
 
-            // For static-analysis check.
+            // 先检查
             Object registryId = this.registryId;
             if (registryId != null) {
                 // See if a renderable has already been registered by this id, if so re-use it.
@@ -501,7 +501,7 @@ public abstract class Renderable {
                 return CompletableFuture.completedFuture(renderable);
             }
 
-            // For static-analysis check.
+            // 非空判断
             Callable<InputStream> inputStreamCreator = this.inputStreamCreator;
             if (inputStreamCreator == null) {
                 CompletableFuture<T> result = new CompletableFuture<>();
@@ -527,9 +527,6 @@ public abstract class Renderable {
                     throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
                 }
             } else {
-//                LoadRenderableFromSfbTask<T> loader =
-//                        new LoadRenderableFromSfbTask<>(renderable, sourceUri);
-//                result = loader.downloadAndProcessRenderable(inputStreamCreator);
                 throw new IllegalArgumentException();
             }
 
@@ -559,7 +556,7 @@ public abstract class Renderable {
             this.sourceUri = sourceUri;
             this.context = context;
             this.registryId = sourceUri;
-            // Configure caching.
+            //配置缓存
             if (enableCaching) {
                 this.setCachingEnabled(context);
             }

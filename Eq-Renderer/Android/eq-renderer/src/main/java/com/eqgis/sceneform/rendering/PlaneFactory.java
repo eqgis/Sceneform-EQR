@@ -10,16 +10,19 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * 平面工厂
+ */
 public class PlaneFactory {
     private static final int COORDS_PER_TRIANGLE = 3;
 
     /**
-     * Creates a {@link ModelRenderable} in the shape of a plane with the given specifications.
+     * 创建一个可渲染的平面对象
      *
-     * @param size     the size of the constructed plane
-     * @param center   the center of the constructed plane
-     * @param material the material to use for rendering the plane
-     * @return renderable representing a plane with the given parameters
+     * @param size     平面的尺寸
+     * @param center   平面的中心位置
+     * @param material 平面的材质对象
+     * @return 渲染对象
      */
     @SuppressWarnings("AndroidApiChecker")
     // CompletableFuture requires api level 24

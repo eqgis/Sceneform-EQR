@@ -7,13 +7,15 @@ import androidx.annotation.RequiresApi;
 
 import java.util.concurrent.CompletableFuture;
 
-/** Utility class used to construct default {@link Material}s. */
+/**
+ * 材质工厂
+ * 用于构造默认{@link Material}的实用程序类
+ * */
 @RequiresApi(api = Build.VERSION_CODES.N)
 
 public final class MaterialFactory {
   /**
-   * Name of material parameter for controlling the color of {@link #makeOpaqueWithColor(Context,
-   * Color)} and {@link #makeTransparentWithColor(Context, Color)} materials.
+   * 材质文件中的颜色参数名称
    *
    * @see Material#setFloat3(String, Color)
    * @see Material#setFloat4(String, Color)
@@ -21,40 +23,28 @@ public final class MaterialFactory {
   public static final String MATERIAL_COLOR = "color";
 
   /**
-   * Name of material parameter for controlling the texture of {@link
-   * #makeOpaqueWithTexture(Context, Texture)} and {@link #makeTransparentWithTexture(Context,
-   * Texture)} materials.
+   * 材质文件中的纹理参数名称
    *
    * @see Material#setTexture(String, Texture)
    */
   public static final String MATERIAL_TEXTURE = "texture";
 
   /**
-   * Name of material parameter for controlling the metallic property of all {@link MaterialFactory}
-   * materials. The metallic property defines whether the surface is a metallic (conductor) or a
-   * non-metallic (dielectric) surface. This property should be used as a binary value, set to
-   * either 0 or 1. Intermediate values are only truly useful to create transitions between
-   * different types of surfaces when using textures. The default value is 0.
+   * 材质文件中的金属度参数名称
    *
    * @see Material#setFloat(String, float)
    */
   public static final String MATERIAL_METALLIC = "metallic";
 
   /**
-   * Name of material parameter for controlling the roughness property of all {@link
-   * MaterialFactory} materials. The roughness property controls the perceived smoothness of the
-   * surface. When roughness is set to 0, the surface is perfectly smooth and highly glossy. The
-   * rougher a surface is, the "blurrier" the reflections are. The default value is 0.4.
+   * 材质文件中的粗糙度参数名称
    *
    * @see Material#setFloat(String, float)
    */
   public static final String MATERIAL_ROUGHNESS = "roughness";
 
   /**
-   * Name of material parameter for controlling the reflectance property of all {@link
-   * MaterialFactory} materials. The reflectance property only affects non-metallic surfaces. This
-   * property can be used to control the specular intensity. This value is defined between 0 and 1
-   * and represents a remapping of a percentage of reflectance. The default value is 0.5.
+   * 材质文件中的反射率参数名称
    *
    * @see Material#setFloat(String, float)
    */
@@ -65,17 +55,14 @@ public final class MaterialFactory {
   private static final float DEFAULT_REFLECTANCE_PROPERTY = 0.5f;
 
   /**
-   * Creates an opaque {@link Material} with the {@link Color} passed in. The {@link Color} can be
-   * modified by calling {@link Material#setFloat3(String, Color)} with {@link #MATERIAL_COLOR}. The
-   * metallicness, roughness, and reflectance can be modified using {@link Material#setFloat(String,
-   * float)}.
+   * 根据颜色值使用不透明材质文件创建材质对象
    *
    * @see #MATERIAL_METALLIC
    * @see #MATERIAL_ROUGHNESS
    * @see #MATERIAL_REFLECTANCE
-   * @param context a context used for loading the material resource
-   * @param color the color for the material to render
-   * @return material that will render the given color
+   * @param context 上下文
+   * @param color 颜色值
+   * @return 材质对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24
@@ -97,17 +84,14 @@ public final class MaterialFactory {
   }
 
   /**
-   * Creates a transparent {@link Material} with the {@link Color} passed in. The {@link Color} can
-   * be modified by calling {@link Material#setFloat4(String, Color)} with {@link #MATERIAL_COLOR}.
-   * The metallicness, roughness, and reflectance can be modified using {@link
-   * Material#setFloat(String, float)}.
+   * 根据颜色值使用透明材质文件创建材质对象
    *
    * @see #MATERIAL_METALLIC
    * @see #MATERIAL_ROUGHNESS
    * @see #MATERIAL_REFLECTANCE
-   * @param context a context used for loading the material resource
-   * @param color the color for the material to render
-   * @return material that will render the given color
+   * @param context 上下文
+   * @param color 颜色值
+   * @return 材质对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24
@@ -129,17 +113,14 @@ public final class MaterialFactory {
   }
 
   /**
-   * Creates an opaque {@link Material} with the {@link Texture} passed in. The {@link Texture} can
-   * be modified by calling {@link Material#setTexture(String, Texture)} with {@link
-   * #MATERIAL_TEXTURE}. The metallicness, roughness, and reflectance can be modified using {@link
-   * Material#setFloat(String, float)}.
+   * 根据纹理使用不透明材质文件创建材质对象
    *
    * @see #MATERIAL_METALLIC
    * @see #MATERIAL_ROUGHNESS
    * @see #MATERIAL_REFLECTANCE
-   * @param context a context used for loading the material resource
-   * @param texture the texture for the material to render
-   * @return material that will render the given texture
+   * @param context 上下文
+   * @param texture 纹理对象
+   * @return 材质对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24
@@ -162,17 +143,14 @@ public final class MaterialFactory {
   }
 
   /**
-   * Creates a transparent {@link Material} with the {@link Texture} passed in. The {@link Texture}
-   * can be modified by calling {@link Material#setTexture(String, Texture)} with {@link
-   * #MATERIAL_TEXTURE}. The metallicness, roughness, and reflectance can be modified using {@link
-   * Material#setFloat(String, float)}.
+   * 根据纹理使用透明材质文件创建材质对象
    *
    * @see #MATERIAL_METALLIC
    * @see #MATERIAL_ROUGHNESS
    * @see #MATERIAL_REFLECTANCE
-   * @param context a context used for loading the material resource
-   * @param texture the texture for the material to render
-   * @return material that will render the given texture
+   * @param context 上下文
+   * @param texture 纹理对象
+   * @return 材质对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24

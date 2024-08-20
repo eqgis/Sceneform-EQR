@@ -5,8 +5,7 @@ import androidx.annotation.Nullable;
 import com.eqgis.sceneform.utilities.AndroidPreconditions;
 
 /**
- * Represents shared data used by {@link Material}s for rendering. The data will be released when
- * all {@link Material}s using this data are finalized.
+ * 表示{@link Material}用于渲染的共享数据。
  */
 class MaterialInternalDataImpl extends MaterialInternalData {
   @Nullable private com.google.android.filament.Material filamentMaterial;

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-/** Renders a single ARCore Plane. */
+/** 平面可视化对象 */
 class PlaneVisualizer implements TransformProvider {
   private static final String TAG = PlaneVisualizer.class.getSimpleName();
 

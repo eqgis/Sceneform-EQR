@@ -24,38 +24,38 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Control rendering of ARCore planes.
- *
- * <p>Used to visualize detected planes and to control whether Renderables cast shadows on them.
+ * 平面渲染器
+ * <p>
+ *     用于AR模式下，渲染扫描到的平面
+ * </p>
  */
 
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"}) // CompletableFuture
 public class PlaneRenderer {
     /**
-     * Material parameter that controls what texture is being used when rendering the planes.
+     * 材质文件中纹理参数名称
      */
     public static final String MATERIAL_TEXTURE = "texture";
     /**
-     * Float2 material parameter to control the X/Y scaling of the texture's UV coordinates. Can be
-     * used to adjust for the texture's aspect ratio and control the frequency of tiling.
+     * 材质文件中UV比例参数
      */
     public static final String MATERIAL_UV_SCALE = "uvScale";
     /**
-     * Float3 material parameter to control the RGB tint of the plane.
+     * 材质文件中的颜色参数
      */
     public static final String MATERIAL_COLOR = "color";
     /**
-     * Float material parameter to control the radius of the spotlight.
+     * 射灯半径
      */
     public static final String MATERIAL_SPOTLIGHT_RADIUS = "radius";
     private static final String TAG = PlaneRenderer.class.getSimpleName();
     /**
-     * Float3 material parameter to control the grid visualization point.
+     * Float3材质参数控制网格可视化点
      */
     private static final String MATERIAL_SPOTLIGHT_FOCUS_POINT = "focusPoint";
 
     /**
-     * Used to control the UV Scale for the default texture.
+     * 用于控制默认纹理的UV比例
      */
     private static final float BASE_UV_SCALE = 8.0f;
 
@@ -82,7 +82,8 @@ public class PlaneRenderer {
     private float lastPlaneHitDistance = 4.0f;
 
     /**
-     * @hide PlaneRenderer is constructed in a different package, but not part of external API.
+     * 构造函数
+     * @hide 仅用于AR模式创建平面，内部调用
      */
     @SuppressWarnings("initialization")
     public PlaneRenderer(Renderer renderer) {
@@ -93,14 +94,14 @@ public class PlaneRenderer {
     }
 
     /**
-     * Check if the plane renderer is enabled.
+     * 判断是否启用
      */
     public boolean isEnabled() {
         return isEnabled;
     }
 
     /**
-     * Enable/disable the plane renderer.
+     * 设置平面渲染器的启用状态
      */
     public void setEnabled(boolean enabled) {
         if (isEnabled != enabled) {
@@ -113,16 +114,15 @@ public class PlaneRenderer {
     }
 
     /**
-     * Return true if Renderables in the scene cast shadows onto the planes.
+     * 如果场景中的Renderables将阴影投射到平面上，则返回true。
      */
     public boolean isShadowReceiver() {
         return isShadowReceiver;
     }
 
     /**
-     * Control whether Renderables in the scene should cast shadows onto the planes.
-     *
-     * <p>If false - no planes receive shadows, regardless of the per-plane setting.
+     * 控制场景中的可渲染对象是否将阴影投射到平面上。
+     * @param shadowReceiver 若设置为false，则没有平面接收阴影
      */
     public void setShadowReceiver(boolean shadowReceiver) {
         if (isShadowReceiver != shadowReceiver) {
@@ -135,17 +135,15 @@ public class PlaneRenderer {
     }
 
     /**
-     * Return true if plane visualization is visible.
+     * 判断是否显示平面渲染结果
      */
     public boolean isVisible() {
         return isVisible;
     }
 
     /**
-     * Control visibility of plane visualization.
-     *
-     * <p>If false - no planes are drawn. Note that shadow visibility is independent of plane
-     * visibility.
+     * 设置平面的显隐状态
+     * @param visible 若设置为false，则没有平面进行渲染
      */
     public void setVisible(boolean visible) {
         if (isVisible != visible) {
@@ -158,19 +156,14 @@ public class PlaneRenderer {
     }
 
     /**
-     * Returns default material instance used to render the planes.
+     * 获取渲染平面的材质
      */
     public CompletableFuture<Material> getMaterial() {
         return planeMaterialFuture;
     }
 
     /**
-     * <pre>
-     *     Return the used {@link PlaneRendererMode}. Two options are available,
-     *     <code>RENDER_ALL</code> and <code>RENDER_TOP_MOST</code>. See
-     *     {@link PlaneRendererMode} and
-     *     {@link #setPlaneRendererMode(PlaneRendererMode)} for more information.
-     * </pre>
+     * 获取平面的渲染模式
      *
      * @return {@link PlaneRendererMode}
      */
@@ -179,24 +172,20 @@ public class PlaneRenderer {
     }
 
     /**
-     * <pre>
-     *     Set here how tracked planes should be visualized on the screen. Two options are available,
-     *     <code>RENDER_ALL</code> and <code>RENDER_TOP_MOST</code>.
-     *     To see all tracked planes which are visible to the camera set the PlaneRendererMode to
-     *     <code>RENDER_ALL</code>. This mode eats up quite a few resources and should only be set
-     *     with care. To optimize the rendering set the mode to <code>RENDER_TOP_MOST</code>.
-     *     In that case only the top most plane visible to a camera is rendered on the screen.
-     *     Especially on weaker smartphone models this improves the overall performance.
-     *
-     *     The default mode is <code>RENDER_TOP_MOST</code>
-     * </pre>
-     *
+     * 设置平面的渲染模式
      * @param planeRendererMode {@link PlaneRendererMode}
      */
     public void setPlaneRendererMode(PlaneRendererMode planeRendererMode) {
         this.planeRendererMode = planeRendererMode;
     }
 
+    /**
+     * 更新渲染结果
+     * <p>实时调用</p>
+     * @param frame AR帧
+     * @param viewWidth 视图宽度
+     * @param viewHeight 视图高度
+     */
     public void update(ARFrame frame, int viewWidth, int viewHeight) {
         if (ARPlatForm.isArCore()){
             update(frame.getCoreFrame(),viewWidth,viewHeight);
@@ -204,8 +193,10 @@ public class PlaneRenderer {
             update(frame.getHwFrame(),viewWidth,viewHeight);
         }
     }
+
     /**
-     * @hide PlaneRenderer is updated in a different package, but not part of external API.
+     * 更新渲染结果
+     * <p>实时调用</p>
      */
     private void update(Frame frame, int viewWidth, int viewHeight) {
         // Get a list of Plane-Trackables which are updated  on this frame.
@@ -237,8 +228,10 @@ public class PlaneRenderer {
         // Check for not tracking Plane-Trackables and remove them.
         cleanupOldPlaneVisualizer();
     }
+
     /**
-     * @hide PlaneRenderer is updated in a different package, but not part of external API.
+     * 更新渲染结果
+     * <p>实时调用</p>
      */
     private void update(com.huawei.hiar.ARFrame frame, int viewWidth, int viewHeight) {
         // Get a list of Plane-Trackables which are updated  on this frame.
@@ -272,10 +265,7 @@ public class PlaneRenderer {
     }
 
     /**
-     * <pre>
-     *     Render all tracked Planes
-     * </pre>
-     *
+     * 渲染AREngine检测到的所有平面
      * @param updatedPlanes {@link Collection}<{@link Plane}>
      * @param planeMaterial {@link Material}
      */
@@ -287,6 +277,12 @@ public class PlaneRenderer {
             renderPlane(plane, planeMaterial);
         }
     }
+
+    /**
+     * 渲染AREngine检测到的所有平面
+     * @param updatedPlanes {@link Collection}<{@link Plane}>
+     * @param planeMaterial {@link Material}
+     */
     private void renderAllByAREngine(
             Collection<com.huawei.hiar.ARPlane> updatedPlanes,
             Material planeMaterial
@@ -297,13 +293,7 @@ public class PlaneRenderer {
     }
 
     /**
-     * <pre>
-     *     This function is responsible to update the rendering
-     *     of a {@link PlaneVisualizer}. If for the given {@link Plane}
-     *     no {@link PlaneVisualizer} exists, create a new one and add
-     *     it to the <code>visualizerMap</code>.
-     * </pre>
-     *
+     * 渲染平面
      * @param plane         {@link Plane}
      * @param planeMaterial {@link Material}
      */
@@ -365,10 +355,8 @@ public class PlaneRenderer {
     }
 
     /**
-     * <pre>
-     *     Remove plane visualizers for old planes that are no longer tracking.
-     *     Update the material parameters for all remaining planes.
-     * </pre>
+     * 删除不再跟踪的旧平面
+     * 更新所有剩余平面的材质参数。
      */
     private void cleanupOldPlaneVisualizer() {
         if (ARPlatForm.isArCore()){
@@ -477,12 +465,8 @@ public class PlaneRenderer {
     }
 
     /**
-     * <pre>
-     *    Cast a ray from the centre of the screen onto the scene and check
-     *    if any plane is hit. The result is a {@link HitResult} with information
-     *    about the hit position as a {@link Pose} and the trackable which got hit.
-     * </pre>
-     *
+     * 获取射线检测结果
+     * <p>ARCore的frame</p>
      * @param frame  {@link Frame}
      * @param width  int
      * @param height int
@@ -503,6 +487,14 @@ public class PlaneRenderer {
         }
         return null;
     }
+
+    /**
+     * 获取射线检测结果
+     * @param frame {@link com.huawei.hiar.ARFrame}
+     * @param width int
+     * @param height int
+     * @return {@link HitResult}
+     */
     private com.huawei.hiar.ARHitResult getHitResult(com.huawei.hiar.ARFrame frame, int width, int height) {
         // If we hit a plane, return the hit point.
         List<com.huawei.hiar.ARHitResult> hits = frame.hitTest(width / 2f, height / 2f);
@@ -519,12 +511,8 @@ public class PlaneRenderer {
     }
 
     /**
-     * <pre>
-     *     Calculate the FocusPoint based on a {@link HitResult} on the current {@link Frame}.
-     *     The FocusPoint is used to determine the position of the visualized plane.
-     *     If the {@link HitResult} is null, we use the last known distance of the camera to
-     *     the last hit plane.
-     * </pre>
+     * 计算当前的焦点
+     * 焦点可作为当前平面的中心位置
      *
      * @param frame {@link Frame}
      * @param hit   {@link HitResult}
@@ -565,19 +553,15 @@ public class PlaneRenderer {
 
 
     /**
-     * <pre>
-     *     Use this enum to configure the Plane Rendering.
-     *
-     *     For performance reasons use <code>RENDER_TOP_MOST</code>.
-     * </pre>
+     * 平面渲染模式
      */
     public enum PlaneRendererMode {
         /**
-         * Render all possible {@link Plane}s which are visible to the camera.
+         * 渲染所有平面
          */
         RENDER_ALL,
         /**
-         * Render only the top most {@link Plane} which is visible to the camera.
+         * 只渲染位于最顶部的平面
          */
         RENDER_TOP_MOST
     }

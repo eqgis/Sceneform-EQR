@@ -13,19 +13,18 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-/** Utility class used to dynamically construct {@link ModelRenderable}s for various shapes. */
+/** Shape工厂 */
 @RequiresApi(api = Build.VERSION_CODES.N)
 public final class ShapeFactory {
   private static final String TAG = ShapeFactory.class.getSimpleName();
   private static final int COORDS_PER_TRIANGLE = 3;
 
   /**
-   * Creates a {@link ModelRenderable} in the shape of a cube with the give specifications.
-   *
-   * @param size the size of the constructed cube
-   * @param center the center of the constructed cube
-   * @param material the material to use for rendering the cube
-   * @return renderable representing a cube with the given parameters
+   * 创建一个Cube
+   * @param size 尺寸
+   * @param center 中心位置
+   * @param material 材质
+   * @return 模型渲染对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24
@@ -134,12 +133,11 @@ public final class ShapeFactory {
   }
 
   /**
-   * Creates a {@link ModelRenderable} in the shape of a sphere with the give specifications.
-   *
-   * @param radius the radius of the constructed sphere
-   * @param center the center of the constructed sphere
-   * @param material the material to use for rendering the sphere
-   * @return renderable representing a sphere with the given parameters
+   * 创建一个球体
+   * @param radius 半径
+   * @param center 中心位置
+   * @param material 材质
+   * @return 模型渲染对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24
@@ -149,7 +147,7 @@ public final class ShapeFactory {
     final int stacks = 24;
     final int slices = 24;
 
-    // Create Vertices.
+    // 创建顶点组
     ArrayList<Vertex> vertices = new ArrayList<>((slices + 1) * stacks + 2);
     float pi = (float) Math.PI;
     float doublePi = pi * 2.0f;
@@ -182,7 +180,7 @@ public final class ShapeFactory {
       }
     }
 
-    // Create triangles.
+    // 构建索引
     int numFaces = vertices.size();
     int numTriangles = numFaces * 2;
     int numIndices = numTriangles * 3;
@@ -238,13 +236,12 @@ public final class ShapeFactory {
   }
 
   /**
-   * Creates a {@link ModelRenderable} in the shape of a cylinder with the give specifications.
-   *
-   * @param radius the radius of the constructed cylinder
-   * @param height the height of the constructed cylinder
-   * @param center the center of the constructed cylinder
-   * @param material the material to use for rendering the cylinder
-   * @return renderable representing a cylinder with the given parameters
+   * 创建一个圆柱
+   * @param radius 底面圆半径
+   * @param height 高度
+   * @param center 中心位置
+   * @param material 材质
+   * @return 模型渲染对象
    */
   @SuppressWarnings("AndroidApiChecker")
   // CompletableFuture requires api level 24

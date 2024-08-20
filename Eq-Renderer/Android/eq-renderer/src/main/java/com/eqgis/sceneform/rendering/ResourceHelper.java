@@ -8,8 +8,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
-/** Helper class for loading resources in filament. */
+/**
+ * 资源加载助手
+ * */
 class ResourceHelper {
+  /**
+   * 根据资源ID读取数据
+   * @param context 上下文
+   * @param resourceId 资源ID
+   * @return ByteBuffer
+   */
   static ByteBuffer readResource(Context context, int resourceId) {
     ByteBuffer buffer = null;
     if (context != null) {

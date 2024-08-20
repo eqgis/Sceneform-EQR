@@ -16,27 +16,31 @@ import com.eqgis.sceneform.utilities.Preconditions;
 import java.util.ArrayList;
 
 /**
- * Used to render an android view to a native open GL texture that can then be rendered by open GL.
- *
- * <p>To correctly draw a hardware accelerated animated view to a surface texture, the view MUST be
- * attached to a window and drawn to a real DisplayListCanvas, which is a hidden class. To achieve
- * this, the following is done:
- *
+ * 用于渲染安卓View的扩展纹理对象
+ * <p>
+ *     用于渲染android视图到一个本地的open GL纹理，然后再由open GL渲染。
+ * </p>
+ * <p>要正确绘制硬件加速的动画视图到表面纹理，视图必须是
+ * 附加到一个窗口，并绘制到一个真正的DisplayListCanvas，这是一个隐藏类。为了实现此，完成以下操作:
  * <ul>
- *   <li>Attach RenderViewToSurfaceTexture to the WindowManager.
- *   <li>Override dispatchDraw.
- *   <li>Call super.dispatchDraw with the real DisplayListCanvas
- *   <li>Draw the clear color the DisplayListCanvas so that it isn't visible on screen.
- *   <li>Draw the view to the SurfaceTexture every frame. This must be done every frame, because the
- *       view will not be marked as dirty when child views are animating when hardware accelerated.
+ *     <li>将RenderViewToSurfaceTexture附加到WindowManager。
+ *     <li>重写dispatchDraw。
+ *     <li>调用superdispatchDraw使用真正的DisplayListCanvas
+ *     <li>在DisplayListCanvas上绘制透明颜色，这样它在屏幕上就不可见了。
+ *     <li>每帧绘制一个视图到SurfaceTexture。每一帧都必须这样做，因为当子视图在硬件加速时动画时，视图不会被标记为dirty。
  * </ul>
  *
- * @hide
+ * @hide 内部调用，外部直接使用{@link ViewRenderable}即可
  */
 
 class RenderViewToExternalTexture extends LinearLayout {
-  /** Interface definition for a callback to be invoked when the size of the view changes. */
+  /** 当视图的大小发生变化时的监听事件 */
   public interface OnViewSizeChangedListener {
+    /**
+     * View尺寸改变时触发回调
+     * @param width View的宽度
+     * @param height View的高度
+     */
     void onViewSizeChanged(int width, int height);
   }
 
@@ -60,9 +64,7 @@ class RenderViewToExternalTexture extends LinearLayout {
   }
 
   /**
-   * Register a callback to be invoked when the size of the view changes.
-   *
-   * @param onViewSizeChangedListener the listener to attach
+   * 添加回调
    */
   void addOnViewSizeChangedListener(OnViewSizeChangedListener onViewSizeChangedListener) {
     if (!onViewSizeChangedListeners.contains(onViewSizeChangedListener)) {
@@ -71,9 +73,7 @@ class RenderViewToExternalTexture extends LinearLayout {
   }
 
   /**
-   * Remove a callback to be invoked when the size of the view changes.
-   *
-   * @param onViewSizeChangedListener the listener to remove
+   * 移除回调
    */
   void removeOnViewSizeChangedListener(OnViewSizeChangedListener onViewSizeChangedListener) {
     onViewSizeChangedListeners.remove(onViewSizeChangedListener);
@@ -152,8 +152,7 @@ class RenderViewToExternalTexture extends LinearLayout {
 
   void releaseResources() {
     detachView();
-
-    // Let Surface and SurfaceTexture be released
-    // automatically by their finalizers.
+    //释放Surface和SurfaceTexture
+    //由它们的finalizer自动执行。
   }
 }

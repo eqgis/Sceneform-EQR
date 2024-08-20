@@ -4,6 +4,12 @@ import android.content.Context;
 
 import com.eqgis.sceneform.utilities.LoadHelper;
 
+/**
+ * 渲染资源管理类
+ * <p>
+ *     配置需要加载的一些资源
+ * </p>
+ */
 public final class RenderingResources {
 
   public static enum Resource {
@@ -54,61 +60,11 @@ public final class RenderingResources {
     return 0;
   }
 
-  
   private static int GetMaterialFactoryBlazeResource(Resource resource) {return 0;}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   private static int GetViewRenderableBlazeResource(Resource resource) {return 0;}
 
-
-
-
-
-
-
-
-  
   private static int GetSceneformBlazeResource(Resource resource) {return 0;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   public static int GetSceneformResource(Context context, Resource resource) {
     int blazeResource = GetSceneformBlazeResource(resource);

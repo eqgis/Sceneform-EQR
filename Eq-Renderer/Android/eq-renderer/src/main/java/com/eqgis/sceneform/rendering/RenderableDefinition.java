@@ -20,8 +20,10 @@ import java.util.EnumSet;
 import java.util.List;
 
 /**
- * Represents the visual information of a {@link Renderable}. Can be used to construct and modify
- * renderables dynamically.
+ * 自定义渲染对象
+ * <p>
+ *     可以用来动态地构造和修改可渲染对象。
+ * </p>
  *
  * @see ModelRenderable.Builder
  * @see ViewRenderable.Builder
@@ -30,8 +32,7 @@ public class RenderableDefinition {
   private static final Matrix scratchMatrix = new Matrix();
 
   /**
-   * Represents a Submesh for a RenderableDefinition. Each RenderableDefinition may have multiple
-   * Submeshes.
+   * 表示RenderableDefinition的子网格。每个RenderableDefinition可以有多个Submeshes。
    */
   public static class Submesh {
     private List<Integer> triangleIndices;
@@ -126,7 +127,6 @@ public class RenderableDefinition {
   }
 
   void applyDefinitionToData(
-      // TODO: Split into RenderableInternalSfbData & RenderableInternalDefinitionData
       IRenderableInternalData data,
       ArrayList<Material> materialBindings,
       ArrayList<String> materialNames) {
@@ -135,7 +135,7 @@ public class RenderableDefinition {
     applyDefinitionToDataIndexBuffer(data);
     applyDefinitionToDataVertexBuffer(data);
 
-    // Update/Add mesh data.
+    // 添加网格数据
     int indexStart = 0;
     materialBindings.clear();
     materialNames.clear();
@@ -158,21 +158,21 @@ public class RenderableDefinition {
       materialNames.add(name != null ? name : "");
     }
 
-    // Remove old mesh data.
+    // 移除旧数据
     while (data.getMeshes().size() > submeshes.size()) {
       data.getMeshes().remove(data.getMeshes().size() - 1);
     }
   }
 
   private void applyDefinitionToDataIndexBuffer(IRenderableInternalData data) {
-    // Determine how many indices there are.
+    // 计算顶点索引
     int numIndices = 0;
     for (int i = 0; i < submeshes.size(); i++) {
       Submesh submesh = submeshes.get(i);
       numIndices += submesh.getTriangleIndices().size();
     }
 
-    // Create the raw index buffer if needed.
+    // 创建原始IndexBuffer
     IntBuffer rawIndexBuffer = data.getRawIndexBuffer();
     if (rawIndexBuffer == null || rawIndexBuffer.capacity() < numIndices) {
       rawIndexBuffer = IntBuffer.allocate(numIndices);
@@ -181,7 +181,7 @@ public class RenderableDefinition {
       rawIndexBuffer.rewind();
     }
 
-    // Fill the index buffer with the data.
+    //填充索引数据
     for (int i = 0; i < submeshes.size(); i++) {
       Submesh submesh = submeshes.get(i);
       List<Integer> triangleIndices = submesh.getTriangleIndices();
@@ -191,7 +191,7 @@ public class RenderableDefinition {
     }
     rawIndexBuffer.rewind();
 
-    // Create the filament index buffer if needed.
+    //创建filament的索引缓冲区
     IndexBuffer indexBuffer = data.getIndexBuffer();
     IEngine engine = EngineInstance.getEngine();
     if (indexBuffer == null || indexBuffer.getIndexCount() < numIndices) {
@@ -218,7 +218,7 @@ public class RenderableDefinition {
     int numVertices = vertices.size();
     Vertex firstVertex = vertices.get(0);
 
-    // Determine which attributes this VertexBuffer needs.
+    //计算顶点数据
     EnumSet<VertexAttribute> descriptionAttributes = EnumSet.of(VertexAttribute.POSITION);
     if (firstVertex.getNormal() != null) {
       descriptionAttributes.add(VertexAttribute.TANGENTS);
@@ -230,7 +230,7 @@ public class RenderableDefinition {
       descriptionAttributes.add(VertexAttribute.COLOR);
     }
 
-    // Determine if the filament vertex buffer needs to be re-created.
+    //计算vertexBuffer
     VertexBuffer vertexBuffer = data.getVertexBuffer();
     boolean createVertexBuffer = true;
     if (vertexBuffer != null) {
@@ -259,7 +259,7 @@ public class RenderableDefinition {
       data.setVertexBuffer(vertexBuffer);
     }
 
-    // Create position Buffer if needed.
+    //创建顶点缓冲区
     FloatBuffer positionBuffer = data.getRawPositionBuffer();
     if (positionBuffer == null || positionBuffer.capacity() < numVertices * POSITION_SIZE) {
       positionBuffer = FloatBuffer.allocate(numVertices * POSITION_SIZE);
@@ -268,7 +268,7 @@ public class RenderableDefinition {
       positionBuffer.rewind();
     }
 
-    // Create tangents Buffer if needed.
+    //创建tangentsBuffer
     FloatBuffer tangentsBuffer = data.getRawTangentsBuffer();
     if (descriptionAttributes.contains(VertexAttribute.TANGENTS)
         && (tangentsBuffer == null || tangentsBuffer.capacity() < numVertices * TANGENTS_SIZE)) {
@@ -278,7 +278,7 @@ public class RenderableDefinition {
       tangentsBuffer.rewind();
     }
 
-    // Create uv Buffer if needed.
+    //创建uvBuffer
     FloatBuffer uvBuffer = data.getRawUvBuffer();
     if (descriptionAttributes.contains(VertexAttribute.UV0)
         && (uvBuffer == null || uvBuffer.capacity() < numVertices * UV_SIZE)) {
@@ -288,7 +288,7 @@ public class RenderableDefinition {
       uvBuffer.rewind();
     }
 
-    // Create color Buffer if needed.
+    //创建colorBuffer
     FloatBuffer colorBuffer = data.getRawColorBuffer();
     if (descriptionAttributes.contains(VertexAttribute.COLOR)
         && (colorBuffer == null || colorBuffer.capacity() < numVertices * COLOR_SIZE)) {
@@ -298,14 +298,14 @@ public class RenderableDefinition {
       colorBuffer.rewind();
     }
 
-    // Variables for calculating the Aabb of the renderable.
+    //计算AABB包围盒
     Vector3 minAabb = new Vector3();
     Vector3 maxAabb = new Vector3();
     Vector3 firstPosition = firstVertex.getPosition();
     minAabb.set(firstPosition);
     maxAabb.set(firstPosition);
 
-    // Update the raw buffers and calculate the Aabb in one pass through the vertices.
+    // 更新原始缓冲区并在一次遍历顶点时计算Aabb。
     for (int i = 0; i < vertices.size(); i++) {
       Vertex vertex = vertices.get(i);
 
@@ -314,10 +314,10 @@ public class RenderableDefinition {
       minAabb.set(Vector3.min(minAabb, position));
       maxAabb.set(Vector3.max(maxAabb, position));
 
-      // Position attribute.
+      // Position
       addVector3ToBuffer(position, positionBuffer);
 
-      // Tangents attribute.
+      // Tangents
       if (tangentsBuffer != null) {
         Vector3 normal = vertex.getNormal();
         if (normal == null) {
@@ -330,7 +330,7 @@ public class RenderableDefinition {
         addQuaternionToBuffer(tangent, tangentsBuffer);
       }
 
-      // Uv attribute.
+      // Uv
       if (uvBuffer != null) {
         Vertex.UvCoordinate uvCoordinate = vertex.getUvCoordinate();
         if (uvCoordinate == null) {
@@ -342,7 +342,7 @@ public class RenderableDefinition {
         addUvToBuffer(uvCoordinate, uvBuffer);
       }
 
-      // Color attribute.
+      // Color
       if (colorBuffer != null) {
         Color color = vertex.getColor();
         if (color == null) {
@@ -355,7 +355,7 @@ public class RenderableDefinition {
       }
     }
 
-    // Set the Aabb in the renderable data.
+    // 在可渲染数据中设置Aabb
     Vector3 extentsAabb = Vector3.subtract(maxAabb, minAabb).scaled(0.5f);
     Vector3 centerAabb = Vector3.add(minAabb, extentsAabb);
     data.setExtentsAabb(extentsAabb);
@@ -408,7 +408,7 @@ public class RenderableDefinition {
 
     builder.vertexCount(vertexCount).bufferCount(attributes.size());
 
-    // Position Attribute.
+    // Position
     int bufferIndex = 0;
     builder.attribute(
         VertexAttribute.POSITION,
@@ -417,7 +417,7 @@ public class RenderableDefinition {
         0,
         POSITION_SIZE * BYTES_PER_FLOAT);
 
-    // Tangents Attribute.
+    // Tangents
     if (attributes.contains(VertexAttribute.TANGENTS)) {
       bufferIndex++;
       builder.attribute(
@@ -428,7 +428,7 @@ public class RenderableDefinition {
           TANGENTS_SIZE * BYTES_PER_FLOAT);
     }
 
-    // Uv Attribute.
+    // Uv
     if (attributes.contains(VertexAttribute.UV0)) {
       bufferIndex++;
       builder.attribute(
@@ -439,7 +439,7 @@ public class RenderableDefinition {
           UV_SIZE * BYTES_PER_FLOAT);
     }
 
-    // Color Attribute.
+    // Color
     if (attributes.contains(VertexAttribute.COLOR)) {
       bufferIndex++;
       builder.attribute(
@@ -482,10 +482,10 @@ public class RenderableDefinition {
     Vector3 tangent;
     Vector3 bitangent;
 
-    // Calculate basis vectors (+x = tangent, +y = bitangent, +z = normal).
+    // 计算 basis vectors (+x = tangent, +y = bitangent, +z = normal).
     tangent = Vector3.cross(Vector3.up(), normal);
 
-    // Uses almostEqualRelativeAndAbs for equality checks that account for float inaccuracy.
+    // 使用almostEqualRelativeAndAbs进行相等性检查，以解释浮点数的不准确性。
     if (MathHelper.almostEqualRelativeAndAbs(Vector3.dot(tangent, tangent), 0.0f)) {
       bitangent = Vector3.cross(normal, Vector3.right()).normalized();
       tangent = Vector3.cross(bitangent, normal).normalized();
@@ -494,7 +494,7 @@ public class RenderableDefinition {
       bitangent = Vector3.cross(normal, tangent).normalized();
     }
 
-    // Rotation of a 4x4 Transformation Matrix is represented by the top-left 3x3 elements.
+    // 一个4x4变换矩阵的旋转由左上角的3x3元素表示。
     final int rowOne = 0;
     scratchMatrix.data[rowOne] = tangent.x;
     scratchMatrix.data[rowOne + 1] = tangent.y;
