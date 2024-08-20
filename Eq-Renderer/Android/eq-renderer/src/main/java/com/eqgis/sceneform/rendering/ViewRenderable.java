@@ -27,16 +27,18 @@ import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Renders a 2D Android view in 3D space by attaching it to a {@link Node}
- * with {@link Node#setRenderable(Renderable)}. By default, the size of the
- * view is 1 meter in the {@link Scene} per 250dp in the layout. Use a
- * {@link ViewSizer} to control how the size of the view in the {@link
- * Scene} is calculated.
+ * 安卓View渲染对象
+ * <p>
+ *     用于将安卓View渲染到三维场景中
+ * </p>
+ * 通过使用{@link Node#setRenderable(Renderable)}将2D Android视图附加到{@link Node}，
+ * 在3D空间中渲染2D Android视图。默认情况下，视图的大小是{@link Scene}中每250dp表示1米。
+ * 使用{@link ViewSizer}来控制{@link Scene}中视图大小的计算方式。
  *
- * <pre>{@code
+ * <code>
  * future = ViewRenderable.builder().setView(context, R.layout.view).build();
  * viewRenderable = future.thenAccept(...);
- * }</pre>
+ * </code>
  */
 @RequiresApi(api = Build.VERSION_CODES.N)
 
@@ -44,8 +46,7 @@ public class ViewRenderable extends Renderable {
   private static final String TAG = ViewRenderable.class.getSimpleName();
 
   /**
-   * Controls the horizontal alignment of the {@link ViewRenderable} relative to the {@link
-   * Node} it is attached to. The default value is CENTER.
+   * 水平对齐方式
    */
   public enum HorizontalAlignment {
     LEFT,
@@ -54,8 +55,7 @@ public class ViewRenderable extends Renderable {
   }
 
   /**
-   * Controls the vertical alignment of the {@link ViewRenderable} relative to the {@link
-   * Node} it is attached to. The default value is BOTTOM.
+   * 垂直对齐方式
    */
   public enum VerticalAlignment {
     BOTTOM,
@@ -66,8 +66,7 @@ public class ViewRenderable extends Renderable {
   @Nullable private ViewRenderableInternalData viewRenderableData;
   private final View view;
 
-  // Used to apply a final scale to the renderable that makes it render at an appropriate size based
-  // on the size of the view.
+  //用于将最终比例应用于可渲染对象，使其根据视图的大小以适当的大小呈现。
   private final Matrix viewScaleMatrix = new Matrix();
 
   private ViewSizer viewSizer;
@@ -85,18 +84,13 @@ public class ViewRenderable extends Renderable {
         }
       };
 
-  /** The 2D Android {@link View} that is rendered by this {@link ViewRenderable}. */
+  /** 获取Android View */
   public View getView() {
     return view;
   }
 
   /**
-   * Creates a new instance of this ViewRenderable.
-   *
-   * <p>The new renderable will have unique copy of all mutable state. All materials referenced by
-   * the ViewRenderable will also be instanced. Immutable data will be shared between the instances.
-   * The new ViewRenderable will reference the same getFilamentEngine View as the original
-   * ViewRenderable.
+   * 对象拷贝
    */
   @Override
   public ViewRenderable makeCopy() {
@@ -121,8 +115,7 @@ public class ViewRenderable extends Renderable {
     viewRenderableData = new ViewRenderableInternalData(renderView);
     viewRenderableData.retain();
 
-    // Empty collision box. Will be modified to fit the size of the view after the view is measured.
-    // If the size of the view changes, the collision shape will change too.
+    // 这时先默认用空碰撞体。后面的步骤将被修改尺寸以适应视图的大小。
     collisionShape = new Box(Vector3.zero());
   }
 
@@ -139,16 +132,14 @@ public class ViewRenderable extends Renderable {
   }
 
   /**
-   * Gets the {@link ViewSizer} that controls the size of this {@link ViewRenderable} in the {@link
-   * Scene}.
+   * 获取{@link ViewSizer}，它控制{@link Scene}中{@link ViewRenderable}的大小。
    */
   public ViewSizer getSizer() {
     return viewSizer;
   }
 
   /**
-   * Sets the {@link ViewSizer} that controls the size of this {@link ViewRenderable} in the {@link
-   * Scene}.
+   * 设置{@link ViewSizer}，它控制{@link Scene}中{@link ViewRenderable}的大小。
    */
   public void setSizer(ViewSizer viewSizer) {
     Preconditions.checkNotNull(viewSizer, "Parameter \"viewSizer\" was null.");
@@ -157,18 +148,17 @@ public class ViewRenderable extends Renderable {
   }
 
   /**
-   * Gets the {@link HorizontalAlignment} that controls where the {@link ViewRenderable} is
-   * positioned relative to the {@link Node} it is attached to along the
-   * x-axis. The default is {@link HorizontalAlignment#CENTER}.
+   * 获取水平对齐方式
    */
   public HorizontalAlignment getHorizontalAlignment() {
     return horizontalAlignment;
   }
 
   /**
-   * Sets the {@link HorizontalAlignment} that controls where the {@link ViewRenderable} is
-   * positioned relative to the {@link Node} it is attached to along the
-   * x-axis. The default is {@link HorizontalAlignment#CENTER}.
+   * 设置水平对齐方式
+   * <p>
+   *     默认值： {@link HorizontalAlignment#CENTER}
+   * </p>
    */
   public void setHorizontalAlignment(HorizontalAlignment horizontalAlignment) {
     this.horizontalAlignment = horizontalAlignment;
@@ -176,18 +166,17 @@ public class ViewRenderable extends Renderable {
   }
 
   /**
-   * Gets the {@link VerticalAlignment} that controls where the {@link ViewRenderable} is positioned
-   * relative to the {@link Node} it is attached to along the y-axis. The
-   * default is {@link VerticalAlignment#BOTTOM}.
+   * 获取垂直对齐方式
    */
   public VerticalAlignment getVerticalAlignment() {
     return verticalAlignment;
   }
 
   /**
-   * Sets the {@link VerticalAlignment} that controls where the {@link ViewRenderable} is positioned
-   * relative to the {@link Node} it is attached to along the y-axis. The
-   * default is {@link VerticalAlignment#BOTTOM}.
+   * 设置垂直对齐方式
+   * <p>
+   *     默认值：{@link VerticalAlignment#BOTTOM}
+   * </p>
    */
   public void setVerticalAlignment(VerticalAlignment verticalAlignment) {
     this.verticalAlignment = verticalAlignment;
@@ -195,25 +184,25 @@ public class ViewRenderable extends Renderable {
   }
 
   /**
-   * Takes the model matrix from the {@link TransformProvider} for rendering this {@link
-   * Node} and scales it to size it appropriately based on the meters to
-   * pixel ratio for the view.
-   *
+   * 获取模型矩阵
+   * <p>
+   *     从{@link TransformProvider}中获取模型矩阵，用于呈现这个{@link Node}，
+   *     并根据视图的米像素比将其缩放到合适的大小。
+   * </p>
    * @hide
    * @param originalMatrix
    */
   @Override
   public Matrix getFinalModelMatrix(final Matrix originalMatrix) {
     Preconditions.checkNotNull(originalMatrix, "Parameter \"originalMatrix\" was null.");
-    // May be better to cache this when the transform provider's model matrix changes.
-    // This would require saving the matrix on a per-instance basis instead of a per-renderable
-    // basis as well.
+    // 当转换提供程序的模型矩阵改变时，最好缓存它。
+    //这将需要以每个实例为基础保存矩阵，而不是以每个可渲染为基础。
 
     Vector3 size = viewSizer.getSize(view);
     viewScaleMatrix.makeScale(new Vector3(size.x, size.y, 1.0f));
 
-    // Set the translation of the matrix based on the alignment pre-scaled by the size.
-    // This is much more efficient than allocating an additional matrix and doing a matrix multiply.
+    //根据大小预先缩放的对齐设置矩阵的平移。
+    //这比分配一个额外的矩阵和做一个矩阵乘法要有效得多。
     viewScaleMatrix.setTranslation(
         new Vector3(
             getOffsetRatioForAlignment(horizontalAlignment) * size.x,
@@ -238,12 +227,12 @@ public class ViewRenderable extends Renderable {
 
     if (!renderViewToExternalTexture.isAttachedToWindow()
         || !renderViewToExternalTexture.isLaidOut()) {
-      // Wait for the view to finish attachment.
+      //等待视图完成绑定
       return;
     }
 
-    // Wait until one frame after the surface texture has been drawn to for the first time.
-    // Fixes an issue where the ViewRenderable would render black for a frame before displaying.
+    //等待第一次绘制表面纹理后的一帧。
+    //解决ViewRenderable在显示前渲染黑色的问题。
     boolean hasDrawnToSurfaceTexture = renderViewToExternalTexture.hasDrawnToSurfaceTexture();
     if (!hasDrawnToSurfaceTexture) {
       return;
@@ -303,7 +292,7 @@ public class ViewRenderable extends Renderable {
     center.x *= viewSize.x;
     center.y *= viewSize.y;
 
-    // Offset the collision shape based on the alignment.
+    //基于对齐方式偏移碰撞形状。
     center.x += getOffsetRatioForAlignment(horizontalAlignment) * size.x;
     center.y += getOffsetRatioForAlignment(verticalAlignment) * size.y;
 
@@ -402,8 +391,7 @@ public class ViewRenderable extends Renderable {
     }
 
     /**
-     * Set the {@link ViewSizer} that controls the size of the built {@link ViewRenderable} in the
-     * {@link Scene}.
+     * 设置尺寸
      */
     public Builder setSizer(ViewSizer viewSizer) {
       Preconditions.checkNotNull(viewSizer, "Parameter \"viewSizer\" was null.");
@@ -412,9 +400,7 @@ public class ViewRenderable extends Renderable {
     }
 
     /**
-     * Sets the {@link HorizontalAlignment} that controls where the {@link ViewRenderable} is
-     * positioned relative to the {@link Node} it is attached to along the
-     * x-axis. The default is {@link HorizontalAlignment#CENTER}.
+     * 设置水平对齐方式
      */
     public Builder setHorizontalAlignment(HorizontalAlignment horizontalAlignment) {
       this.horizontalAlignment = horizontalAlignment;
@@ -422,9 +408,7 @@ public class ViewRenderable extends Renderable {
     }
 
     /**
-     * Sets the {@link VerticalAlignment} that controls where the {@link ViewRenderable} is
-     * positioned relative to the {@link Node} it is attached to along the
-     * y-axis. The default is {@link VerticalAlignment#BOTTOM}.
+     * 设置垂直对齐方式
      */
     public Builder setVerticalAlignment(VerticalAlignment verticalAlignment) {
       this.verticalAlignment = verticalAlignment;
@@ -435,9 +419,8 @@ public class ViewRenderable extends Renderable {
     @SuppressWarnings("AndroidApiChecker") // java.util.concurrent.CompletableFuture
     public CompletableFuture<ViewRenderable> build() {
       if (!hasSource() && context != null) {
-        // For ViewRenderables, the registryId must come from the View, not the RCB source.
-        // If the source is a View, use that as the registryId. If the view is null, then the source
-        // is a resource id and the registryId should also be null.
+        //对于ViewRenderables, registryId必须来自View，而不是RCB源。
+        //如果源是View，使用它作为registryId。如果视图为空，则源是资源id，并且registryId也应该为空。
         registryId = view;
 
         CompletableFuture<Void> setSourceFuture = Material.builder()
@@ -544,8 +527,7 @@ public class ViewRenderable extends Renderable {
         throw new AssertionError("Context cannot be null");
       }
 
-      // Inflate the view in a detached state.
-      // We need a dummy ViewGroup as the root so that the layout params of the view are loaded.
+      //需要一个虚拟ViewGroup作为根，以便加载View。
       ViewGroup dummy = new FrameLayout(context);
       return LayoutInflater.from(context).inflate(resourceId.getAsInt(), dummy, false);
     }

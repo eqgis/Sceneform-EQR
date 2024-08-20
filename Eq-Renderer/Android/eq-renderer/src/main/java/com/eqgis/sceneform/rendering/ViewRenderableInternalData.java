@@ -5,8 +5,8 @@ import com.eqgis.sceneform.resources.SharedReference;
 import com.eqgis.sceneform.utilities.AndroidPreconditions;
 
 /**
- * Represents shared data used by {@link ViewRenderable}s for rendering. The data will be released
- * when all {@link ViewRenderable}s using this data are finalized.
+ * 表示{@link ViewRenderable}用于渲染的共享数据。
+ * 当使用这些数据的所有{@link ViewRenderable}完成时，数据将被释放。
  */
 
 class ViewRenderableInternalData extends SharedReference {

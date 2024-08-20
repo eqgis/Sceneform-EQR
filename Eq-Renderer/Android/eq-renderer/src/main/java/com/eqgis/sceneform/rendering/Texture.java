@@ -20,31 +20,32 @@ import java.io.InputStream;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
-/** Represents a reference to a texture. */
+/** 纹理对象
+ *
+ * */
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"}) // CompletableFuture
 @RequiresApi(api = Build.VERSION_CODES.N)
 @UsedByNative("material_java_wrappers.h")
 public class Texture {
   private static final String TAG = Texture.class.getSimpleName();
 
-  /** Type of Texture usage. */
+  /** 纹理使用类型。 */
   public enum Usage {
-    /** Texture contains a color map */
+    /** 颜色贴图 */
     COLOR,
-    /** Assume color usage by default */
-    /** Texture contains a normal map */
+    /** 纹理包含法线贴图 */
     NORMAL,
-    /** Texture contains arbitrary data */
+    /** 纹理包含任意的数据 */
     DATA
   }
 
-  // Set mipCount to the maximum number of levels, Filament will clamp it as required.
-  // This will make sure that all the mip levels are filled out, down to 1x1.
+  //将mipCount设置为最大数量的级别，filament将根据需要夹紧它。
+  //这将确保所有的mip级别被填满，直到1x1。
   private static final int MIP_LEVELS_TO_GENERATE = 0xff;
 
   @Nullable private final TextureInternalData textureData;
 
-  /** Constructs a default texture, if nothing else is set */
+  /** 构建一个默认纹理对象 */
   public static Builder builder() {
     AndroidPreconditions.checkMinAndroidApiLevel();
 
@@ -66,8 +67,7 @@ public class Texture {
   }
 
   /**
-   * Get engine data required to use the texture.
-   *
+   * 获取filament的纹理对象
    * @hide
    */
   com.google.android.filament.Texture getFilamentTexture() {
@@ -91,16 +91,16 @@ public class Texture {
     return format;
   }
 
-  /** Factory class for {@link Texture} */
+  /** 建造者模式 */
   public static final class Builder {
-    /** The {@link Texture} will be constructed from the contents of this callable */
+    /** {@link Texture}将从这个可调用对象的内容构造 */
     @Nullable private Callable<InputStream> inputStreamCreator = null;
 
     @Nullable private Bitmap bitmap = null;
     @Nullable private TextureInternalData textureInternalData = null;
 
     private Usage usage = Usage.COLOR;
-    /** Enables reuse through the registry */
+    /** 可通过注册表启用重用 */
     @Nullable private Object registryId = null;
 
     private boolean inPremultiplied = true;
@@ -109,17 +109,12 @@ public class Texture {
 
     private static final int MAX_BITMAP_SIZE = 4096;
 
-    /** Constructor for asynchronous building. The sourceBuffer will be read later. */
+    /**构造函数*/
     private Builder() {}
 
     /**
-     * Allows a {@link Texture} to be constructed from {@link Uri}. Construction will be
-     * asynchronous.
-     *
-     * @param sourceUri Sets a remote Uri or android resource Uri. The texture will be added to the
-     *     registry using the Uri A previously registered texture with the same Uri will be re-used.
-     * @param context Sets the {@link Context} used to resolve sourceUri
-     * @return {@link Builder} for chaining setup calls.
+     * 设置数据源
+     * @param sourceUri URI
      */
     public Builder setSource(Context context, Uri sourceUri) {
       Preconditions.checkNotNull(sourceUri, "Parameter \"sourceUri\" was null.");
@@ -130,10 +125,8 @@ public class Texture {
     }
 
     /**
-     * Allows a {@link Texture} to be constructed via callable function.
-     *
-     * @param inputStreamCreator Supplies an {@link InputStream} with the {@link Texture} data.
-     * @return {@link Builder} for chaining setup calls.
+     * 设置数据源
+     * @param inputStreamCreator Callable<InputStream>
      */
     public Builder setSource(Callable<InputStream> inputStreamCreator) {
       Preconditions.checkNotNull(inputStreamCreator, "Parameter \"inputStreamCreator\" was null.");
@@ -144,12 +137,8 @@ public class Texture {
     }
 
     /**
-     * Allows a {@link Texture} to be constructed from resource. Construction will be asynchronous.
-     *
-     * @param resource an android resource with raw type. A previously registered texture with the
-     *     same resource id will be re-used.
-     * @param context {@link Context} used for resolution
-     * @return {@link Builder} for chaining setup calls.
+     * 设置数据源
+     * @param resource 资源Id
      */
     public Builder setSource(Context context, int resource) {
       setSource(LoadHelper.fromResource(context, resource));
@@ -158,15 +147,14 @@ public class Texture {
     }
 
     /**
-     * Allows a {@link Texture} to be constructed from a {@link Bitmap}. Construction will be
-     * immediate.
+     * 设置数据源
      *
-     * <p>The Bitmap must meet the following conditions to be used by Sceneform:
+     * <p>位图必须满足以下条件才能被使用:
      *
      * <ul>
-     *   <li>{@link Bitmap#getConfig()} must be {@link Bitmap.Config#ARGB_8888}.
-     *   <li>{@link Bitmap#isPremultiplied()} must be true.
-     *   <li>The width and height must be smaller than 4096 pixels.
+     *     <li>{@link Bitmap#getConfig()}必须是{@link Bitmap.Config #ARGB_8888}。
+     *     <li>{@link Bitmap# ispremultiply()}必须为真。
+     *     <li>宽度和高度必须小于4096像素。
      * </ul>
      *
      * @param bitmap {@link Bitmap} source of texture data
@@ -204,9 +192,8 @@ public class Texture {
     }
 
     /**
-     * Sets internal data of the texture directly.
-     *
-     * @hide Hidden API direct from filament
+     * 直接设置纹理的内部数据。
+     * @hide
      */
     public Builder setData(TextureInternalData textureInternalData) {
       this.textureInternalData = textureInternalData;
@@ -214,12 +201,9 @@ public class Texture {
     }
 
     /**
-     * Indicates whether the a texture loaded via an {@link InputStream}should be loaded with
-     * premultiplied alpha.
+     * 通过{@link InputStream}加载的纹理是否应该使用预乘alpha加载。
      *
-     * @param inPremultiplied Whether the texture loaded via an {@link InputStream} should be loaded
-     *     with premultiplied alpha. Default value is true.
-     * @return {@link Builder} for chaining setup calls.
+     * @param inPremultiplied 通过{@link InputStream}加载的纹理是否应该用预乘alpha加载。默认值为true。
      */
     Builder setPremultiplied(boolean inPremultiplied) {
       this.inPremultiplied = inPremultiplied;
@@ -227,11 +211,8 @@ public class Texture {
     }
 
     /**
-     * Allows a {@link Texture} to be reused. If registryId is non-null it will be saved in a
-     * registry and the registry will be checked for this id before construction.
-     *
-     * @param registryId Allows the function to be skipped and a previous texture to be re-used.
-     * @return {@link Builder} for chaining setup calls.
+     * 允许{@link Texture}被重用。如果registryId是非空的，它将被保存在一个注册表中，并且注册表将在构建之前检查这个id。
+     * @param registryId 允许跳过该函数并重用之前的纹理。
      */
     public Builder setRegistryId(Object registryId) {
       this.registryId = registryId;
@@ -239,11 +220,9 @@ public class Texture {
     }
 
     /**
-     * Mark the {@link Texture} as a containing color, normal or arbitrary data. Color is the
-     * default.
+     * 将{@link Texture}标记为包含颜色、正常或任意数据。颜色是默认的。
      *
-     * @param usage Sets the kind of data in {@link Texture}
-     * @return {@link Builder} for chaining setup calls.
+     * @param usage 设置{@link Texture}中的数据类型。
      */
     public Builder setUsage(Usage usage) {
       this.usage = usage;
@@ -251,10 +230,8 @@ public class Texture {
     }
 
     /**
-     * Sets the {@link Sampler}to control rendering parameters on the {@link Texture}.
-     *
+     * 设置采样器参数
      * @param sampler Controls appearance of the {@link Texture}
-     * @return {@link Builder} for chaining setup calls.
      */
     public Builder setSampler(Sampler sampler) {
       this.sampler = sampler;
@@ -262,9 +239,7 @@ public class Texture {
     }
 
     /**
-     * Creates a new {@link Texture} based on the parameters set previously
-     *
-     * @throws IllegalStateException if the builder is not properly set
+     * 创建
      */
     public CompletableFuture<Texture> build() {
       AndroidPreconditions.checkUiThread();
@@ -379,7 +354,7 @@ public class Texture {
   }
 
   // LINT.IfChange(api)
-  /** Controls what settings are used to sample Textures when rendering. */
+  /** 采样设置 */
   @UsedByNative("material_java_wrappers.h")
   public static class Sampler {
     /** Options for Minification Filter function. */
@@ -424,16 +399,6 @@ public class Texture {
     private final WrapMode wrapModeS;
     private final WrapMode wrapModeT;
     private final WrapMode wrapModeR;
-
-
-
-
-
-
-
-
-
-
 
     private Sampler(Builder builder) {
       this.minFilter = builder.minFilter;
@@ -566,7 +531,7 @@ public class Texture {
   //     //depot/google3/third_party/arcore/ar/sceneform/loader/model/material_java_wrappers.h:api
   // )
 
-  /** Cleanup {@link TextureInternalData} after garbage collection */
+  /** Cleanup回调 */
   private static final class CleanupCallback implements Runnable {
     private final TextureInternalData textureData;
 

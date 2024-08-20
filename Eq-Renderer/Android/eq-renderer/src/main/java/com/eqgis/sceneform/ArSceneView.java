@@ -50,7 +50,6 @@ import java.util.function.Consumer;
 @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
 public class ArSceneView extends SceneView {
     private static final String TAG = ArSceneView.class.getSimpleName();
-    private static final String REPORTED_ENGINE_TYPE = "Sceneform";
     private static final float DEFAULT_PIXEL_INTENSITY = 1.0f;
     private static final Color DEFAULT_COLOR_CORRECTION = new Color(1, 1, 1);
 
@@ -60,8 +59,7 @@ public class ArSceneView extends SceneView {
     private static final float RECREATE_LIGHTING_ANCHOR_DISTANCE = 0.5f;
     private final Color lastValidColorCorrection = new Color(DEFAULT_COLOR_CORRECTION);
     private final float[] colorCorrectionPixelIntensity = new float[4];
-    // pauseResumeTask is modified on the main thread only.  It may be completed on background
-    // threads however.
+    // pauseResumeTask需在主线程调用
     private final SequentialTask pauseResumeTask = new SequentialTask();
     private int cameraTextureId;
     @Nullable private ARSession session;
@@ -88,7 +86,7 @@ public class ArSceneView extends SceneView {
      */
     @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
     public ArSceneView(Context context) {
-        // SceneView will initialize the scene, renderer, and camera.
+        // 初始化 scene、renderer、camera.
         super(context);
         Renderer renderer = Preconditions.checkNotNull(getRenderer());
         renderer.enablePerformanceMode();
@@ -102,19 +100,19 @@ public class ArSceneView extends SceneView {
      */
     @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
     public ArSceneView(Context context, AttributeSet attrs) {
-        // SceneView will initialize the scene, renderer, and camera.
+        // 初始化 scene、renderer、camera.
         super(context, attrs);
         Renderer renderer = Preconditions.checkNotNull(getRenderer());
         renderer.enablePerformanceMode();
         initializeAr();
     }
 
-    private static boolean loadUnifiedJni() {
-        return false;
-    }
-
-    private static native void nativeReportEngineType(
-            ARSession session, String engineType, String engineVersion);
+//    private static boolean loadUnifiedJni() {
+//        return false;
+//    }
+//
+//    private static native void nativeReportEngineType(
+//            ARSession session, String engineType, String engineVersion);
 
     /**
      * 配置ARSession
@@ -466,7 +464,6 @@ public class ArSceneView extends SceneView {
         return updated;
     }
 
-    /***********************=====added by Ikkyu(tanyx)=====TOP============****************/
     /**
      * 自定义姿态更新监听
      */
@@ -486,7 +483,6 @@ public class ArSceneView extends SceneView {
         this.customPoseUpdateListener = customPoseUpdateListener;
     }
 
-    /***********************=====added by Ikkyu(tanyx)=====BOTTOM=========****************/
     @Override
     public void doFrame(long frameTimeNanos) {
         super.doFrame(frameTimeNanos);
@@ -505,7 +501,7 @@ public class ArSceneView extends SceneView {
             return;
         }
 
-        // Update the Light Probe with the new light estimate.
+        // 更新光估计
         ARLightEstimate estimate = frame.getLightEstimate();
 
         if (isEnvironmentalHdrLightingAvailable()) {
@@ -749,7 +745,7 @@ public class ArSceneView extends SceneView {
             return;
         }
 
-        // Check the update mode.//不检查，不更新，O(∩_∩)O哈哈~
+        // Check the update mode.//Ikkyu: 不检查，不更新，O(∩_∩)O哈哈~
 //        if (minArCoreVersionCode >= ArCoreVersion.VERSION_CODE_1_3) {
 //            if (cachedConfig == null) {
 //                cachedConfig = session.getConfig();

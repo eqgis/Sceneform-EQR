@@ -7,8 +7,7 @@ import android.os.Looper;
 import java.util.concurrent.Executor;
 
 /**
- * Provides access to default {@link Executor}s to be used
- *
+ * 线程池
  * @hide
  */
 public class ThreadPools {
@@ -17,7 +16,7 @@ public class ThreadPools {
 
   private ThreadPools() {}
 
-  /** {@link Executor} for anything that that touches {@link Renderer} state */
+  /** 获取主线程Executor */
   public static Executor getMainExecutor() {
     if (mainExecutor == null) {
       mainExecutor =
@@ -33,12 +32,18 @@ public class ThreadPools {
     return mainExecutor;
   }
 
-  /** @param executor provides access to the main thread. */
-  public static void setMainExecutor(Executor executor) {
-    mainExecutor = executor;
-  }
+//  /**
+//   * 更新主线程Executor
+//   * @param executor
+//   * */
+//  public static void setMainExecutor(Executor executor) {
+//    mainExecutor = executor;
+//  }
 
-  /** Default background {@link Executor} for async operations including file reading. */
+  /**
+   * 获取后台线程的Executor
+   * <p>用于异步执行特定任务</p>
+   * */
   public static Executor getThreadPoolExecutor() {
     if (threadPoolExecutor == null) {
       return AsyncTask.THREAD_POOL_EXECUTOR;
@@ -46,12 +51,10 @@ public class ThreadPools {
     return threadPoolExecutor;
   }
 
-  /**
-   * Sets the default background {@link Executor}.
-   *
-   * <p>Tasks may be long running. This should not include the main thread
-   */
-  public static void setThreadPoolExecutor(Executor executor) {
-    threadPoolExecutor = executor;
-  }
+//  /**
+//   * 设置后台线程Executor
+//   */
+//  public static void setThreadPoolExecutor(Executor executor) {
+//    threadPoolExecutor = executor;
+//  }
 }

@@ -7,20 +7,19 @@ import com.eqgis.sceneform.Node;
 import com.eqgis.sceneform.Scene;
 
 /**
- * Interface for controlling the size of a {@link ViewRenderable} in the {@link
- * Scene}. The final size that the view is displayed at will be the size
- * from this {@link ViewSizer} scaled by the {@link Node#getWorldScale()} of
- * the {@link Node} that the {@link ViewRenderable} is attached to.
+ * 接口用于控制{@link Scene}中{@link ViewRenderable}的大小。
+ * 视图显示的最终大小将是{@link ViewSizer}的大小，
+ * 由{@link ViewRenderable}所附加的{@link Node}的{@link Node#getWorldScale()}缩放。
  */
 
 public interface ViewSizer {
   /**
-   * Calculates the desired size of the view in the {@link Scene}. {@link
-   * Vector3#x} represents the width, and {@link Vector3#y} represents the height.
-   *
-   * @param view the view to calculate the size of
-   * @return a new vector that represents the view's size in the {@link
-   *     Scene}
+   * 计算{@link Scene}中所需的视图大小。
+   * <p>
+   *     {@link Vector3#x}表示宽度，{@link Vector3#y}表示高度。
+   * </p>
+   * @param view 视图
+   * @return Vector3
    */
   Vector3 getSize(View view);
 }

@@ -8,24 +8,20 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 /**
- * Manages a {@link FrameLayout} that is attached directly to a {@link WindowManager} that other
- * views can be added and removed from.
- *
- * <p>To render a {@link View}, the {@link View} must be attached to a {@link WindowManager} so that
- * it can be properly drawn. This class encapsulates a {@link FrameLayout} that is attached to a
- * {@link WindowManager} that other views can be added to as children. This allows us to safely and
- * correctly draw the {@link View} associated with {@link ViewRenderable}'s while keeping them
- * isolated from the rest of the activities View hierarchy.
- *
- * <p>Additionally, this manages the lifecycle of the window to help ensure that the window is
- * added/removed from the WindowManager at the appropriate times.
- *
+ * 管理直接附加到{@link WindowManager}的{@link FrameLayout}视图可以添加和删除。
+ * <p>
+ *     要呈现{@link View}， {@link View}必须附加到{@link WindowManager}，以便
+ *     它可以被恰当地画出来。这个类封装了一个{@link FrameLayout}，它附加到
+ *     {@link WindowManager}，其他视图可以作为子视图添加。这使我们能够
+ *     绘制{@link View}与{@link ViewRenderable}相关联的{@link View}，同时保留它们
+ *     与活动视图层次结构的其余部分隔离。
+ *     此外，这管理窗口的生命周期，以帮助确保窗口是有效的
+ * </p>
+ * 在适当的时候从WindowManager中添加/删除。
  * @hide
  */
-// TODO: Create Unit Tests for this class.
 class ViewAttachmentManager {
-  // View that owns the ViewAttachmentManager.
-  // Used to post callbacks onto the UI thread.
+  // 拥有ViewAttachmentManager的视图，用于向UI线程触发回调。
   private final View ownerView;
 
   private final WindowManager windowManager;
@@ -38,9 +34,8 @@ class ViewAttachmentManager {
   private boolean isAdded = false;
 
   /**
-   * Construct a ViewAttachmentManager.
-   *
-   * @param ownerView used by the ViewAttachmentManager to post callbacks on the UI thread
+   * 构造函数
+   * @param ownerView ViewAttachmentManager用来在UI线程上触发回调
    */
   ViewAttachmentManager(Context context, View ownerView) {
     this.ownerView = ownerView;
@@ -57,8 +52,8 @@ class ViewAttachmentManager {
   }
 
   void onResume() {
-    // A ownerView can only be added to the WindowManager after the activity has finished resuming.
-    // Therefore, we must use post to ensure that the window is only added after resume is finished.
+    // ownerView只能在activity完成恢复后添加到WindowManager中。
+    // 因此，我们必须使用post来确保只有在resume完成后才添加窗口。
     if (!isAdded){
       ownerView.postDelayed(
               () -> {
@@ -71,8 +66,8 @@ class ViewAttachmentManager {
   }
 
   void onPause() {
-    // The ownerView must be removed from the WindowManager before the activity is destroyed, or the
-    // window will be leaked. Therefore we add/remove the ownerView in resume/pause.
+    // ownerView必须在activity被销毁之前从WindowManager中移除，
+    // 否则窗口将被泄露。因此，我们在resume/pause中添加/删除ownerView。
 //    if (frameLayout.getParent() != null) {
 //      windowManager.removeView(frameLayout);
 //    }
@@ -86,11 +81,10 @@ class ViewAttachmentManager {
   }
 
   /**
-   * Add a ownerView as a child of the {@link FrameLayout} that is attached to the {@link
-   * WindowManager}.
-   *
-   * <p>Used by {@link RenderViewToExternalTexture} to ensure that the ownerView is drawn with all
-   * appropriate lifecycle events being called correctly.
+   * 添加一个ownerView作为附加到{@link WindowManager}的{@link FrameLayout}的子视图。
+   * <p>
+   *     由{@link RenderViewToExternalTexture}使用，以确保ownerView被绘制并正确调用所有适当的生命周期事件。
+   * </p>
    */
   void addView(View view) {
     if (view.getParent() == frameLayout) {
@@ -101,10 +95,8 @@ class ViewAttachmentManager {
   }
 
   /**
-   * Remove a ownerView from the {@link FrameLayout} that is attached to the {@link WindowManager}.
-   *
-   * <p>Used by {@link RenderViewToExternalTexture} to remove ownerView's that no longer need to be
-   * drawn.
+   * 从{@link FrameLayout}中移除附加到{@link WindowManager}的ownerView。
+   * <p>由{@link RenderViewToExternalTexture}用来移除不再需要绘制的ownerView。
    */
   void removeView(View view) {
     if (view.getParent() != frameLayout) {

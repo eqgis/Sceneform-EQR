@@ -50,7 +50,7 @@ public class ModelRenderable extends Renderable {
     return new Builder();
   }
 
-  /** 构建者模式 {@link ModelRenderable}. */
+  /** 建造者模式 {@link ModelRenderable}. */
   public static final class Builder extends Renderable.Builder<ModelRenderable, Builder> {
 
     /** @hide */

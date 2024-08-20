@@ -5,14 +5,13 @@ import androidx.annotation.Nullable;
 import com.eqgis.sceneform.math.Vector3;
 
 /**
- * Represents a Vertex for a {@link RenderableDefinition}. Used for constructing renderables
- * dynamically.
+ * 表示{@link RenderableDefinition}的顶点。用于动态构造可渲染对象。
  *
  * @see ModelRenderable.Builder
  * @see ViewRenderable.Builder
  */
 public class Vertex {
-  /** Represents a texture Coordinate for a Vertex. Values should be between 0 and 1. */
+  /** 表示顶点的纹理坐标。值应该在0到1之间。 */
   public static final class UvCoordinate {
     public float x;
     public float y;
@@ -77,7 +76,7 @@ public class Vertex {
     return new Builder();
   }
 
-  /** Factory class for {@link Vertex}. */
+  /** 建造者模式 */
   public static final class Builder {
     // Required.
     private final Vector3 position = Vector3.zero();

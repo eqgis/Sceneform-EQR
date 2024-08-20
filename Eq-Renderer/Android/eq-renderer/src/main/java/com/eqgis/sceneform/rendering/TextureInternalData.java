@@ -7,10 +7,8 @@ import com.eqgis.sceneform.utilities.AndroidPreconditions;
 import com.google.ar.core.annotations.UsedByNative;
 
 /**
- * Represents shared data used by {@link Texture}s for rendering. The data will be released when all
- * {@link Texture}s using this data are finalized.
- *
- * @hide Only for use for private features such as occlusion.
+ * 表示{@link Texture}用于渲染的共享数据。当使用该数据的所有{@link Texture}完成时，数据将被释放。
+ * @hide
  */
 @UsedByNative("material_java_wrappers.h")
 public class TextureInternalData extends SharedReference {

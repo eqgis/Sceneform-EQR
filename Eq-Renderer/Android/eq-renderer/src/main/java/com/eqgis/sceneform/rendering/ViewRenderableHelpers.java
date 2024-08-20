@@ -5,12 +5,16 @@ import android.util.DisplayMetrics;
 import android.view.View;
 
 
-/** Helper class for utility functions for a view rendered in world space. */
-
+/**
+ * View渲染对象工具类
+ * <p>
+ *     用于在世界空间中呈现视图的实用程序函数的Helper类。
+ * </p>
+ * */
 public class ViewRenderableHelpers {
   static boolean USE_PIXEL = true;
 
-  /** Returns the aspect ratio of a view (width / height). */
+  /** 获取View的宽高比 */
   static float getAspectRatio(View view) {
     float viewWidth = (float) view.getWidth();
     float viewHeight = (float) view.getHeight();
@@ -23,14 +27,21 @@ public class ViewRenderableHelpers {
   }
 
   /**
-   * Returns the number of density independent pixels that a given number of pixels is equal to on
-   * this device.
+   * 将px转换为dp
+   * @param px px值
+   * @return dp值
    */
   public static float convertPxToDp(int px) {
     if (USE_PIXEL)return px / 2.0f;//1m = 500px
     DisplayMetrics displayMetrics = Resources.getSystem().getDisplayMetrics();
     return px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT);
   }
+
+  /**
+   * 将dp转换为px
+   * @param dp dp值
+   * @return px值
+   */
   public static int convertDpToPx(float dp) {
     if (USE_PIXEL)return (int) (dp * 2.0f);//1m = 500px
     DisplayMetrics displayMetrics = Resources.getSystem().getDisplayMetrics();
