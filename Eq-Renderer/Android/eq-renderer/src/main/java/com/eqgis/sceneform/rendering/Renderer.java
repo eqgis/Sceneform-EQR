@@ -375,25 +375,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
     return getSurfaceView().getContext();
   }
 
-  /**
-   * 设置用于反射和间接光的光探针。
-   * @hide
-   */
-  public void setLightProbe(LightProbe lightProbe) {
-    if (lightProbe == null) {
-      throw new AssertionError("Passed in an invalid light probe.");
-    }
-    final IndirectLight latestIndirectLight = lightProbe.buildIndirectLight();
-    if (latestIndirectLight != null) {
-      scene.setIndirectLight(latestIndirectLight);
-      if (indirectLight != null && indirectLight != latestIndirectLight) {
-        final IEngine engine = EngineInstance.getEngine();
-        engine.destroyIndirectLight(indirectLight);
-      }
-      indirectLight = latestIndirectLight;
-    }
-  }
-
   /** @hide */
   public void setDesiredSize(int width, int height) {
     int minor = Math.min(width, height);

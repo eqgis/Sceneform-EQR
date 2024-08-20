@@ -1,7 +1,6 @@
 package com.eqgis.sceneform;
 
 import android.media.Image;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import androidx.annotation.Nullable;
@@ -11,10 +10,8 @@ import com.eqgis.sceneform.collision.Collider;
 import com.eqgis.sceneform.collision.CollisionSystem;
 import com.eqgis.sceneform.collision.Ray;
 import com.eqgis.sceneform.rendering.Color;
-import com.eqgis.sceneform.rendering.LightProbe;
 import com.eqgis.sceneform.rendering.Renderer;
 import com.eqgis.sceneform.utilities.EnvironmentalHdrParameters;
-import com.eqgis.sceneform.utilities.LoadHelper;
 import com.eqgis.sceneform.utilities.AndroidPreconditions;
 import com.eqgis.sceneform.utilities.Preconditions;
 
@@ -88,7 +85,6 @@ public class Scene extends NodeParent {
   private final Camera camera;
   @Nullable private final Sun sunlightNode;
   @Nullable private final SceneView view;
-  @Nullable private LightProbe lightProbe;
   private boolean lightProbeSet = false;
   private boolean isUnderTesting = false;
 
@@ -102,7 +98,6 @@ public class Scene extends NodeParent {
   @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
   Scene() {
     view = null;
-    lightProbe = null;
     camera = new Camera(true);
     if (!AndroidPreconditions.isMinAndroidApiLevel()) {
       // Enforce min api level 24
@@ -126,9 +121,6 @@ public class Scene extends NodeParent {
       return;
     }
     sunlightNode = new Sun(this);
-
-    // Setup the default lighting for the scene, if it exists.
-    setupLightProbe(view);
   }
 
   /** 获取场景视图 */
@@ -161,37 +153,6 @@ public class Scene extends NodeParent {
   @Nullable
   public Node getSunlight() {
     return sunlightNode;
-  }
-
-  /**
-   * 获取场景中的光照探针
-   * <p>早期scenefrom中用于环境光，现已弃用</p>
-   * @return 光照探针
-   */
-  @Deprecated
-  public LightProbe getLightProbe() {
-    // the lightProbe field cannot be marked for the purposes of unit testing.
-    // Add this check for static analysis go/nullness.
-    if (lightProbe == null) {
-      throw new IllegalStateException("Scene's lightProbe must not be null.");
-    }
-    return lightProbe;
-  }
-
-  /**
-   * 设置光照探针
-   */
-  public void setLightProbe(LightProbe lightProbe) {
-    Preconditions.checkNotNull(lightProbe, "Parameter \"lightProbe\" was null.");
-    this.lightProbe = lightProbe;
-    this.lightProbeSet = true;
-
-    // the view field cannot be marked for the purposes of unit testing.
-    // Add this check for static analysis go/nullness.
-    if (view == null) {
-      throw new IllegalStateException("Scene's view must not be null.");
-    }
-    Preconditions.checkNotNull(view.getRenderer()).setLightProbe(lightProbe);
   }
 
   /**
@@ -425,16 +386,6 @@ public class Scene extends NodeParent {
       hdrParameters = renderer.getEnvironmentalHdrParameters();
     }
 
-    if (lightProbe != null) {
-      if (sphericalHarmonics != null) {
-        lightProbe.setEnvironmentalHdrSphericalHarmonics(
-            sphericalHarmonics, exposure, hdrParameters);
-      }
-      if (cubeMap != null) {
-        lightProbe.setCubeMap(cubeMap);
-      }
-      setLightProbe(lightProbe);
-    }
     if (sunlightNode != null && direction != null) {
       sunlightNode.setEnvironmentalHdrLightEstimate(
           direction, colorCorrection, relativeIntensity, exposure, hdrParameters);
@@ -455,13 +406,6 @@ public class Scene extends NodeParent {
    * @param pixelIntensity 要被调整的场景光强
    */
   void setLightEstimate(Color colorCorrection, float pixelIntensity) {
-    if (lightProbe != null) {
-      lightProbe.setLightEstimate(colorCorrection, pixelIntensity);
-      // TODO: The following call is not public (@hide). When public, ensure that it is
-      // not possible to forget to call setLightProbe after changing the light estimate of a light
-      // probe.
-      setLightProbe(lightProbe);
-    }
     if (sunlightNode != null) {
       sunlightNode.setLightEstimate(colorCorrection, pixelIntensity);
     }
@@ -482,44 +426,5 @@ public class Scene extends NodeParent {
     }
 
     callOnHierarchy(node -> node.dispatchUpdate(frameTime));
-  }
-
-  @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
-  private void setupLightProbe(SceneView view) {
-    Preconditions.checkNotNull(view, "Parameter \"view\" was null.");
-
-    int defaultLightProbeId =
-        LoadHelper.rawResourceNameToIdentifier(view.getContext(), DEFAULT_LIGHTPROBE_RESOURCE_NAME);
-
-    if (defaultLightProbeId == LoadHelper.INVALID_RESOURCE_IDENTIFIER) {
-      // TODO: Better log message.
-      Log.w(
-          TAG,
-          "Unable to find the default Light Probe."
-              + " The scene will not be lit unless a light probe is set.");
-      return;
-    }
-
-    try {
-      LightProbe.builder()
-          .setSource(view.getContext(), defaultLightProbeId)
-          .setAssetName(DEFAULT_LIGHTPROBE_ASSET_NAME)
-          .build()
-          .thenAccept(
-              result -> {
-                // Set when setLightProbe is called so that we don't override the user setting.
-                if (!lightProbeSet) {
-                  setLightProbe(result);
-                }
-              })
-          .exceptionally(
-              throwable -> {
-                Log.e(TAG, "Failed to create the default Light Probe: ", throwable);
-                return null;
-              });
-    } catch (Exception ex) {
-      throw new IllegalStateException(
-          "Failed to create the default Light Probe: " + ex.getLocalizedMessage());
-    }
   }
 }
