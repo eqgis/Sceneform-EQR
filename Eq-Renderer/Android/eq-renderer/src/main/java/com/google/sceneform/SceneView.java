@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.filament.IndirectLight;
 import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Renderer;
 import com.google.sceneform.rendering.ResourceManager;
