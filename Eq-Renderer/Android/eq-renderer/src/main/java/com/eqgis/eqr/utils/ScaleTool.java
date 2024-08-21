@@ -1,9 +1,9 @@
 package com.eqgis.eqr.utils;
 
-import com.eqgis.sceneform.collision.Box;
-import com.eqgis.sceneform.collision.CollisionShape;
-import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.sceneform.rendering.Renderable;
+import com.google.sceneform.collision.Box;
+import com.google.sceneform.collision.CollisionShape;
+import com.google.sceneform.math.Vector3;
+import com.google.sceneform.rendering.Renderable;
 
 /**
  * 缩放比例工具类

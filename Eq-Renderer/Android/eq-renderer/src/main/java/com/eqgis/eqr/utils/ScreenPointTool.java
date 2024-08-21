@@ -4,9 +4,9 @@ import android.content.Context;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
-import com.eqgis.sceneform.Camera;
-import com.eqgis.sceneform.collision.Ray;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.Camera;
+import com.google.sceneform.collision.Ray;
+import com.google.sceneform.math.Vector3;
 
 import java.util.ArrayList;
 import java.util.List;

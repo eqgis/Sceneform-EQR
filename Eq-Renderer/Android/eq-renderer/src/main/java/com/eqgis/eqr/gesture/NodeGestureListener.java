@@ -7,10 +7,10 @@ import android.view.ScaleGestureDetector;
 
 import com.eqgis.eqr.animation.ValueAnimation;
 import com.eqgis.eqr.animation.ValueAnimationEvaluator;
-import com.eqgis.sceneform.Camera;
-import com.eqgis.sceneform.Node;
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.Camera;
+import com.google.sceneform.Node;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.Vector3;
 
 
 /**

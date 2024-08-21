@@ -21,7 +21,7 @@
     android:id="@+id/sceneform_hand_layout"
     android:clipChildren="false">
 
-  <com.eqgis.sceneform.ux.HandMotionView
+  <com.google.sceneform.ux.HandMotionView
       android:id="@+id/sceneform_hand_image"
       android:layout_width="match_parent"
       android:layout_height="match_parent"

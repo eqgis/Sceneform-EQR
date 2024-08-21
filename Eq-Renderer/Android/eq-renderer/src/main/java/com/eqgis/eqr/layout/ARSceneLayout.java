@@ -13,7 +13,7 @@ import com.eqgis.ar.ARFrame;
 import com.eqgis.ar.OnSessionInitializationListener;
 import com.eqgis.ar.OnTapArPlaneListener;
 import com.eqgis.ar.TrackingState;
-import com.eqgis.sceneform.ArSceneView;
+import com.google.sceneform.ArSceneView;
 import com.eqgis.ar.ARConfig;
 import com.eqgis.ar.ARPlugin;
 import com.eqgis.ar.ARSession;

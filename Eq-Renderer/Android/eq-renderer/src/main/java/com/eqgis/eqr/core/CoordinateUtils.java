@@ -2,7 +2,7 @@ package com.eqgis.eqr.core;
 
 
 import com.eqgis.eqr.Location;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.math.Vector3;
 
 /**
  * 坐标计算工具类

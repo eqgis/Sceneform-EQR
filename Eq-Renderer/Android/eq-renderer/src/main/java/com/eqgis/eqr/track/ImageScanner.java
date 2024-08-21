@@ -5,8 +5,8 @@ import android.graphics.Bitmap;
 
 import com.eqgis.ar.ARFrame;
 import com.eqgis.eqr.layout.ARSceneLayout;
-import com.eqgis.sceneform.FrameTime;
-import com.eqgis.sceneform.Scene;
+import com.google.sceneform.FrameTime;
+import com.google.sceneform.Scene;
 import com.eqgis.ar.ARAugmentedImage;
 
 import java.util.Collection;

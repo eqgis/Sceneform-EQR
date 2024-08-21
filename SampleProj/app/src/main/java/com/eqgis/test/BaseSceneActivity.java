@@ -8,7 +8,7 @@ import android.widget.Toast;
 
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.test.scene.GltfSampleScene;
-import com.eqgis.sceneform.Node;
+import com.google.sceneform.Node;
 
 import java.util.List;
 

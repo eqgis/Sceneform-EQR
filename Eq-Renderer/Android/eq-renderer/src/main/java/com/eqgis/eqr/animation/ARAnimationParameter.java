@@ -1,7 +1,7 @@
 package com.eqgis.eqr.animation;
 
 import com.eqgis.eqr.Location;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.math.Vector3;
 
 import java.util.ArrayList;
 import java.util.List;

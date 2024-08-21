@@ -2,8 +2,8 @@ package com.eqgis.eqr.utils;
 
 import android.graphics.Point;
 
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.Vector3;
 
 import java.util.ArrayList;
 import java.util.Arrays;
