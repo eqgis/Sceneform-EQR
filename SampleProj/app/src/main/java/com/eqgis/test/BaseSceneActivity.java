@@ -25,6 +25,7 @@ public class BaseSceneActivity extends BaseActivity {
         sceneLayout = findViewById(R.id.base_scene_layout);
         sceneLayout.getCamera().setVerticalFovDegrees(45);
         sceneLayout.setTransparent(true);
+        sceneLayout.setSkybox("enviroments/pillars_2k_skybox.ktx");
         //节点手势控制器初始化
         NodeGestureController.getInstance()
                 .setCamera(sceneLayout.getCamera())

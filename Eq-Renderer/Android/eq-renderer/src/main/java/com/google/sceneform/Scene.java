@@ -83,7 +83,7 @@ public class Scene extends NodeParent {
       EnvironmentalHdrParameters.makeDefault();
 
   private final Camera camera;
-  @Nullable private final Sun sunlightNode;
+  private Sun sunlightNode;
   @Nullable private final SceneView view;
   private boolean lightProbeSet = false;
   private boolean isUnderTesting = false;
@@ -99,13 +99,6 @@ public class Scene extends NodeParent {
   Scene() {
     view = null;
     camera = new Camera(true);
-    if (!AndroidPreconditions.isMinAndroidApiLevel()) {
-      // Enforce min api level 24
-      sunlightNode = null;
-    } else {
-      sunlightNode = new Sun();
-    }
-
     isUnderTesting = true;
   }
 
@@ -115,10 +108,15 @@ public class Scene extends NodeParent {
     Preconditions.checkNotNull(view, "Parameter \"view\" was null.");
     this.view = view;
     camera = new Camera(this);
+  }
+
+  /**
+   * 载入默认太阳光
+   */
+  public void initDefaultSunlight() {
     if (!AndroidPreconditions.isMinAndroidApiLevel()) {
       // Enforce min api level 24
       sunlightNode = null;
-      return;
     }
     sunlightNode = new Sun(this);
   }

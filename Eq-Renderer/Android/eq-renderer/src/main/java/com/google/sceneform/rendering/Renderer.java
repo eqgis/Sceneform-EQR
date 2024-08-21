@@ -2,6 +2,7 @@ package com.google.sceneform.rendering;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceView;
 
@@ -10,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
+import com.google.android.filament.Skybox;
 import com.google.sceneform.utilities.EnvironmentalHdrParameters;
 import com.google.android.filament.View;
 import com.google.sceneform.SceneView;
@@ -64,6 +66,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
   private Camera camera;
   public Scene scene;
   private IndirectLight indirectLight;
+  private Skybox skybox;
   private boolean recreateSwapChain;
 
   private float cameraAperature;
@@ -336,6 +339,49 @@ public class Renderer implements EqUiHelper.RendererCallback {
     }
   }
 
+  /**
+   * 设置天空盒
+   * @param skybox 天空和
+   */
+  public void setSkybox(Skybox skybox){
+    this.skybox = skybox;
+    if (skybox != null){
+      scene.setSkybox(skybox);
+      Log.i("IKKYU ", "setSkybox: "+skybox.toString());
+    }
+  }
+
+  /**
+   * 获取天空盒
+   * @return 天空盒
+   */
+  public Skybox getSkybox(){
+    return this.skybox;
+  }
+
+  /**
+   * 设置间接光
+   * <p>
+   *     间接光会产生一个照明,这些照明时从场景中其它物体上反射而形成的。
+   *     该节点会向场景中添加间接光,不会使用光线跟踪。
+   * </p>
+   * @param light 间接光
+   */
+  public void setIndirectLight(IndirectLight light) {
+    this.indirectLight = light;
+    if (light != null){
+      scene.setIndirectLight(light);
+    }
+  }
+
+  /**
+   * 获取间接光对象
+   * @return 间接光
+   */
+  public IndirectLight getIndirectLight(){
+    return indirectLight;
+  }
+
   /** @hide */
   public void dispose() {
     filamentHelper.detach(); // call this before destroying the Engine (it could call back)
@@ -343,6 +389,11 @@ public class Renderer implements EqUiHelper.RendererCallback {
     final IEngine engine = EngineInstance.getEngine();
     if (indirectLight != null) {
       engine.destroyIndirectLight(indirectLight);
+      indirectLight = null;
+    }
+    if (skybox != null){
+      engine.destroySkybox(skybox);
+      skybox = null;
     }
     engine.destroyRenderer(renderer);
     engine.destroyView(view);
@@ -354,6 +405,11 @@ public class Renderer implements EqUiHelper.RendererCallback {
     final IEngine engine = EngineInstance.getEngine();
     if (indirectLight != null) {
       engine.destroyIndirectLight(indirectLight);
+      indirectLight = null;
+    }
+    if (skybox != null){
+      engine.destroySkybox(skybox);
+      skybox = null;
     }
 
     engine.destroyRenderer(renderer);

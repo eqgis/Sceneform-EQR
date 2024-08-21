@@ -1,8 +1,11 @@
 package com.eqgis.ar;
 
+import android.hardware.HardwareBuffer;
 import android.media.Image;
+import android.os.Build;
 import android.view.MotionEvent;
 
+import com.eqgis.exception.NotSupportException;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
@@ -429,4 +432,22 @@ public class ARFrame {
 //        }
 //    }
 
+    /**
+     * 获取高性能的内存缓冲区
+     * @return HardwareBuffer
+     */
+    public HardwareBuffer getHardwareBuffer(){
+        if (coreFrame != null){
+            //应该只在使用Config.TextureUpdateMode.EXPOSE_HARDWARE_BUFFER的配置处于启用状态时调用。
+            //参考：https://developers.google.com/ar/reference/java/com/google/ar/core/Frame#getHardwareBuffer()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                try {
+                    coreFrame.getHardwareBuffer();
+                } catch (NotYetAvailableException e) {
+                    throw new NotSupportException("min Version must be >= 27");
+                }
+            }
+        }
+        return null;
+    }
 }

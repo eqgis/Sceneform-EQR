@@ -9,10 +9,10 @@ android {
     compileSdk 28
 
     defaultConfig {
-        minSdk 21
+        minSdk 24
         targetSdk 28
-        versionCode 8
-        versionName "1.0.7"
+        versionCode 9
+        versionName "1.0.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -87,7 +87,7 @@ ext {
 
     PUBLISH_ARTIFACT_ID = 'eq-renderer'//自定义名
 
-    PUBLISH_VERSION = '1.0.7'//版本号，每一次更新迭代升级版本
+    PUBLISH_VERSION = '1.0.6'//版本号，每一次更新迭代升级版本
 }
 
 afterEvaluate {

@@ -10,14 +10,24 @@ import android.widget.FrameLayout;
 import com.eqgis.eqr.core.Eqr;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.exception.NotSupportException;
+import com.google.android.filament.Engine;
+import com.google.android.filament.IndirectLight;
+import com.google.android.filament.Skybox;
+import com.google.android.filament.utils.KTX1Loader;
 import com.google.sceneform.Camera;
 import com.google.sceneform.Node;
 import com.google.sceneform.Scene;
 import com.google.sceneform.SceneView;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
+import com.google.sceneform.rendering.EngineInstance;
+import com.google.sceneform.utilities.SceneformBufferUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 场景布局控件
@@ -70,6 +80,9 @@ public class SceneLayout extends FrameLayout{
 
         rootNode = new RootNode();
         rootNode.setParent(sceneView.getScene());
+
+        //添加默认间接光
+        addIndirectLight();
     }
 
     /**
@@ -81,6 +94,29 @@ public class SceneLayout extends FrameLayout{
         sceneView = new SceneView(context);
         sceneView.setLayoutParams(layoutParams);
         this.addView(sceneView);
+    }
+
+    /**
+     * 添加间接照明
+     */
+    protected void addIndirectLight() {
+        //载入环境光
+        try {
+            //使用KTXLoader加载环境光
+            InputStream inputStream = context.getAssets().open("enviroments/light/lightroom_ibl.ktx");
+            ByteBuffer byteBuffer = SceneformBufferUtils.readStream(inputStream);
+            inputStream.close();
+            if (byteBuffer != null && sceneView.getRenderer() != null){
+                Engine engine = EngineInstance.getEngine().getFilamentEngine();
+
+                IndirectLight light = KTX1Loader.INSTANCE
+                        .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options());
+                light.setIntensity(100);
+                setIndirectLight(light);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("*.ktx was not found.");
+        }
     }
 
     /**
@@ -209,5 +245,65 @@ public class SceneLayout extends FrameLayout{
         final Vector3 cameraPosition = sceneView.getScene().getCamera().getWorldPosition();
         Vector3 direction = Vector3.subtract(cameraPosition, position);
         return Quaternion.lookRotation(direction, Vector3.up());
+    }
+
+    /**
+     * 设置间接光
+     * <p>
+     *     间接光会产生一个照明,这些照明时从场景中其它物体上反射而形成的。
+     *     该节点会向场景中添加间接光,不会使用光线跟踪。
+     * </p>
+     * @param light
+     */
+    public void setIndirectLight(IndirectLight light) {
+        Objects.requireNonNull(this.sceneView.getRenderer()).setIndirectLight(light);
+    }
+
+    /**
+     * 获取间接光对象
+     * @return 间接光
+     */
+    public IndirectLight getIndirectLight(){
+        return Objects.requireNonNull(this.sceneView.getRenderer()).getIndirectLight();
+    }
+
+    /**
+     * 添加天空盒
+     * @param assetsPath Assets目录下ktx文件路径
+     *                   如："enviroments/pillars_2k_skybox.ktx"
+     */
+    public void setSkybox(String assetsPath) {
+        //载入环境光
+        try {
+            //使用KTXLoader加载环境光
+            InputStream inputStream = context.getAssets().open(assetsPath);
+            ByteBuffer byteBuffer = SceneformBufferUtils.readStream(inputStream);
+            inputStream.close();
+            if (byteBuffer != null && sceneView.getRenderer() != null){
+                Engine engine = EngineInstance.getEngine().getFilamentEngine();
+
+                Skybox skybox = KTX1Loader.INSTANCE.createSkybox(engine,
+                        byteBuffer, new KTX1Loader.Options());
+                setSkybox(skybox);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("*.ktx was not found.");
+        }
+    }
+
+    /**
+     * 设置天空盒
+     * @param skybox 天空盒
+     */
+    public void setSkybox(Skybox skybox){
+        Objects.requireNonNull(this.sceneView.getRenderer()).setSkybox(skybox);
+    }
+
+    /**
+     * 获取天空盒
+     * @return 天空盒
+     */
+    public Skybox getSkybox(){
+        return Objects.requireNonNull(this.sceneView.getRenderer()).getSkybox();
     }
 }

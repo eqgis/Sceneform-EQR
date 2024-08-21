@@ -113,6 +113,8 @@ public class EngineInstance {
       if (!filamentInitialized) {
         try {
           gltfioInit();
+          //加载工具so
+          System.loadLibrary("filament-utils-jni");
         } catch (UnsatisfiedLinkError err) {
           // Fallthrough and allow regular Filament to initialize.
         }

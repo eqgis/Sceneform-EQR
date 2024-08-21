@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.node.RootNode;
+import com.eqgis.eqr.utils.PoseUtils;
 import com.eqgis.eqr.utils.ScaleTool;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
@@ -42,7 +43,7 @@ public class GltfSampleScene implements ISampleScene{
         addGltf(context, rootNode);
 
         //添加光源
-        addLight(rootNode);
+//        addLight(rootNode);
     }
 
     @Override
@@ -53,7 +54,9 @@ public class GltfSampleScene implements ISampleScene{
         }
         //断开节点
         modelNode.setParent(null);
-        lightNode.setParent(null);
+        if (lightNode != null){
+            lightNode.setParent(null);
+        }
     }
 
     /**
@@ -103,6 +106,6 @@ public class GltfSampleScene implements ISampleScene{
                 .build();
         lightNode.setLight(light);
         //平行光默认方向为(-Z)方向,此处旋转适当的角度，模拟室内日光灯角度
-//        lightNode.setWorldRotation(/*欧拉角转四元数*/PoseUtils.toQuaternion(-45,0,-30));
+        lightNode.setWorldRotation(/*欧拉角转四元数*/PoseUtils.toQuaternion(-45,0,-30));
     }
 }
