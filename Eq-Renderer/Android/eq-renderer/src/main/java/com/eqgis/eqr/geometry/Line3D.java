@@ -1,10 +1,10 @@
 package com.eqgis.eqr.geometry;
 
 
-import com.eqgis.sceneform.Node;
-import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.sceneform.rendering.Material;
-import com.eqgis.sceneform.rendering.ModelRenderable;
+import com.google.sceneform.Node;
+import com.google.sceneform.math.Vector3;
+import com.google.sceneform.rendering.Material;
+import com.google.sceneform.rendering.ModelRenderable;
 
 import java.util.ArrayList;
 import java.util.Arrays;

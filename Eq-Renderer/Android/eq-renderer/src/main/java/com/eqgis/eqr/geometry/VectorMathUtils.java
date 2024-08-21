@@ -1,8 +1,8 @@
 package com.eqgis.eqr.geometry;
 
-import com.eqgis.sceneform.math.Matrix;
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.math.Matrix;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.Vector3;
 
 /**
  * @author tanyx 2024/2/12

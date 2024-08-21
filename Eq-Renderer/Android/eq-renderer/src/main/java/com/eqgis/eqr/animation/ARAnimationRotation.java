@@ -5,9 +5,9 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.view.animation.LinearInterpolator;
 
-import com.eqgis.sceneform.Node;
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.QuaternionEvaluator;
+import com.google.sceneform.Node;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.QuaternionEvaluator;
 
 
 /**

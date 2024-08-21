@@ -1,11 +1,11 @@
 package com.eqgis.eqr.utils;
 
-import com.eqgis.sceneform.math.Vector3;
-import com.eqgis.sceneform.rendering.Material;
-import com.eqgis.sceneform.rendering.ModelRenderable;
-import com.eqgis.sceneform.rendering.RenderableDefinition;
-import com.eqgis.sceneform.rendering.Vertex;
-import com.eqgis.sceneform.utilities.AndroidPreconditions;
+import com.google.sceneform.math.Vector3;
+import com.google.sceneform.rendering.Material;
+import com.google.sceneform.rendering.ModelRenderable;
+import com.google.sceneform.rendering.RenderableDefinition;
+import com.google.sceneform.rendering.Vertex;
+import com.google.sceneform.utilities.AndroidPreconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -17,10 +17,10 @@ import com.eqgis.slam.core.TrackingState;
 import com.eqgis.slam.listener.OnPlaneUpdateListener;
 import com.eqgis.slam.listener.OnPoseUpdateListener;
 import com.eqgis.slam.listener.OnStateUpdateListener;
-import com.eqgis.sceneform.Camera;
-import com.eqgis.sceneform.SceneView;
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.Camera;
+import com.google.sceneform.SceneView;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.Vector3;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;

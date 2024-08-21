@@ -5,9 +5,9 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
 
-import com.eqgis.sceneform.Camera;
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.Camera;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.Vector3;
 
 import java.util.ArrayList;
 import java.util.List;

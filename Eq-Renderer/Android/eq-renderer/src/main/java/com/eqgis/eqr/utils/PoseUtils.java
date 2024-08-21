@@ -1,7 +1,7 @@
 package com.eqgis.eqr.utils;
 
-import com.eqgis.sceneform.math.Quaternion;
-import com.eqgis.sceneform.math.Vector3;
+import com.google.sceneform.math.Quaternion;
+import com.google.sceneform.math.Vector3;
 
 /**
  * Pose工具
