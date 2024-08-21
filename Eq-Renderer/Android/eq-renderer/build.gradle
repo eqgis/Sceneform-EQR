@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'maven-publish'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -50,12 +51,16 @@ android {
             version '3.22.1'
         }
     }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.core:core-ktx:1.10.1'
 
     //AR相关采用在线依赖
 //    compileOnly 'com.google.ar:core:1.39.0'
