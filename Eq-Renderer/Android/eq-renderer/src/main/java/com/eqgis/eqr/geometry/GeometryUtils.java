@@ -14,6 +14,7 @@ import com.google.sceneform.utilities.AndroidPreconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -508,6 +509,62 @@ public class GeometryUtils {
         } catch (ExecutionException ex) {
             throw new AssertionError("Error creating renderable.", ex);
         }catch (InterruptedException ex) {
+            throw new AssertionError("Error creating renderable.", ex);
+        }
+
+        if (result == null) {
+            throw new AssertionError("Error creating renderable.");
+        }
+
+        return result;
+    }
+
+    /**
+     * 创建平面
+     * <p>法向量向上</p>
+     * @param size 尺寸
+     * @param center 中心点
+     * @param material 材质
+     * @return 渲染对象
+     */
+    public static ModelRenderable makePlane(Vector3 size, Vector3 center, Material material) {
+        AndroidPreconditions.checkMinAndroidApiLevel();
+        Vector3 extents = size.scaled(0.5f);
+        Vector3 p0 = Vector3.add(center, new Vector3(-extents.x, 0, -extents.z));
+        Vector3 p1 = Vector3.add(center, new Vector3(-extents.x, 0, extents.z));
+        Vector3 p2 = Vector3.add(center, new Vector3(extents.x, 0, extents.z));
+        Vector3 p3 = Vector3.add(center, new Vector3(extents.x, 0, -extents.z));
+
+        //法向量
+        Vector3 up = Vector3.up();
+        Vertex.UvCoordinate uv00 = new Vertex.UvCoordinate(0.0f, 0.0f);
+        Vertex.UvCoordinate uv10 = new Vertex.UvCoordinate(1.0f, 0.0f);
+        Vertex.UvCoordinate uv01 = new Vertex.UvCoordinate(0.0f, 1.0f);
+        Vertex.UvCoordinate uv11 = new Vertex.UvCoordinate(1.0f, 1.0f);
+
+        ArrayList<Vertex> vertices =
+                new ArrayList<Vertex>(
+                        Arrays.asList(Vertex.builder().setPosition(p0).setNormal(up).setUvCoordinate(uv01).build(),
+                                Vertex.builder().setPosition(p1).setNormal(up).setUvCoordinate(uv11).build(),
+                                Vertex.builder().setPosition(p2).setNormal(up).setUvCoordinate(uv10).build(),
+                                Vertex.builder().setPosition(p3).setNormal(up).setUvCoordinate(uv00).build()));
+
+        List<Integer> triangleIndices = Arrays.asList(0, 1, 2, 2, 3, 0);
+        RenderableDefinition.Submesh submesh =
+                RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+
+        RenderableDefinition renderableDefinition =
+                RenderableDefinition.builder()
+                        .setVertices(vertices)
+                        .setSubmeshes(Arrays.asList(submesh))
+                        .build();
+        CompletableFuture<ModelRenderable> future =
+                ModelRenderable.builder().setSource(renderableDefinition).build();
+
+        ModelRenderable result;
+        try {
+            result = future.get();
+        } catch (ExecutionException | InterruptedException ex) {
             throw new AssertionError("Error creating renderable.", ex);
         }
 
