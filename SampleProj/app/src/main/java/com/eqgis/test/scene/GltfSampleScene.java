@@ -11,7 +11,6 @@ import com.eqgis.eqr.utils.PoseUtils;
 import com.eqgis.eqr.utils.ScaleTool;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
-import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Light;
@@ -44,7 +43,7 @@ public class GltfSampleScene implements ISampleScene{
         addGltf(context, rootNode);
 
         //添加光源
-        addLight(rootNode);
+//        addLight(rootNode);
     }
 
     @Override
@@ -100,26 +99,13 @@ public class GltfSampleScene implements ISampleScene{
     private void addLight(RootNode rootNode) {
         lightNode = new Node();
         lightNode.setParent(rootNode);
-//        Light.Builder builder = Light.builder(Light.Type.POINT);
-//        Light light = builder.setColor(new Color(1, 0, 0, 1))
-//                .setIntensity(/*光强：2000lm*/6000)
-//                .build();
-//        lightNode.setLight(light);
-//        //平行光默认方向为(-Z)方向,此处旋转适当的角度，模拟室内日光灯角度
-//        lightNode.setWorldRotation(/*欧拉角转四元数*/PoseUtils.toQuaternion(-45,0,-30));
-        lightNode.setWorldPosition(new Vector3(0f,2.0f,-distance));
-        Quaternion quaternion = Quaternion.rotationBetweenVectors(Vector3.forward(), new Vector3(0,-1,-0.2f));
-        lightNode.setWorldRotation(quaternion);
-
-        Light light = Light.builder(Light.Type.SPOTLIGHT)
-                .setColorTemperature(/*3000*/4800)
-                .setFalloffRadius(5.0f)
-                .setInnerConeAngle(0.1f)
-                .setOuterConeAngle(0.6f)
-//                .setOuterConeAngle(0.5f)
-                .setIntensity(/*10000*/30000)
-                .setShadowCastingEnabled(/*启用光线投射，这会产生阴影，默认未启用*/true)
+        Light.Builder builder = Light.builder(Light.Type.DIRECTIONAL);
+        Light light = builder.setColor(new Color(1, 1, 1, 1))
+                .setColorTemperature(6500)
+                .setIntensity(/*光强：2000lm*/420)
                 .build();
         lightNode.setLight(light);
+        //平行光默认方向为(-Z)方向,此处旋转适当的角度，模拟室内日光灯角度
+        lightNode.setWorldRotation(/*欧拉角转四元数*/PoseUtils.toQuaternion(-45,0,-30));
     }
 }
