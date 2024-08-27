@@ -10,7 +10,7 @@ import java.util.List;
  * AR动画参数
  * */
 public class ARAnimationParameter {
-    private long duration=0;//周期
+    private long duration = 6000L;//周期
     private int RepeatCount=-1;//循环次数，值为-1时一直循环
     private ARAnimationRepeatMode RepeatMode=ARAnimationRepeatMode.INFINITE;//循环方式
     private long StartDelay=0;//延迟播放时间
@@ -25,7 +25,7 @@ public class ARAnimationParameter {
 
     /**
      * 设置周期
-     * @param duration 周期
+     * @param duration 周期，默认值：6000ms
      * */
     public void setDuration(Long duration){
         this.duration=duration;

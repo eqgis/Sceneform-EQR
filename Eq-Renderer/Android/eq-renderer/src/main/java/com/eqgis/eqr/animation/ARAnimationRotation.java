@@ -3,6 +3,7 @@ package com.eqgis.eqr.animation;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.view.animation.LinearInterpolator;
 
 import com.google.sceneform.Node;
@@ -14,8 +15,8 @@ import com.google.sceneform.math.QuaternionEvaluator;
  * 旋转动画
  */
 public class ARAnimationRotation extends ARAnimation {
-    public float mStartAngle=0;//旋转起始角度
-    public float mRotationAngle=360;//旋转角度
+    private float mStartAngle=0;//旋转起始角度
+    private float mRotationAngle=360;//旋转角度
 
     /**
      * 构造方法
@@ -28,6 +29,7 @@ public class ARAnimationRotation extends ARAnimation {
     /**
      * 创建旋转动画
      * */
+    @SuppressLint("WrongConstant")
     private ObjectAnimator createAnimator(ARAnimationParameter parameter)  {
         // 节点的位置和角度信息设置通过Quaternion来设置
         Quaternion orientation1;
@@ -80,7 +82,7 @@ public class ARAnimationRotation extends ARAnimation {
      * 创建动画
      * @param parameter 动画参数
      */
-    public void creatAnimation(ARAnimationParameter parameter){
+    public void createAnimation(ARAnimationParameter parameter){
         m_ObjectAnimator=createAnimator(parameter);
     }
 

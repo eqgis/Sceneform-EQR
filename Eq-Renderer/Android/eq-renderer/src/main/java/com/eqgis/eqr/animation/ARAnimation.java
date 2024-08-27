@@ -87,7 +87,7 @@ public class ARAnimation {
      * 获取属性动画
      * @return
      */
-    protected ObjectAnimator getObjectAnimator() {
+    public ObjectAnimator getObjectAnimator() {
         return m_ObjectAnimator;
     }
 
