@@ -15,6 +15,7 @@ import com.google.android.filament.IndirectLight;
 import com.google.android.filament.Skybox;
 import com.google.android.filament.utils.KTX1Loader;
 import com.google.sceneform.Camera;
+import com.google.sceneform.ExSceneView;
 import com.google.sceneform.Node;
 import com.google.sceneform.Scene;
 import com.google.sceneform.SceneView;
@@ -38,6 +39,11 @@ import java.util.Objects;
  * </code>
  **/
 public class SceneLayout extends FrameLayout{
+    /**
+     * 是否采用ExSceneView替代SceneView
+     */
+    private static boolean useExSceneView = false;
+
     private LifecycleListener lifecycleListener;
 
     protected Context context;
@@ -81,8 +87,10 @@ public class SceneLayout extends FrameLayout{
         rootNode = new RootNode();
         rootNode.setParent(sceneView.getScene());
 
-        //添加默认间接光
-        addIndirectLight();
+        if (!useExSceneView){
+            //添加默认间接光
+            addIndirectLight();
+        }
     }
 
     /**
@@ -91,7 +99,13 @@ public class SceneLayout extends FrameLayout{
      */
     protected void addLayout() {
         LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        sceneView = new SceneView(context);
+
+        if (useExSceneView){
+            sceneView = new ExSceneView(context);
+            setTransparent(false);
+        }else {
+            sceneView = new SceneView(context);
+        }
         sceneView.setLayoutParams(layoutParams);
         this.addView(sceneView);
     }
@@ -305,5 +319,25 @@ public class SceneLayout extends FrameLayout{
      */
     public Skybox getSkybox(){
         return Objects.requireNonNull(this.sceneView.getRenderer()).getSkybox();
+    }
+
+    /**
+     * 启用ExSceneView替代SceneView
+     * <p>在布局控件初始化之前调用</p>
+     * @param enable 启用状态
+     */
+    public static void enableExSceneView(boolean enable){
+        useExSceneView = enable;
+    }
+
+    /**
+     * 获取扩展纹理场景视图
+     * @return {@link ExSceneView}扩展纹理场景视图
+     */
+    public ExSceneView getExSceneView(){
+        if (!useExSceneView){
+            throw new IllegalStateException("ExSceneView was disabled.");
+        }
+        return (ExSceneView) sceneView;
     }
 }
