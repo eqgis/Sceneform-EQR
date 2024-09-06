@@ -71,4 +71,11 @@ public class MainActivity extends AppCompatActivity {
     public void toInteractiveActivity(View view) {
         startActivity(new Intent(this,InteractiveActivity.class));
     }
+
+    /**
+     * 转至视频播放器示例
+     */
+    public void toVideoActivity(View view) {
+        startActivity(new Intent(this,VideoActivity.class));
+    }
 }
