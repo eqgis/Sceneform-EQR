@@ -20,6 +20,8 @@ public class ARSceneActivity extends BaseActivity {
         setContentView(R.layout.activity_ar_scene);
 
         sceneLayout = findViewById(R.id.ar_scene_layout);
+        sceneLayout.init(this);
+        sceneLayout.addIndirectLight("enviroments/light/lightroom_ibl.ktx",100);
         //节点手势控制器初始化
         NodeGestureController.getInstance()
                 .setCamera(sceneLayout.getCamera())

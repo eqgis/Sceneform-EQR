@@ -36,9 +36,10 @@ public class BaseSceneActivity extends BaseActivity {
         setContentView(R.layout.activity_base_scene);
 
         sceneLayout = findViewById(R.id.base_scene_layout);
+        sceneLayout.init(this).addIndirectLight("enviroments/light/lightroom_ibl.ktx",50);
         sceneLayout.getCamera().setVerticalFovDegrees(45);
         sceneLayout.getCamera().setFarClipPlane(100);
-        sceneLayout.setTransparent(true);
+//        sceneLayout.setTransparent(false);
 //        sceneLayout.setSkybox("enviroments/pillars_2k_skybox.ktx");
         //节点手势控制器初始化
         NodeGestureController.getInstance()

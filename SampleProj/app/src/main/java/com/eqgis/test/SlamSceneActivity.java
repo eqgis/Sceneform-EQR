@@ -16,6 +16,7 @@ public class SlamSceneActivity extends BaseActivity {
 
         setContentView(R.layout.activity_slam_scene);
         sceneLayout = findViewById(R.id.slam_scene_layout);
+        sceneLayout.init(this);
         /*EqSlamSceneLayout eqSlamSceneLayout = (EqSlamSceneLayout) sceneLayout;
         //关闭特征点绘制
         eqSlamSceneLayout.setDrawPoints(false);*/

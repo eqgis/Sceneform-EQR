@@ -42,7 +42,7 @@ public class SceneLayout extends FrameLayout{
     /**
      * 是否采用ExSceneView替代SceneView
      */
-    private static boolean useExSceneView = false;
+    private boolean useExSceneView = false;
 
     private LifecycleListener lifecycleListener;
 
@@ -58,26 +58,26 @@ public class SceneLayout extends FrameLayout{
     //<editor-fold> 构造函数
     public SceneLayout(Context context) {
         super(context);
-        init(context);
     }
 
     public SceneLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
     }
 
     public SceneLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
     }
 
     public SceneLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init(context);
     }
     //</editor-fold>
 
-    private void init(Context context){
+    /**
+     * 初始化控件
+     * @param context 上下文
+     */
+    public SceneLayout init(Context context){
         Eqr.getCoreStatus();
         this.context = context;
 
@@ -86,11 +86,7 @@ public class SceneLayout extends FrameLayout{
 
         rootNode = new RootNode();
         rootNode.setParent(sceneView.getScene());
-
-        if (!useExSceneView){
-            //添加默认间接光
-            addIndirectLight();
-        }
+        return this;
     }
 
     /**
@@ -111,9 +107,9 @@ public class SceneLayout extends FrameLayout{
     }
 
     /**
-     * 添加间接照明
+     * 添加默认的环境照明
      */
-    protected void addIndirectLight() {
+    public void addDefaultIndirectLight() {
         //载入环境光
         try {
             //使用KTXLoader加载环境光
@@ -126,6 +122,31 @@ public class SceneLayout extends FrameLayout{
                 IndirectLight light = KTX1Loader.INSTANCE
                         .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options());
                 light.setIntensity(100);
+                setIndirectLight(light);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("*.ktx was not found.");
+        }
+    }
+
+    /**
+     * 添加间接光
+     * @param assetsFilePath 文件路径
+     * @param intensity 光强度
+     */
+    public void addIndirectLight(String assetsFilePath, int intensity) {
+        //载入环境光
+        try {
+            //使用KTXLoader加载环境光
+            InputStream inputStream = context.getAssets().open(assetsFilePath);
+            ByteBuffer byteBuffer = SceneformBufferUtils.readStream(inputStream);
+            inputStream.close();
+            if (byteBuffer != null && sceneView.getRenderer() != null){
+                Engine engine = EngineInstance.getEngine().getFilamentEngine();
+
+                IndirectLight light = KTX1Loader.INSTANCE
+                        .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options());
+                light.setIntensity(intensity);
                 setIndirectLight(light);
             }
         } catch (IOException e) {
@@ -323,11 +344,12 @@ public class SceneLayout extends FrameLayout{
 
     /**
      * 启用ExSceneView替代SceneView
-     * <p>在布局控件初始化之前调用</p>
+     * <p>在{@link #init(Context)}之前调用</p>
      * @param enable 启用状态
      */
-    public static void enableExSceneView(boolean enable){
-        useExSceneView = enable;
+    public SceneLayout enableExSceneView(boolean enable){
+         useExSceneView = enable;
+         return this;
     }
 
     /**

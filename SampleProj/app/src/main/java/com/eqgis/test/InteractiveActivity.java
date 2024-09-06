@@ -18,6 +18,7 @@ public class InteractiveActivity extends BaseActivity{
         //普通三维场景(场景3选1)
         setContentView(R.layout.activity_base_scene);
         sceneLayout = findViewById(R.id.base_scene_layout);
+        sceneLayout.init(this);
         sceneLayout.setTransparent(true);//场景视图背景透明
 
         //AR三维场景(场景3选1)

@@ -35,14 +35,13 @@ public class VideoActivity extends BaseActivity{
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //启用ExSceneView，以便实现背景的自定义
-        SceneLayout.enableExSceneView(true);
 
         super.onCreate(savedInstanceState);
 
         //普通三维场景(场景3选1)
         setContentView(R.layout.activity_video_scene);
         sceneLayout = findViewById(R.id.video_scene_layout);
+        sceneLayout.enableExSceneView(true).init(this);
         videoTimeLine = findViewById(R.id.time_line);
 
         sceneLayout.getExSceneView().setInitializeListener(new ExSceneView.InitializeListener() {

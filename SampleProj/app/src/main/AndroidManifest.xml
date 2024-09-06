@@ -33,8 +33,7 @@
             android:exported="false" />
         <activity
             android:name=".InteractiveActivity"
-            android:exported="false"
-            android:screenOrientation="landscape" />
+            android:exported="false" />
         <activity
             android:name=".BaseSceneActivity"
             android:exported="false" />

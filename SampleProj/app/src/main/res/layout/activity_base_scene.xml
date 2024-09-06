@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     android:background="#1E4670"
     tools:context=".BaseSceneActivity">
+
+    <com.eqgis.eqr.layout.SceneLayout
+        android:id="@+id/base_scene_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
     <TextView
         android:textColor="#fff"
         android:textSize="24dp"
@@ -16,37 +21,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <com.eqgis.eqr.layout.SceneLayout
-        android:id="@+id/base_scene_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
     <View
         android:id="@+id/touch_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
-    <!--<LinearLayout
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:ignore="MissingConstraints">
-
-        <TextView
-            android:textColor="@color/black"
-            android:onClick="add"
-            android:gravity="center"
-            android:text="+"
-            android:layout_width="100dp"
-            android:layout_height="50dp"
-            tools:ignore="MissingConstraints" />
-        <TextView
-            android:textColor="@color/black"
-            android:onClick="remove"
-            android:gravity="center"
-            android:text="-"
-            android:layout_width="100dp"
-            android:layout_height="50dp"
-            tools:ignore="MissingConstraints" />
-    </LinearLayout>-->
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -594,7 +594,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     filamentHelper = new EqUiHelper(EqUiHelper.ContextErrorPolicy.DONT_CHECK);
     filamentHelper.setRenderCallback(this);
     //使用TextureView时，需要实现透明背景
-    filamentHelper.setOpaque(false);
+//    filamentHelper.setOpaque(false);//使用SurfaceView，需注释，否则层级会出现问题
 //    filamentHelper.setMediaOverlay(true);//CHECK 影响SurfaceView
     filamentHelper.attachTo(surfaceView);
 
