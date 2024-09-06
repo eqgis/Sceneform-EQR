@@ -23,6 +23,7 @@ public class ExSceneView extends SceneView{
     private Renderer renderer;
     private BeginFrameListener beginFrameListener;
     private InitializeListener initializeListener;
+    private boolean isInit = false;
 
     public interface BeginFrameListener{
         void onBeginFrame(long frameTimeNanos);
@@ -88,8 +89,10 @@ public class ExSceneView extends SceneView{
         // 初始化默认的纹理
         if (!cameraStream.isTextureInitialized()) {
             cameraStream.initializeTexture(externalTexture);
-            if (initializeListener != null)
+            if (!isInit && initializeListener != null){
                 initializeListener.initializeTexture(externalTexture);
+                isInit = true;
+            }
         }
 
         //更新深度图

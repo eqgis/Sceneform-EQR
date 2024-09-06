@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:constantSize="true">
+    <item
+        android:state_pressed="true"
+        android:id="@android:id/background"
+        android:gravity="center">
+        <shape android:shape="rectangle">
+            <size android:height="4dp" />
+            <corners android:radius="2dp" />
+            <solid android:color="#21B7D1" />
+        </shape>
+    </item>
+    <item>
+        <bitmap android:src="@drawable/abc_scrubber_control_off_mtrl_alpha"
+            android:gravity="center"/>
+    </item>
+</selector>

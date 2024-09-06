@@ -3,11 +3,17 @@ package com.eqgis.media.component;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
+import com.eqgis.eqr.R;
 import com.google.sceneform.ExSceneView;
 
 /**
@@ -17,33 +23,34 @@ import com.google.sceneform.ExSceneView;
  */
 @SuppressLint("AppCompatCustomView")
 public class VideoTimeLine extends FrameLayout {
+    private int max = -1;
     private boolean isSeekBarTouching;
     private SeekBar mSeekBar;
+    private TextView startTime;
+    private TextView endTime;
 
     private Context mContext;
-    private OnChangeLister onChangeLister;
+    private OnUpdateListener onUpdateListener;
 
     //当前进度
-    private float currentFraction;
+    private int current;
 
     /**
      * 更新监听事件
      */
-    public interface OnChangeLister{
+    public interface OnUpdateListener {
         /**
          * 播放进度
-         * <p>取值区间[0,1]</p>
-         * @param progress 进度值
          */
-        void onChanged(float progress);
+        void onUpdate();
     }
 
     /**
      * 设置更新监听
-     * @param onChangeLister 监听事件
+     * @param onUpdateListener 监听事件
      */
-    public void setOnChangeLister(OnChangeLister onChangeLister) {
-        this.onChangeLister = onChangeLister;
+    public void setOnChangeLister(OnUpdateListener onUpdateListener) {
+        this.onUpdateListener = onUpdateListener;
     }
 
     //<editor-fold> 构造函数
@@ -71,7 +78,7 @@ public class VideoTimeLine extends FrameLayout {
      * @return 取值区间[0,1]
      */
     public float getProgress(){
-        return currentFraction;
+        return (float)current / max;
     }
 
 
@@ -82,17 +89,21 @@ public class VideoTimeLine extends FrameLayout {
      * @return this
      */
     public VideoTimeLine bindView(ExSceneView exSceneView, MediaPlayer mediaPlayer){
-        if (!(mediaPlayer.getDuration() > 0))
-            throw new IllegalArgumentException("The duration of media was error.");
-        initSeekBarSetting(mediaPlayer.getDuration());
+//        if (!(mediaPlayer.getDuration() > 0))
+//            throw new IllegalArgumentException("The duration of media was error.");
+        initSeekBarSetting(mediaPlayer);
 
         exSceneView.getScene().addOnUpdateListener(frameTime -> {
             if (isSeekBarTouching){
                 //如果在拖拽进度条，这就不更新
                 return;
             }
-            int progress = mediaPlayer.getCurrentPosition();
-            mSeekBar.setProgress(progress);
+            if (max < 1){
+                updateMax(mediaPlayer);
+            }
+            int position = mediaPlayer.getCurrentPosition();
+            Log.i("IKKYU ", "bindView: " + position);
+            mSeekBar.setProgress(position);
         });
         return this;
     }
@@ -100,30 +111,41 @@ public class VideoTimeLine extends FrameLayout {
     /**
      * 初始化
      */
-    private void initSeekBarSetting(int max) {
+    private void initSeekBarSetting(MediaPlayer mediaPlayer) {
         mSeekBar.setProgress(0);
-        mSeekBar.setMax(max);
+        updateMax(mediaPlayer);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                current = progress;
+                Log.i("IKKYU ", "onProgressChanged: "+current);
+                startTime.setText(format(current,0));
+                endTime.setText(format(max - current,1));
+                if (onUpdateListener != null){
+                    onUpdateListener.onUpdate();
+                }
                 if (!isSeekBarTouching){
                     return;
                 }
-
-                currentFraction = (float) progress / max;
-                if (onChangeLister != null){
-                    onChangeLister.onChanged(currentFraction);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mediaPlayer.seekTo(current, MediaPlayer.SEEK_NEXT_SYNC);
+                }else {
+                    mediaPlayer.seekTo(current);
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 isSeekBarTouching = true;
+                //拖拽中，暂停播放
+                mediaPlayer.pause();
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 isSeekBarTouching = false;
+                //拖拽结束，恢复播放
+                mediaPlayer.start();
             }
         });
     }
@@ -131,14 +153,49 @@ public class VideoTimeLine extends FrameLayout {
     /**
      * 初始化
      */
+    @SuppressLint({"InflateParams", "UseCompatLoadingForDrawables"})
     private void init(Context context) {
         this.mContext = context;
 
-        mSeekBar = new SeekBar(mContext);
+        View view = LayoutInflater.from(mContext).inflate(R.layout.eq_video_timeline,null);
+        mSeekBar = view.findViewById(R.id.timeline_seekbar);
+        startTime = view.findViewById(R.id.start_time_str);
+        endTime = view.findViewById(R.id.end_time_str);
         ViewGroup.LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        this.addView(mSeekBar,params);
+        this.addView(view,params);
         isSeekBarTouching = false;
     }
 
+    /**
+     * 更新seekbar的最大值
+     */
+    private void updateMax(MediaPlayer mediaPlayer) {
+        int duration = mediaPlayer.getDuration();
+        if (duration > 0){
+            max = duration;
+            mSeekBar.setMax(max);
+        }
+    }
+
+    /**
+     * 时间格式转换
+     * @param millis 毫秒
+     * @return 字符串
+     */
+    @SuppressLint("DefaultLocale")
+    private String format(int millis,int type){
+        int hours = (int) (millis / 1000 / 3600); // 计算小时数
+        int minutes = (int) ((millis / 1000) % 3600 / 60); // 计算分钟数
+        int seconds = (int) ((millis / 1000) % 60); // 计算秒数
+        // 格式化时间为hh:mm:ss格式
+        if (hours != 0){
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        }else {
+            if (type == 0) {
+                return String.format("      %02d:%02d", minutes, seconds);
+            }
+            return String.format("%02d:%02d      ", minutes, seconds);
+        }
+    }
 }

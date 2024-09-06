@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 进度条的背景色 -->
+    <item
+        android:id="@android:id/background"
+        android:gravity="center_vertical|fill_horizontal">
+        <shape android:shape="rectangle">
+            <!-- 设置水平进度条的高度、圆角、颜色 -->
+            <size android:height="3dp" />
+            <corners android:radius="1dp" />
+            <solid android:color="#1A03A9F4" />
+        </shape>
+    </item>
+    <item
+        android:id="@android:id/progress"
+        android:gravity="center_vertical|fill_horizontal">
+        <scale android:scaleWidth="100%">
+            <shape android:shape="rectangle">
+                <size android:height="3dp" />
+                <corners android:radius="1dp" />
+                <gradient
+                    android:angle="180"
+                    android:endColor="#5C03A9F4"
+                    android:startColor="#8000E1FF" />
+            </shape>
+        </scale>
+    </item>
+    <!-- 进度条的背景色 -->
+<!--    <item
+        android:id="@android:id/progress"
+        android:gravity="center_vertical|fill_horizontal">
+        <scale android:scaleWidth="100%">
+            <shape android:shape="rectangle">
+                <size android:height="8dp" />
+                <corners android:radius="5dp" />
+                <gradient
+                    android:angle="180"
+                    android:endColor="#3303A9F4"
+                    android:startColor="#8000E1FF" />
+            </shape>
+        </scale>
+    </item>-->
+</layer-list>

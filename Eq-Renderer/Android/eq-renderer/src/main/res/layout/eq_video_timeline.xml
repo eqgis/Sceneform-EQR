@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_centerInParent="true"
+    android:layout_width="match_parent"
+    android:layout_height="24dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/start_time_str"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:gravity="center"
+        android:text="212:14:51"
+        android:textSize="12sp"
+        android:textColor="#aaa"
+        android:layout_marginStart="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
+    <SeekBar
+        android:id="@+id/timeline_seekbar"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/start_time_str"
+        app:layout_constraintRight_toLeftOf="@+id/end_time_str"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="56dp"
+        android:layout_marginRight="56dp"
+        android:progressDrawable="@drawable/progress_default_style"
+        android:thumb="@drawable/video_timeline_thumb"
+        android:layout_width="match_parent"
+        android:layout_height="16dp"/>
+
+    <TextView
+        android:id="@+id/end_time_str"
+        app:layout_constraintRight_toRightOf="parent"
+        android:gravity="center"
+        android:text="122:14:51"
+        android:textSize="12sp"
+        android:textColor="#aaa"
+        android:layout_marginEnd="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
