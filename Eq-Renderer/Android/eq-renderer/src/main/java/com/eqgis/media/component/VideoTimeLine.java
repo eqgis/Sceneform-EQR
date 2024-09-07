@@ -5,7 +5,6 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,7 +101,7 @@ public class VideoTimeLine extends FrameLayout {
                 updateMax(mediaPlayer);
             }
             int position = mediaPlayer.getCurrentPosition();
-            Log.i("IKKYU ", "bindView: " + position);
+//            Log.i("IKKYU ", "bindView: " + position);
             mSeekBar.setProgress(position);
         });
         return this;
@@ -118,7 +117,7 @@ public class VideoTimeLine extends FrameLayout {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 current = progress;
-                Log.i("IKKYU ", "onProgressChanged: "+current);
+//                Log.i("IKKYU ", "onProgressChanged: "+current);
                 startTime.setText(format(current,0));
                 endTime.setText(format(max - current,1));
                 if (onUpdateListener != null){
