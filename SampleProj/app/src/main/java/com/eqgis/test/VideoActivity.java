@@ -6,6 +6,7 @@ import android.media.MediaPlayer;
 import android.media.TimedMetaData;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -31,8 +32,9 @@ public class VideoActivity extends BaseActivity{
     private ExternalTexture externalTexture;
     private MediaPlayer mediaPlayer;
     private VideoTimeLine videoTimeLine;
+    private View videoComponent;
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint({"MissingInflatedId", "ClickableViewAccessibility"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -56,6 +58,32 @@ public class VideoActivity extends BaseActivity{
                 }
             }
         });
+
+        videoComponent = findViewById(R.id.video_play_component);
+        videoComponent.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                findViewById(R.id.video_play_btn).setVisibility(View.VISIBLE);
+                return false;
+            }
+        });
+
+        //播放按钮
+        findViewById(R.id.video_play_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mediaPlayer.isPlaying()){
+                    //播放视频
+                    mediaPlayer.start();
+                }else {
+                    mediaPlayer.pause();
+                }
+                view.setSelected(!view.isSelected());
+                view.getHandler().postDelayed(()->{
+                    view.setVisibility(View.GONE);
+                },1500);
+            }
+        });
     }
 
     /**
@@ -64,7 +92,11 @@ public class VideoActivity extends BaseActivity{
      */
     private void loadDefaultVideo() throws IOException {
         //这里使用eq_test_video.mp4为例，实际上，你也可以通过其它方式创建MediaPlayer，并设置数据源
-        mediaPlayer = MediaPlayer.create(this,R.raw.eq_test_video);
+        mediaPlayer = new MediaPlayer();
+        // 获取assets中的mp4文件
+        AssetFileDescriptor afd = getAssets().openFd("video/eq_test_video.mp4");
+        mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+        mediaPlayer.prepare();
         videoTimeLine.bindView(sceneLayout.getExSceneView(),mediaPlayer);
         mediaPlayer.setLooping(true);//循环播放
         mediaPlayer.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {
@@ -76,7 +108,5 @@ public class VideoActivity extends BaseActivity{
                 }
             }
         });
-        //就绪时，自动播放
-        mediaPlayer.start();
     }
 }

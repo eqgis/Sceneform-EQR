@@ -8,7 +8,7 @@
             <!-- 设置水平进度条的高度、圆角、颜色 -->
             <size android:height="3dp" />
             <corners android:radius="1dp" />
-            <solid android:color="#1A03A9F4" />
+            <solid android:color="#1AFFFFFF" />
         </shape>
     </item>
     <item
@@ -20,8 +20,8 @@
                 <corners android:radius="1dp" />
                 <gradient
                     android:angle="180"
-                    android:endColor="#5C03A9F4"
-                    android:startColor="#8000E1FF" />
+                    android:endColor="#33FFFFFF"
+                    android:startColor="#BFFFFFFF" />
             </shape>
         </scale>
     </item>

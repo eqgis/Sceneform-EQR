@@ -4,22 +4,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".VideoActivity">
     <com.eqgis.eqr.layout.SceneLayout
         android:id="@+id/video_scene_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <com.eqgis.media.component.VideoTimeLine
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
-        android:id="@+id/time_line"
+
+    <RelativeLayout
+        android:id="@+id/video_play_component"
         android:layout_width="match_parent"
-        android:layout_height="20dp"/>
-    <TextView
-        android:textSize="24sp"
-        android:text="样例视频"
-        android:layout_centerInParent="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent">
+        <!--组件-->
+        <com.eqgis.media.component.VideoTimeLine
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="20dp"
+            android:id="@+id/time_line"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"/>
+        <TextView
+            android:textColor="@color/white"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="20dp"
+            android:textSize="24sp"
+            android:text="样例视频"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <ImageView
+            android:id="@+id/video_play_btn"
+            android:background="@drawable/ic_video_btn_bg"
+            android:src="@drawable/ic_video_btn"
+            android:layout_centerInParent="true"
+            android:layout_width="60dp"
+            android:layout_height="60dp"/>
+    </RelativeLayout>
 </RelativeLayout>

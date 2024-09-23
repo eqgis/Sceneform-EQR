@@ -33,6 +33,8 @@ public class VideoTimeLine extends FrameLayout {
 
     //当前进度
     private int current;
+    private boolean hasPause = false;
+    private MediaPlayer mediaPlayer;
 
     /**
      * 更新监听事件
@@ -90,6 +92,7 @@ public class VideoTimeLine extends FrameLayout {
     public VideoTimeLine bindView(ExSceneView exSceneView, MediaPlayer mediaPlayer){
 //        if (!(mediaPlayer.getDuration() > 0))
 //            throw new IllegalArgumentException("The duration of media was error.");
+        this.mediaPlayer = mediaPlayer;
         initSeekBarSetting(mediaPlayer);
 
         exSceneView.getScene().addOnUpdateListener(frameTime -> {
@@ -104,7 +107,22 @@ public class VideoTimeLine extends FrameLayout {
 //            Log.i("IKKYU ", "bindView: " + position);
             mSeekBar.setProgress(position);
         });
+
+        //seekTo(0)，恢复为第一帧
+        reset();
         return this;
+    }
+
+    public void reset(){
+        current = 0;
+//                Log.i("IKKYU ", "onProgressChanged: "+current);
+        startTime.setText(format(current,0));
+        endTime.setText(format(max - current,1));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mediaPlayer.seekTo(current, MediaPlayer.SEEK_NEXT_SYNC);
+        }else {
+            mediaPlayer.seekTo(current);
+        }
     }
 
     /**
@@ -136,15 +154,21 @@ public class VideoTimeLine extends FrameLayout {
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 isSeekBarTouching = true;
-                //拖拽中，暂停播放
-                mediaPlayer.pause();
+                if (mediaPlayer.isPlaying()){
+                    //拖拽中，暂停播放
+                    mediaPlayer.pause();
+                    hasPause = true;
+                }
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 isSeekBarTouching = false;
-                //拖拽结束，恢复播放
-                mediaPlayer.start();
+                if (hasPause){
+                    //拖拽结束，恢复播放
+                    mediaPlayer.start();
+                    hasPause = false;
+                }
             }
         });
     }
