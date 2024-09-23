@@ -74,7 +74,7 @@ public class PlaneRenderer {
     private final Map<com.huawei.hiar.ARPlane, Material> materialOverridesAREngine = new HashMap<>();
     private CompletableFuture<Material> planeMaterialFuture;
     private Material shadowMaterial;
-    private boolean isEnabled = true;
+    private boolean isEnabled = false;
     private boolean isVisible = true;
     private boolean isShadowReceiver = true;
     private PlaneRendererMode planeRendererMode = PlaneRendererMode.RENDER_ALL;
