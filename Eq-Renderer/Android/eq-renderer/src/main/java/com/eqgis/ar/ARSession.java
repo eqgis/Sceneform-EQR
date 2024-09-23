@@ -293,11 +293,12 @@ public class ARSession {
      * <p>应用调用ARSession.update()后，AR Engine会更新相机预览到纹理textureId中。textureId使用时需要指定为GL_TEXTURE_EXTERNAL_OES，如：GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureId)。</p>
      * @param textureId 相机预览数据流的openGL textureId。
      */
-    public void setCameraTextureName(int textureId) {
+    public void setCameraTextureNames(int[] textureId) {
         if (coreSession!=null){
-            coreSession.setCameraTextureName(textureId);
+            //Passing multiple textures allows for a multithreaded rendering pipeline, unlike {@link #setCameraTextureName}.
+            coreSession.setCameraTextureNames(textureId);
         }else{
-            hwSession.setCameraTextureName(textureId);
+            hwSession.setCameraTextureName(textureId[0]);
         }
     }
 

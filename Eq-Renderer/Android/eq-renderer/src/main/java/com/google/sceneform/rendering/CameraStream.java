@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.google.ar.core.Frame;
 import com.google.sceneform.ARPlatForm;
 import com.google.sceneform.CustomDepthImage;
 import com.google.sceneform.utilities.AndroidPreconditions;
@@ -27,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -46,25 +48,14 @@ public class CameraStream {
 
     private static final int POSITION_BUFFER_INDEX = 0;
     private static final int UV_BUFFER_INDEX = 1;//000
-//    private static final int VERTEX_COUNT = 3;
-//    private static final float[] CAMERA_VERTICES =
-//            new float[]{
-//                    -1.0f, 1.0f,
-//                    1.0f, -1.0f,
-//                    -3.0f, 1.0f,
-//                    3.0f, 1.0f,
-//                    1.0f};
-//    private static final float[] CAMERA_UVS = new float[]{
-//            0.0f, 0.0f,
-//            0.0f, 2.0f,
-//            2.0f, 0.0f};
-//    private static final short[] INDICES = new short[]{0, 1, 2};
 
     private static final int FLOAT_SIZE_IN_BYTES = Float.SIZE / 8;
     private static final int UNINITIALIZED_FILAMENT_RENDERABLE = -1;//00
 
     private final Scene scene;
-    private final int cameraTextureId;
+    private final int[] cameraTextureId;
+    //当前使用的相机纹理ID对象，GLHelper创建的值
+    private int currentCameraTextureId;
     private final IndexBuffer cameraIndexBuffer;
     private final VertexBuffer cameraVertexBuffer;
     private final FloatBuffer cameraUvCoords;
@@ -77,7 +68,7 @@ public class CameraStream {
     /** 启用深度遮挡 {@link DepthOcclusionMode#DEPTH_OCCLUSION_DISABLED} */
     private DepthOcclusionMode depthOcclusionMode = DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED;
 
-    @Nullable private ExternalTexture cameraTexture;
+    @Nullable private final HashMap<Integer,ExternalTexture> cameraTexture = new HashMap<>();
     @Nullable private DepthTexture depthTexture;
 
     @Nullable private Material cameraMaterial = null;
@@ -109,7 +100,7 @@ public class CameraStream {
     /******************************************/
 
     @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored", "initialization"})
-    public CameraStream(int cameraTextureId, Renderer renderer) {
+    public CameraStream(int[] cameraTextureId, Renderer renderer) {
         scene = renderer.getFilamentScene();
         this.cameraTextureId = cameraTextureId;
 
@@ -297,7 +288,10 @@ public class CameraStream {
         }
 
 //        setupStandardCameraMaterial(renderer);
-        setupOcclusionCameraMaterial(renderer);
+        //仅当启用遮挡时，才创建Occlusion材质对象
+        if (ARPlatForm.OCCLUSION_MODE == ARPlatForm.OcclusionMode.OCCLUSION_ENABLED){
+            setupOcclusionCameraMaterial(renderer);
+        }
     }
 
     private FloatBuffer createCameraUVBuffer() {
@@ -371,9 +365,10 @@ public class CameraStream {
             return;
         }
 
+        currentCameraTextureId = cameraTextureId[0];
         cameraMaterial.setExternalTexture(
                 MATERIAL_CAMERA_TEXTURE,
-                Preconditions.checkNotNull(cameraTexture));
+                Preconditions.checkNotNull(cameraTexture.get(currentCameraTextureId)));
     }
 
     private void setOcclusionMaterial(Material material) {
@@ -389,9 +384,10 @@ public class CameraStream {
             return;
         }
 
+        currentCameraTextureId = cameraTextureId[0];
         occlusionCameraMaterial.setExternalTexture(
                 MATERIAL_CAMERA_TEXTURE,
-                Preconditions.checkNotNull(cameraTexture));
+                Preconditions.checkNotNull(cameraTexture.get(currentCameraTextureId)));
     }
 
 
@@ -463,36 +459,21 @@ public class CameraStream {
         return isTextureInitialized;
     }
 
-    public void initializeTexture(ARFrame frame) {
-        if (isTextureInitialized()) {
+    /**
+     * 初始化纹理对象
+     */
+    public void initializeTexture() {
+        if (isTextureInitialized) {
             return;
         }
 
-//        ARCamera arCamera = frame.getCamera();
-//        ARCameraIntrinsics intrinsics = arCamera.getCameraImageIntrinsics();
-//        int[] dimensions = intrinsics.getImageDimensions();
-//        int width ;//= dimensions[1];//1440;//
-//        int height ;//= dimensions[0];//1080;//
-////    int width = dimensions[0];//1440;//
-////    int height = dimensions[1];//1080;//
-//
-//        if (ARPlatForm.isArCore()/*3*/){
-//            width = dimensions[0];//1440;//
-//            height = dimensions[1];//1080;//
-//        }else{
-////            width = dimensions[1];//1440;//
-////            height = dimensions[0];//1080;//
-//            //Ikkyu_memo, AREngine width must be > height
-//            if (dimensions[0] == 0 && dimensions[1] == 0){
-//                width = 1440;
-//                height = 1080;
-//            }else {
-//                width = Math.max(dimensions[1],dimensions[0]);
-//                height = Math.min(dimensions[1],dimensions[0]);
-//            }
-//        }
         //在使用1.22.x之后的filament，由于textureId的使用接口变更，这里不再需要w和h
-        cameraTexture = new ExternalTexture(cameraTextureId);
+        //cameraTexture = new ExternalTexture(cameraTextureId);
+        for (int i = 0; i < cameraTextureId.length; i++) {
+            if (cameraTexture != null && !cameraTexture.containsKey(cameraTextureId[i])) {
+                cameraTexture.put(cameraTextureId[i], new ExternalTexture(cameraTextureId[i]));
+            }
+        }
 
         //updated by IKkyu 2022/01/22
         if (ARPlatForm.OCCLUSION_MODE != ARPlatForm.OcclusionMode.OCCLUSION_DISABLED
@@ -520,16 +501,20 @@ public class CameraStream {
      *     通过ExternalTexture的surface，我们可以绘制任何内容作为背景
      * </p>
      * Init BackgroundTexture , added by ikkyu 2022/04/29
-     * @param externalTexture
+     * @param textureName 纹理名称
+     * @param externalTexture 扩展纹理
      */
-    public void initializeTexture(ExternalTexture externalTexture) {
+    public void initializeTexture(int textureName,ExternalTexture externalTexture) {
         if (isTextureInitialized()) {
             return;
         }
         if (externalTexture == null)return;
 
+        if (cameraTexture == null) {
+            return;
+        }
         //用作相机纹理
-        cameraTexture = externalTexture;
+        cameraTexture.put(textureName,externalTexture);
 
         if (ARPlatForm.OCCLUSION_MODE != ARPlatForm.OcclusionMode.OCCLUSION_DISABLED
                 ||(depthOcclusionMode == DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED && (
@@ -548,6 +533,37 @@ public class CameraStream {
             }
         }
     }
+
+    /**
+     * 检查是否是正在绘制的纹理
+     * <p>若不是，则切换。这仅适用于新版本的ARCore(截至目前，使用的是ARCore_v1.45)</p>
+     * @param frame
+     */
+    public void checkCameraTexture(ARFrame frame){
+        if (ARPlatForm.isArCore()){
+            //适用于ARCore多线程渲染纹理
+            Frame coreFrame = frame.getCoreFrame();
+            int cameraTextureName = coreFrame.getCameraTextureName();
+            if (cameraTextureName == currentCameraTextureId || cameraTexture == null)
+                return;
+            ExternalTexture externalTexture = cameraTexture.get(cameraTextureName);
+            if (externalTexture == null)return;
+            //更新纹理
+            if (ARPlatForm.OCCLUSION_MODE != ARPlatForm.OcclusionMode.OCCLUSION_ENABLED){
+                cameraMaterial.setExternalTexture(
+                        MATERIAL_CAMERA_TEXTURE,externalTexture);
+                currentCameraTextureId = cameraTextureName;
+//                Log.i(TAG, "Ikkyu checkCameraTexture: checked:"+cameraTextureName);
+            }else {
+                occlusionCameraMaterial.setExternalTexture(
+                        MATERIAL_CAMERA_TEXTURE,externalTexture);
+                currentCameraTextureId = cameraTextureName;
+//                Log.i(TAG, "Ikkyu checkCameraTexture-OCC: checked:"+cameraTextureName);
+            }
+        }
+    }
+
+
     /**
      * <pre>
      *      更新深度图

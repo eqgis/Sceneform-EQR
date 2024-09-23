@@ -24,6 +24,7 @@ public class ExSceneView extends SceneView{
     private BeginFrameListener beginFrameListener;
     private InitializeListener initializeListener;
     private boolean isInit = false;
+    private int textureId = -1;
 
     public interface BeginFrameListener{
         void onBeginFrame(long frameTimeNanos);
@@ -72,7 +73,7 @@ public class ExSceneView extends SceneView{
     private void initBaseParameter() {
         renderer = Preconditions.checkNotNull(getRenderer());
         // 背景平面初始化
-        cameraStream = new CameraStream(-1,renderer);
+        cameraStream = new CameraStream(new int[]{textureId},renderer);
         externalTexture = new ExternalTexture();
     }
 
@@ -88,7 +89,7 @@ public class ExSceneView extends SceneView{
 
         // 初始化默认的纹理
         if (!cameraStream.isTextureInitialized()) {
-            cameraStream.initializeTexture(externalTexture);
+            cameraStream.initializeTexture(textureId,externalTexture);
             if (!isInit && initializeListener != null){
                 initializeListener.initializeTexture(externalTexture);
                 isInit = true;

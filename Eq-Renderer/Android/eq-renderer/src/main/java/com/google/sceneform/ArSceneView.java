@@ -11,6 +11,8 @@ import android.view.WindowManager;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
+import com.google.ar.core.Pose;
+import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.CameraStream;
@@ -61,7 +63,7 @@ public class ArSceneView extends SceneView {
     private final float[] colorCorrectionPixelIntensity = new float[4];
     // pauseResumeTask需在主线程调用
     private final SequentialTask pauseResumeTask = new SequentialTask();
-    private int cameraTextureId;
+    private int[] cameraTextureId;
     @Nullable private ARSession session;
     @Nullable private ARFrame currentFrame;
     //    @Nullable private ARConfig cachedConfig;
@@ -143,7 +145,7 @@ public class ArSceneView extends SceneView {
 
         // Session needs access to a texture id for updating the camera stream.
         // Filament and the Main thread each have their own gl context that share resources for this.
-        session.setCameraTextureName(cameraTextureId);
+        session.setCameraTextureNames(cameraTextureId);
     }
 
 //    private void initializeFacingDirection(ARSession session) {
@@ -389,8 +391,10 @@ public class ArSceneView extends SceneView {
 
             //配置相机纹理
             if (!cameraStream.isTextureInitialized()) {
-                cameraStream.initializeTexture(frame);
+                cameraStream.initializeTexture();
             }
+            //检查相机纹理,当前为了解决绿屏闪烁问题，在使用ARCore时采用了多纹理渲染。
+            cameraStream.checkCameraTexture(frame);
 
             //重新计算UV
             if (shouldRecalculateCameraUvs(frame)) {
@@ -735,7 +739,17 @@ public class ArSceneView extends SceneView {
     }
 
     private void initializeCameraStream() {
-        cameraTextureId = GLHelper.createCameraTexture();
+        if (ARPlatForm.isArCore()){
+            //ARCore采用多线程渲染，使用多个纹理
+            cameraTextureId = new int[]{
+                    GLHelper.createCameraTexture(),
+                    GLHelper.createCameraTexture(),
+                    GLHelper.createCameraTexture(),
+                    GLHelper.createCameraTexture()
+            };
+        }else {
+            cameraTextureId = new int[]{GLHelper.createCameraTexture()};
+        }
         Renderer renderer = Preconditions.checkNotNull(getRenderer());
         cameraStream = new CameraStream(cameraTextureId, renderer);
     }
