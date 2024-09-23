@@ -26,7 +26,7 @@ import java.util.function.Function;
  * @version 1.0
  **/
 public class GltfSampleScene implements ISampleScene{
-    private String modelPath = "gltf/test.glb";
+    private String modelPath = "gltf/bee.glb";
     public float distance = 3.6f;
 
 
