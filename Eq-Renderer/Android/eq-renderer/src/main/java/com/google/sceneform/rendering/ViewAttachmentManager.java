@@ -2,6 +2,7 @@ package com.google.sceneform.rendering;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -20,24 +21,24 @@ import android.widget.FrameLayout;
  * 在适当的时候从WindowManager中添加/删除。
  * @hide
  */
-class ViewAttachmentManager {
-  // 拥有ViewAttachmentManager的视图，用于向UI线程触发回调。
+public class ViewAttachmentManager {
+  // View that owns the ViewAttachmentManager.
+  // Used to post callbacks onto the UI thread.
   private final View ownerView;
 
   private final WindowManager windowManager;
   private final WindowManager.LayoutParams windowLayoutParams;
 
-  private FrameLayout frameLayout;
+  private final FrameLayout frameLayout;
   private final ViewGroup.LayoutParams viewLayoutParams;
 
   private static final String VIEW_RENDERABLE_WINDOW = "ViewRenderableWindow";
-  private boolean isAdded = false;
 
   /**
    * 构造函数
    * @param ownerView ViewAttachmentManager用来在UI线程上触发回调
    */
-  ViewAttachmentManager(Context context, View ownerView) {
+  public ViewAttachmentManager(Context context, View ownerView) {
     this.ownerView = ownerView;
 
     windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -51,33 +52,23 @@ class ViewAttachmentManager {
     return frameLayout;
   }
 
-  void onResume() {
-    // ownerView只能在activity完成恢复后添加到WindowManager中。
-    // 因此，我们必须使用post来确保只有在resume完成后才添加窗口。
-    if (!isAdded){
-      ownerView.postDelayed(
-              () -> {
-                if (frameLayout.getParent() == null && ownerView.isAttachedToWindow()) {
-                  windowManager.addView(frameLayout, windowLayoutParams);
-                }
-              },100);
-      isAdded = true;
-    }
+  public void onResume() {
+    // A ownerView can only be added to the WindowManager after the activity has finished resuming.
+    // Therefore, we must use post to ensure that the window is only added after resume is finished.
+    ownerView.post(
+            () -> {
+              if (frameLayout.getParent() == null && ownerView.isAttachedToWindow()) {
+                windowManager.addView(frameLayout, windowLayoutParams);
+              }
+            });
   }
 
-  void onPause() {
-    // ownerView必须在activity被销毁之前从WindowManager中移除，
-    // 否则窗口将被泄露。因此，我们在resume/pause中添加/删除ownerView。
-//    if (frameLayout.getParent() != null) {
-//      windowManager.removeView(frameLayout);
-//    }
-  }
-
-  void onDestroy(){
+  public void onPause() {
+    // The ownerView must be removed from the WindowManager before the activity is destroyed, or the
+    // window will be leaked. Therefore we add/remove the ownerView in resume/pause.
     if (frameLayout.getParent() != null) {
       windowManager.removeView(frameLayout);
     }
-    frameLayout = null;
   }
 
   /**
@@ -86,7 +77,7 @@ class ViewAttachmentManager {
    *     由{@link RenderViewToExternalTexture}使用，以确保ownerView被绘制并正确调用所有适当的生命周期事件。
    * </p>
    */
-  void addView(View view) {
+  public void addView(View view) {
     if (view.getParent() == frameLayout) {
       return;
     }
@@ -98,7 +89,7 @@ class ViewAttachmentManager {
    * 从{@link FrameLayout}中移除附加到{@link WindowManager}的ownerView。
    * <p>由{@link RenderViewToExternalTexture}用来移除不再需要绘制的ownerView。
    */
-  void removeView(View view) {
+  public void removeView(View view) {
     if (view.getParent() != frameLayout) {
       return;
     }

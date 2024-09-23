@@ -53,7 +53,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
 
   @Nullable private CameraProvider cameraProvider;
   private final SurfaceView surfaceView;
-  private final ViewAttachmentManager viewAttachmentManager;
+  private ViewAttachmentManager viewAttachmentManager;
 
   private final ArrayList<RenderableInstance> renderableInstances = new ArrayList<>();
   private final ArrayList<LightInstance> lightInstances = new ArrayList<>();
@@ -108,7 +108,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
     AndroidPreconditions.checkMinAndroidApiLevel();
 
     this.surfaceView = view;
-    viewAttachmentManager = new ViewAttachmentManager(getContext(), view);
     initialize();
   }
 
@@ -208,17 +207,16 @@ public class Renderer implements EqUiHelper.RendererCallback {
 
   /** @hide */
   public void onPause() {
-    viewAttachmentManager.onPause();
+    if (viewAttachmentManager != null){
+      viewAttachmentManager.onPause();
+    }
   }
 
   /** @hide */
   public void onResume() {
-    viewAttachmentManager.onResume();
-  }
-
-  /**@hide */
-  public void onDestroy(){
-    viewAttachmentManager.onDestroy();
+    if (viewAttachmentManager != null){
+      viewAttachmentManager.onResume();
+    }
   }
 
   /**
@@ -584,6 +582,12 @@ public class Renderer implements EqUiHelper.RendererCallback {
   }
 
   ViewAttachmentManager getViewAttachmentManager() {
+    synchronized (Renderer.class){
+      if (viewAttachmentManager == null){
+        viewAttachmentManager = new ViewAttachmentManager(getContext(), surfaceView);
+        viewAttachmentManager.onResume();
+      }
+    }
     return viewAttachmentManager;
   }
 

@@ -185,9 +185,6 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      */
     public void destroy() {
         Choreographer.getInstance().removeFrameCallback(this);
-        if (renderer != null) {
-            renderer.onDestroy();
-        }
 
         if (renderer != null) {
 
