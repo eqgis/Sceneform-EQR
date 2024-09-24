@@ -42,7 +42,7 @@ public class GltfSampleScene implements ISampleScene{
     private Node lightNode;
 
     @Override
-    public void create(Context context, RootNode rootNode) {
+    public void create(Context context, Node rootNode) {
         addGltf(context, rootNode);
 
         //添加光源
@@ -65,7 +65,7 @@ public class GltfSampleScene implements ISampleScene{
     /**
      * 加载模型
      */
-    public void addGltf(Context context, RootNode rootNode) {
+    public void addGltf(Context context, Node rootNode) {
         modelNode = new Node();
         ModelRenderable
                 .builder()
@@ -101,7 +101,7 @@ public class GltfSampleScene implements ISampleScene{
         NodeGestureController.getInstance().select(modelNode,distance);
     }
 
-    private void addLight(RootNode rootNode) {
+    private void addLight(Node rootNode) {
         lightNode = new Node();
         lightNode.setParent(rootNode);
 //        Light.Builder builder = Light.builder(Light.Type.POINT);

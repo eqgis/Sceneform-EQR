@@ -6,13 +6,19 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.eqgis.ar.ARPlugin;
 import com.eqgis.eqr.core.Eqr;
+import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
+import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
+import com.google.sceneform.ARPlatForm;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,6 +50,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void checkAR(View view){
+        System.out.println();
+        boolean arApkReady = ARPlugin.isARApkReady(this);
+        Toast.makeText(this, "AR服务支持状态："+arApkReady, Toast.LENGTH_SHORT).show();
+        if (!arApkReady){
+            if (ARPlugin.isHuawei()){
+                ARPlatForm.setType(ARPlatForm.Type.AR_ENGINE);
+                Intent intent = new Intent("com.huawei.appmarket.intent.action.AppDetail");
+                intent.putExtra("APP_PACKAGENAME", "com.huawei.arengine.service");
+                intent.setPackage("com.huawei.appmarket");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }else{
+//                ARPlatForm.setType(ARPlatForm.Type.AR_CORE);
+//                Uri uri = Uri.parse("market://details?id=com.google.ar.core");
+//                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                startActivity(intent);
+                try {
+                    ArCoreApk.getInstance().requestInstall(this, true);
+                } catch (UnavailableDeviceNotCompatibleException e) {
+//                    throw new RuntimeException(e);
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                } catch (UnavailableUserDeclinedInstallationException e) {
+//                    throw new RuntimeException(e);
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
     /**
      * 转至普通三维场景
      */
@@ -56,6 +93,13 @@ public class MainActivity extends AppCompatActivity {
      */
     public void toArSceneActivity(View view) {
         startActivity(new Intent(this, ARSceneActivity.class));
+    }
+
+    /**
+     * 转至AR三维场景
+     */
+    public void toArScenePlaneActivity(View view) {
+        startActivity(new Intent(this, ARScenePlaneActivity.class));
     }
 
     /**

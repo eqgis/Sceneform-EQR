@@ -39,12 +39,12 @@ public class InteractiveScene implements ISampleScene{
      */
     private Node lightNode;
 
-    private RootNode rootNode;
+    private Node rootNode;
 
     private Context context;
 
     @Override
-    public void create(Context context, RootNode rootNode) {
+    public void create(Context context, Node rootNode) {
         this.context = context;
         this.rootNode = rootNode;
 

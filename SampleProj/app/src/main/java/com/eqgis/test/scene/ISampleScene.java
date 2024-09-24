@@ -3,6 +3,7 @@ package com.eqgis.test.scene;
 import android.content.Context;
 
 import com.eqgis.eqr.node.RootNode;
+import com.google.sceneform.Node;
 
 /**
  * 场景示例通用接口
@@ -15,7 +16,7 @@ public interface ISampleScene{
      * @param context 上下文
      * @param rootNode 场景节点
      */
-    void create(Context context, RootNode rootNode);
+    void create(Context context, Node rootNode);
 
     /**
      * 销毁成就

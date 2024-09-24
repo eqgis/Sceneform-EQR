@@ -28,31 +28,75 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+            <TextView
+                android:textSize="12dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="普通3D示例:"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
             <Button
                 android:onClick="toBaseSceneActivity"
                 android:text="普通三维场景"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"/>
-            <Button
-                android:onClick="toArSceneActivity"
-                android:text="AR三维场景(ARCore)"
-                android:layout_width="match_parent"
-                android:layout_height="80dp"/>
-            <Button
-                android:onClick="toSlamSceneActivity"
-                android:text="AR三维场景(EQ-SLAM)"
-                android:layout_width="match_parent"
-                android:layout_height="80dp"/>
+                android:layout_height="60dp"/>
             <Button
                 android:onClick="toInteractiveActivity"
                 android:text="手势交互示例"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"/>
+                android:layout_height="60dp"/>
+
+            <!--AR示例入口按钮组-->
+            <TextView
+                android:textSize="12dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AR示例:"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <Button
+                android:onClick="checkAR"
+                android:text="检查当前设备是否支持AR服务\n(ARCore或AREngine)"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+            <Button
+                android:onClick="toArSceneActivity"
+                android:text="AR三维场景\n(需AR服务支持)"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+            <Button
+                android:onClick="toArScenePlaneActivity"
+                android:text="AR平面识别\n(需AR服务支持)"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+            <Button
+                android:onClick="toSlamSceneActivity"
+                android:text="AR三维场景\n(EQ-SLAM)"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+
+            <TextView
+                android:textSize="12dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="其它示例:"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <Button
                 android:onClick="toVideoActivity"
                 android:text="视频播放器示例"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"/>
+                android:layout_height="60dp"/>
         </LinearLayout>
     </ScrollView>
 
