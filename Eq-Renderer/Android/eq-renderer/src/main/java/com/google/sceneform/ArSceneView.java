@@ -713,8 +713,6 @@ public class ArSceneView extends SceneView {
     }
 
     private void initializeAr() {
-        //updated by ikkyu 替换兼容之前的修改，
-        setPlatForm();
 
         display = getContext().getSystemService(WindowManager.class).getDefaultDisplay();
 
@@ -723,10 +721,11 @@ public class ArSceneView extends SceneView {
     }
 
     /**
-     * 设置AR平台
+     * 检查是否安装ARCore或AREngine
+     * <p>建议在resume事件中调用</p>
      * 默认为根据设备厂商选择
      */
-    private void setPlatForm() {
+    public void checkARApk() {
         //AREngine.enforceARCore();//若要强制使用ARCore，必须在此之前调用
         if (!ARPlugin.isARApkReady(getContext())){
             ARPlugin.installARApk(getContext());

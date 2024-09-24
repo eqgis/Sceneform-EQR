@@ -92,6 +92,7 @@ public class ARSceneLayout extends SceneLayout{
         if (!(ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)){
             SceneLayoutUtils.displayError(context,"Unable to get permission of camera.",null);
         }
+        arSceneView.checkARApk();
         if (arSceneView.getSession() == null) {
             try {
                 Object[] objects = SceneLayoutUtils.createArSession((Activity) context, ARConfig.PlaneFindingMode.HORIZONTAL_ONLY);
