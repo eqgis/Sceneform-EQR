@@ -240,7 +240,7 @@ public class EqSlamSceneLayout extends SceneLayout{
         this.addView(cameraView);
         this.addView(sceneView);
 
-        slam = new SlamCore(context).init(0.3);
+        slam = new SlamCore(context).init(0.2);
 
         camera = sceneView.getScene().getCamera();
         slam.setOnPoseUpdateListener(new OnPoseUpdateListener() {
