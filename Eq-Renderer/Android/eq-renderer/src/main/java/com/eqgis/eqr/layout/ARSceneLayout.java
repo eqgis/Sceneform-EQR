@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
@@ -92,9 +93,13 @@ public class ARSceneLayout extends SceneLayout{
         if (!(ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)){
             SceneLayoutUtils.displayError(context,"Unable to get permission of camera.",null);
         }
-        arSceneView.checkARApk();
+
         if (arSceneView.getSession() == null) {
             try {
+//        arSceneView.checkARApk();
+                if (!ARPlugin.isARApkReady(getContext())){
+                    throw new ARSessionException();
+                }
                 Object[] objects = SceneLayoutUtils.createArSession((Activity) context, ARConfig.PlaneFindingMode.HORIZONTAL_ONLY);
                 session = (ARSession) objects[0];
                 arConfig = (ARConfig) objects[1];
@@ -106,11 +111,12 @@ public class ARSceneLayout extends SceneLayout{
             } catch (ARSessionException e) {
                 String text;
                 if (ARPlugin.isHuawei()){
-                    text = "Please update AREngine";
+                    text = "请在应用商店安装最新版本的华为AREngine服务";
                 }else {
-                    text = "Please update ARCore";
+                    text = "请在应用商店安装最新版本的“Google Play Services for AR”";
                 }
-                SceneLayoutUtils.displayError(context,text,e);
+//                SceneLayoutUtils.displayError(context,text,e);
+                Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
             }
         }
 
