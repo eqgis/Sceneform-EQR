@@ -107,7 +107,6 @@ public class CameraStream {
         engine = EngineInstance.getEngine();
 
         if (/*1*/ARPlatForm.isArCoreOrNone()){
-            Log.i(TAG, "CameraStream: ikkyu1234567890-");
             // create screen quad geometry to camera stream to
             ShortBuffer indexBufferData = ShortBuffer.allocate(ARCORE_CAMERA_INDICES.length);
             indexBufferData.put(ARCORE_CAMERA_INDICES);
