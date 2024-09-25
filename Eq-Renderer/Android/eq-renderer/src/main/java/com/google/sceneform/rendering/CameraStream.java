@@ -1,5 +1,6 @@
 package com.google.sceneform.rendering;
 
+import android.content.Context;
 import android.media.Image;
 import android.util.Log;
 
@@ -56,10 +57,12 @@ public class CameraStream {
     private final int[] cameraTextureId;
     //当前使用的相机纹理ID对象，GLHelper创建的值
     private int currentCameraTextureId;
-    private final IndexBuffer cameraIndexBuffer;
-    private final VertexBuffer cameraVertexBuffer;
-    private final FloatBuffer cameraUvCoords;
-    private final FloatBuffer transformedCameraUvCoords;
+    /*createBuffer方法*/
+    private IndexBuffer cameraIndexBuffer;
+    private VertexBuffer cameraVertexBuffer;
+    private FloatBuffer cameraUvCoords;
+    private FloatBuffer transformedCameraUvCoords;
+
     private final IEngine engine;
     private int cameraStreamRenderable = UNINITIALIZED_FILAMENT_RENDERABLE;
 
@@ -80,22 +83,9 @@ public class CameraStream {
     private boolean isTextureInitialized = false;
 
     //added
-    private static final short[] ARCORE_CAMERA_INDICES = new short[] {0, 1, 2};
-    private static final short[] HUAWEI_CAMERA_INDICES = new short[] {0, 1, 2,3,2,1};
-//    private static final short[] HUAWEI_CAMERA_INDICES = new short[] {0, 1, 2,1,2,3};
+    private static final short[] CAMERA_INDICES = new short[] {0, 1, 2,3,2,1};
 
-    private static final float[] ARCORE_CAMERA_VERTICES =
-            new float[] {-1.0f, 1.0f, 1.0f,
-                    -1.0f, -3.0f, 1.0f,
-                    3.0f, 1.0f, 1.0f};
-    private static final float[] ARCORE_CAMERA_UVS = new float[] {0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 0.0f};
-
-    private static final float[] HUAWEI_CAMERA_VERTICES =
-            new float[] {-1.0f, 1.0f, 1.0f,      -1.0f, -1.0f,1.0f,     1.0f, 1.0f,1.0f,    1.0f, -1.0f,1.0f};;
-    private static final float[] HUAWEI_CAMERA_UVS = new float[] {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
-
-    private static final int ARCORE_VERTEX_COUNT = 3;
-    private static final int HUAWEI_VERTEX_COUNT = 4;
+    private static final int VERTEX_COUNT = 4;
 
     /******************************************/
 
@@ -103,188 +93,48 @@ public class CameraStream {
     public CameraStream(int[] cameraTextureId, Renderer renderer) {
         scene = renderer.getFilamentScene();
         this.cameraTextureId = cameraTextureId;
+//        Log.i(TAG, "IKKYU CameraStream: 当前平台类型："+ARPlatForm.getEngineType());
 
         engine = EngineInstance.getEngine();
 
-        if (/*1*/ARPlatForm.isArCoreOrNone()){
-            // create screen quad geometry to camera stream to
-            ShortBuffer indexBufferData = ShortBuffer.allocate(ARCORE_CAMERA_INDICES.length);
-            indexBufferData.put(ARCORE_CAMERA_INDICES);
-            final int indexCount = indexBufferData.capacity();
-            cameraIndexBuffer =
-                    new IndexBuffer.Builder()
-                            .indexCount(indexCount)
-                            .bufferType(IndexType.USHORT)
-                            .build(engine.getFilamentEngine());
-            indexBufferData.rewind();
-            Preconditions.checkNotNull(cameraIndexBuffer)
-                    .setBuffer(engine.getFilamentEngine(), indexBufferData);
-
-            // Note: ARCore expects the UV buffers to be direct or will assert in transformDisplayUvCoords.
-            cameraUvCoords = createCameraUVBuffer();
-            transformedCameraUvCoords = createCameraUVBuffer();
-
-            FloatBuffer vertexBufferData = FloatBuffer.allocate(ARCORE_CAMERA_VERTICES.length);
-            vertexBufferData.put(ARCORE_CAMERA_VERTICES);
-
-            cameraVertexBuffer =
-                    new Builder()
-                            .vertexCount(ARCORE_VERTEX_COUNT)
-                            .bufferCount(2)
-                            .attribute(
-                                    VertexAttribute.POSITION,
-                                    0,
-                                    VertexBuffer.AttributeType.FLOAT3,
-                                    0,
-                                    (ARCORE_CAMERA_VERTICES.length / ARCORE_VERTEX_COUNT) * FLOAT_SIZE_IN_BYTES)
-                            .attribute(
-                                    VertexAttribute.UV0,
-                                    1,
-                                    VertexBuffer.AttributeType.FLOAT2,
-                                    0,
-                                    (ARCORE_CAMERA_UVS.length / ARCORE_VERTEX_COUNT) * FLOAT_SIZE_IN_BYTES)
-                            .build(engine.getFilamentEngine());
-
-            vertexBufferData.rewind();
-            Preconditions.checkNotNull(cameraVertexBuffer)
-                    .setBufferAt(engine.getFilamentEngine(), POSITION_BUFFER_INDEX, vertexBufferData);
-
-            adjustCameraUvsForOpenGL();
-            cameraVertexBuffer.setBufferAt(
-                    engine.getFilamentEngine(), UV_BUFFER_INDEX, transformedCameraUvCoords);
-
-            CompletableFuture<Material> materialFuture =
-                    Material.builder()
-                            .setSource(
-                                    renderer.getContext(),
-                                    RenderingResources.GetSceneformResource(
-                                            renderer.getContext(), RenderingResources.Resource.CAMERA_MATERIAL))
-                            .build();
-
-            materialFuture
-                    .thenAccept(
-                            material -> {
-//                                defaultCameraMaterial = material;
-//
-//                                // Only set the camera material if it hasn't already been set to a custom material.
-//                                if (cameraMaterial == null) {
-//                                    setCameraMaterial(defaultCameraMaterial);
-//                                }
-                                float[] uvTransform = new float[]{
-                                        1,0,0,0,
-                                        0,1,0,0,
-                                        0,0,1,0,
-                                        0,0,0,1
-                                };
-                                material.getFilamentMaterialInstance()
-                                        .setParameter(
-                                                "uvTransform",
-                                                MaterialInstance.FloatElement.FLOAT4,
-                                                uvTransform,
-                                                0,
-                                                4);
-
-                                // Only set the camera material if it hasn't already been set to a custom material.
-                                if(cameraMaterial == null) {
-                                    cameraMaterial = material;
-                                }
-                            })
-                    .exceptionally(
-                            throwable -> {
-                                Log.e(TAG, "Unable to load camera stream materials.", throwable);
-                                return null;
-                            });
-
-
-        }
-        else{
-            //创建一个矩形对象
-            ShortBuffer indexBufferData = ShortBuffer.allocate(HUAWEI_CAMERA_INDICES.length);
-            indexBufferData.put(HUAWEI_CAMERA_INDICES);
-            final int indexCount = indexBufferData.capacity();
-            cameraIndexBuffer =
-                    new IndexBuffer.Builder()
-                            .indexCount(indexCount)
-                            .bufferType(IndexType.USHORT)
-                            .build(engine.getFilamentEngine());
-            indexBufferData.rewind();
-            Preconditions.checkNotNull(cameraIndexBuffer)
-                    .setBuffer(engine.getFilamentEngine(), indexBufferData);
-
-            // UV
-            cameraUvCoords = createCameraUVBuffer();
-            transformedCameraUvCoords = createCameraUVBuffer();
-
-            FloatBuffer vertexBufferData = FloatBuffer.allocate(HUAWEI_CAMERA_VERTICES.length);
-            vertexBufferData.put(HUAWEI_CAMERA_VERTICES);
-
-            cameraVertexBuffer =
-                    new Builder()
-                            .vertexCount(HUAWEI_VERTEX_COUNT)
-                            .bufferCount(2)
-                            .attribute(
-                                    VertexAttribute.POSITION,
-                                    0,
-                                    VertexBuffer.AttributeType.FLOAT3,
-                                    0,
-                                    (HUAWEI_CAMERA_VERTICES.length / HUAWEI_VERTEX_COUNT) * FLOAT_SIZE_IN_BYTES)
-                            .attribute(
-                                    VertexAttribute.UV0,
-                                    1,
-                                    VertexBuffer.AttributeType.FLOAT2,
-                                    0,
-                                    (HUAWEI_CAMERA_UVS.length / HUAWEI_VERTEX_COUNT) * FLOAT_SIZE_IN_BYTES)
-                            .build(engine.getFilamentEngine());
-
-            vertexBufferData.rewind();
-            Preconditions.checkNotNull(cameraVertexBuffer)
-                    .setBufferAt(engine.getFilamentEngine(), POSITION_BUFFER_INDEX, vertexBufferData);
-
-            adjustCameraUvsForOpenGL();
-            cameraVertexBuffer.setBufferAt(
-                    engine.getFilamentEngine(), UV_BUFFER_INDEX, transformedCameraUvCoords);
-
-            CompletableFuture<Material> materialFuture =
-                    Material.builder()
-                            .setSource(
-                                    renderer.getContext(),
-                                    RenderingResources.GetSceneformResource(
-                                            renderer.getContext(), RenderingResources.Resource.CAMERA_MATERIAL))
-                            .build();
-
-            materialFuture
-                    .thenAccept(
-                            material -> {
-//                                defaultCameraMaterial = material;
-//
-//                                // Only set the camera material if it hasn't already been set to a custom material.
-//                                if (cameraMaterial == null) {
-//                                    setCameraMaterial(defaultCameraMaterial);
-//                                }
-                                float[] uvTransform = new float[]{
-                                        1,0,0,0,
-                                        0,1,0,0,
-                                        0,0,1,0,
-                                        0,0,0,1
-                                };
-                                material.getFilamentMaterialInstance()
-                                        .setParameter(
-                                                "uvTransform",
-                                                MaterialInstance.FloatElement.FLOAT4,
-                                                uvTransform,
-                                                0,
-                                                4);
-
-                                // Only set the camera material if it hasn't already been set to a custom material.
-                                if(cameraMaterial == null) {
-                                    cameraMaterial = material;
-                                }
-                            })
-                    .exceptionally(
-                            throwable -> {
-                                Log.e(TAG, "Unable to load camera stream materials.", throwable);
-                                return null;
-                            });
+        switch (ARPlatForm.getEngineType()){
+            case AR_ENGINE:
+                createBuffer(renderer.getContext(), new float[] {
+                                -1.0f, 1.0f, 1.0f,
+                                -1.0f, -1.0f,1.0f,
+                                1.0f, 1.0f,1.0f,
+                                1.0f, -1.0f,1.0f},
+                        new float[] {
+                                0.0f, 0.0f,
+                                0.0f, 1.0f,
+                                1.0f, 0.0f,
+                                1.0f, 1.0f});
+                break;
+            case CAMERA:
+                createBuffer(renderer.getContext(), new float[] {
+                        1.0f, 1.0f,1.0f,//2
+                        -1.0f, 1.0f, 1.0f,//0
+                        1.0f, -1.0f,1.0f,//3
+                        -1.0f, -1.0f,1.0f//1
+                }, new float[] {
+                        0.0f,0.0f,
+                        0.0f,1.0f,
+                        1.0f,0.0f,
+                        1.0f,1.0f});
+                break;
+            case AR_CORE:
+            case NONE:
+                createBuffer(renderer.getContext(), new float[] {
+                        -1.0f, 1.0f, 1.0f,//0
+                        -1.0f, -1.0f,1.0f,//1
+                        1.0f, 1.0f,1.0f,//2
+                        1.0f, -1.0f,1.0f//3
+                }, new float[] {
+                        0.0f, 0.0f,
+                        0.0f, 1.0f,
+                        1.0f, 0.0f,
+                        1.0f, 1.0f});
+                break;
         }
 
 //        setupStandardCameraMaterial(renderer);
@@ -294,19 +144,12 @@ public class CameraStream {
         }
     }
 
-    private FloatBuffer createCameraUVBuffer() {
+    private FloatBuffer createCameraUVBuffer(float[] cameraUvs) {
         FloatBuffer buffer;
-        if (ARPlatForm.isArCoreOrNone()/*2*/){
-            buffer= ByteBuffer.allocateDirect(ARCORE_CAMERA_UVS.length * FLOAT_SIZE_IN_BYTES)
-                    .order(ByteOrder.nativeOrder())
-                    .asFloatBuffer();
-            buffer.put(ARCORE_CAMERA_UVS);
-        }else {
-            buffer= ByteBuffer.allocateDirect(HUAWEI_CAMERA_UVS.length * FLOAT_SIZE_IN_BYTES)
-                    .order(ByteOrder.nativeOrder())
-                    .asFloatBuffer();
-            buffer.put(HUAWEI_CAMERA_UVS);
-        }
+        buffer= ByteBuffer.allocateDirect(cameraUvs.length * FLOAT_SIZE_IN_BYTES)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        buffer.put(cameraUvs);
 
         buffer.rewind();
 
@@ -638,14 +481,8 @@ public class CameraStream {
 
     private void adjustCameraUvsForOpenGL() {
         // Correct for vertical coordinates to match OpenGL
-        if (ARPlatForm.isArCoreOrNone()/*4*/){
-            for (int i = 1; i < ARCORE_VERTEX_COUNT * 2; i += 2) {
-                transformedCameraUvCoords.put(i, 1.0f - transformedCameraUvCoords.get(i));
-            }
-        }else{
-            for (int i = 1; i < HUAWEI_VERTEX_COUNT * 2; i += 2) {
-                transformedCameraUvCoords.put(i, 1.0f - transformedCameraUvCoords.get(i));
-            }
+        for (int i = 1; i < VERTEX_COUNT * 2; i += 2) {
+            transformedCameraUvCoords.put(i, 1.0f - transformedCameraUvCoords.get(i));
         }
     }
 
@@ -661,6 +498,102 @@ public class CameraStream {
             int renderableInstance = renderableManager.getInstance(cameraStreamRenderable);
             renderableManager.setPriority(renderableInstance, renderablePriority);
         }
+    }
+
+    private void createBuffer(Context context, float[] cameraVertices, float[] cameraUvs){
+        if (cameraIndexBuffer != null){
+            EngineInstance.getEngine().getFilamentEngine().destroyIndexBuffer(cameraIndexBuffer);
+        }
+        if (cameraVertexBuffer != null){
+            EngineInstance.getEngine().getFilamentEngine().destroyVertexBuffer(cameraVertexBuffer);
+        }
+        // create screen quad geometry to camera stream to
+        ShortBuffer indexBufferData = ShortBuffer.allocate(CAMERA_INDICES.length);
+        indexBufferData.put(CAMERA_INDICES);
+        final int indexCount = indexBufferData.capacity();
+        cameraIndexBuffer =
+                new IndexBuffer.Builder()
+                        .indexCount(indexCount)
+                        .bufferType(IndexType.USHORT)
+                        .build(engine.getFilamentEngine());
+        indexBufferData.rewind();
+        Preconditions.checkNotNull(cameraIndexBuffer)
+                .setBuffer(engine.getFilamentEngine(), indexBufferData);
+
+        // Note: ARCore expects the UV buffers to be direct or will assert in transformDisplayUvCoords.
+        cameraUvCoords = createCameraUVBuffer(cameraUvs);
+        transformedCameraUvCoords = createCameraUVBuffer(cameraUvs);
+
+        FloatBuffer vertexBufferData = FloatBuffer.allocate(cameraVertices.length);
+        vertexBufferData.put(cameraVertices);
+
+        cameraVertexBuffer =
+                new Builder()
+                        .vertexCount(VERTEX_COUNT)
+                        .bufferCount(2)
+                        .attribute(
+                                VertexAttribute.POSITION,
+                                0,
+                                VertexBuffer.AttributeType.FLOAT3,
+                                0,
+                                (cameraVertices.length / VERTEX_COUNT) * FLOAT_SIZE_IN_BYTES)
+                        .attribute(
+                                VertexAttribute.UV0,
+                                1,
+                                VertexBuffer.AttributeType.FLOAT2,
+                                0,
+                                (cameraUvs.length / VERTEX_COUNT) * FLOAT_SIZE_IN_BYTES)
+                        .build(engine.getFilamentEngine());
+
+        vertexBufferData.rewind();
+        Preconditions.checkNotNull(cameraVertexBuffer)
+                .setBufferAt(engine.getFilamentEngine(), POSITION_BUFFER_INDEX, vertexBufferData);
+
+        adjustCameraUvsForOpenGL();
+        cameraVertexBuffer.setBufferAt(
+                engine.getFilamentEngine(), UV_BUFFER_INDEX, transformedCameraUvCoords);
+
+        CompletableFuture<Material> materialFuture =
+                Material.builder()
+                        .setSource(
+                                context,
+                                RenderingResources.GetSceneformResource(
+                                        context, RenderingResources.Resource.CAMERA_MATERIAL))
+                        .build();
+
+        materialFuture
+                .thenAccept(
+                        material -> {
+//                                defaultCameraMaterial = material;
+//
+//                                // Only set the camera material if it hasn't already been set to a custom material.
+//                                if (cameraMaterial == null) {
+//                                    setCameraMaterial(defaultCameraMaterial);
+//                                }
+                            float[] uvTransform = new float[]{
+                                    1,0,0,0,
+                                    0,1,0,0,
+                                    0,0,1,0,
+                                    0,0,0,1
+                            };
+                            material.getFilamentMaterialInstance()
+                                    .setParameter(
+                                            "uvTransform",
+                                            MaterialInstance.FloatElement.FLOAT4,
+                                            uvTransform,
+                                            0,
+                                            4);
+
+                            // Only set the camera material if it hasn't already been set to a custom material.
+                            if(cameraMaterial == null) {
+                                cameraMaterial = material;
+                            }
+                        })
+                .exceptionally(
+                        throwable -> {
+                            Log.e(TAG, "Unable to load camera stream materials.", throwable);
+                            return null;
+                        });
     }
 
     /**

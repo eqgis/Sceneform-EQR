@@ -1,5 +1,7 @@
 package com.google.sceneform;
 
+import android.util.Log;
+
 /**
  * AR-Platform
  */
@@ -31,6 +33,7 @@ public class ARPlatForm {
      */
     public static void setType(Type type){
         TYPE = type;
+        Log.i("Ikkyu ARPlatForm", "setType: "+type);
     }
 
     public enum Type{
@@ -42,6 +45,10 @@ public class ARPlatForm {
          * AREngine
          */
         AR_ENGINE,
+        /**
+         * 相机场景
+         */
+        CAMERA,
         /**
          * None
          */
