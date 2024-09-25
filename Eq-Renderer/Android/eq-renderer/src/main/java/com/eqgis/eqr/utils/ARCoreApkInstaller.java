@@ -1,18 +1,13 @@
-package com.eqgis.eqr;
+package com.eqgis.eqr.utils;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
-
-import androidx.core.content.FileProvider;
 
 import com.eqgis.ar.ARPlugin;
 
