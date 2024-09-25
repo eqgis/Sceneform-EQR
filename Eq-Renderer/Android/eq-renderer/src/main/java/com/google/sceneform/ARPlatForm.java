@@ -8,8 +8,13 @@ public class ARPlatForm {
     //default-ARCore
     static Type TYPE = Type.AR_CORE;
 
-    public static boolean isArCore(){
-        return TYPE == Type.AR_CORE;//1
+    public static boolean isArCoreOrNone(){
+        //None是为了兼容CameraStream中采用背景纹理的情况
+        return TYPE == Type.AR_CORE || TYPE == Type.NONE;//1
+    }
+
+    public static boolean isNone(){
+        return TYPE == Type.NONE;//1
     }
 
     public static boolean isArEngine(){

@@ -32,7 +32,7 @@ public class ARPlugin {
     private static boolean isEnforceARCore = false;
 
     public static boolean isUsingARCore(){
-        return ARPlatForm.isArCore();
+        return ARPlatForm.isArCoreOrNone();
     }
 
     public static boolean isUsingAREngine(){

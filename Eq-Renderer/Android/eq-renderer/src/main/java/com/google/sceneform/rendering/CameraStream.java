@@ -106,7 +106,8 @@ public class CameraStream {
 
         engine = EngineInstance.getEngine();
 
-        if (/*1*/ARPlatForm.isArCore()){
+        if (/*1*/ARPlatForm.isArCoreOrNone()){
+            Log.i(TAG, "CameraStream: ikkyu1234567890-");
             // create screen quad geometry to camera stream to
             ShortBuffer indexBufferData = ShortBuffer.allocate(ARCORE_CAMERA_INDICES.length);
             indexBufferData.put(ARCORE_CAMERA_INDICES);
@@ -296,7 +297,7 @@ public class CameraStream {
 
     private FloatBuffer createCameraUVBuffer() {
         FloatBuffer buffer;
-        if (ARPlatForm.isArCore()/*2*/){
+        if (ARPlatForm.isArCoreOrNone()/*2*/){
             buffer= ByteBuffer.allocateDirect(ARCORE_CAMERA_UVS.length * FLOAT_SIZE_IN_BYTES)
                     .order(ByteOrder.nativeOrder())
                     .asFloatBuffer();
@@ -540,7 +541,7 @@ public class CameraStream {
      * @param frame
      */
     public void checkCameraTexture(ARFrame frame){
-        if (ARPlatForm.isArCore()){
+        if (ARPlatForm.isArCoreOrNone()){
             //适用于ARCore多线程渲染纹理
             Frame coreFrame = frame.getCoreFrame();
             int cameraTextureName = coreFrame.getCameraTextureName();
@@ -638,7 +639,7 @@ public class CameraStream {
 
     private void adjustCameraUvsForOpenGL() {
         // Correct for vertical coordinates to match OpenGL
-        if (ARPlatForm.isArCore()/*4*/){
+        if (ARPlatForm.isArCoreOrNone()/*4*/){
             for (int i = 1; i < ARCORE_VERTEX_COUNT * 2; i += 2) {
                 transformedCameraUvCoords.put(i, 1.0f - transformedCameraUvCoords.get(i));
             }

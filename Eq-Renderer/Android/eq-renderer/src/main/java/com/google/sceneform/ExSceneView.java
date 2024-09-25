@@ -71,6 +71,8 @@ public class ExSceneView extends SceneView{
     }
 
     private void initBaseParameter() {
+        //当前使用NONE类型
+        ARPlatForm.setType(ARPlatForm.Type.NONE);
         renderer = Preconditions.checkNotNull(getRenderer());
         // 背景平面初始化
         cameraStream = new CameraStream(new int[]{textureId},renderer);

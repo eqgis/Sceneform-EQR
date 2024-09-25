@@ -44,7 +44,7 @@ public class ARSession {
      */
 
     public ARSession(Context context) throws ARSessionException {
-        if (ARPlatForm.isArCore()){
+        if (ARPlatForm.isArCoreOrNone()){
             try {
                 coreSession = new Session(context);
             } catch (UnavailableArcoreNotInstalledException | UnavailableApkTooOldException | UnavailableSdkTooOldException | UnavailableDeviceNotCompatibleException e) {

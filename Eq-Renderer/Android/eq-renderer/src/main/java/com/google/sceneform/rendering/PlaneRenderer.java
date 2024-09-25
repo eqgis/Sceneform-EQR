@@ -187,7 +187,7 @@ public class PlaneRenderer {
      * @param viewHeight 视图高度
      */
     public void update(ARFrame frame, int viewWidth, int viewHeight) {
-        if (ARPlatForm.isArCore()){
+        if (ARPlatForm.isArCoreOrNone()){
             update(frame.getCoreFrame(),viewWidth,viewHeight);
         }else {
             update(frame.getHwFrame(),viewWidth,viewHeight);
@@ -359,7 +359,7 @@ public class PlaneRenderer {
      * 更新所有剩余平面的材质参数。
      */
     private void cleanupOldPlaneVisualizer() {
-        if (ARPlatForm.isArCore()){
+        if (ARPlatForm.isArCoreOrNone()){
             Iterator<Map.Entry<Plane, PlaneVisualizer>> iter = visualizerMap.entrySet().iterator();
 
             while (iter.hasNext()) {

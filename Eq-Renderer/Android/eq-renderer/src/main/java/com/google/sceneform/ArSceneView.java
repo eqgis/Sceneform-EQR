@@ -11,8 +11,6 @@ import android.view.WindowManager;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
-import com.google.ar.core.Pose;
-import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.CameraStream;
@@ -727,7 +725,7 @@ public class ArSceneView extends SceneView {
     }
 
     private void initializeCameraStream() {
-        if (ARPlatForm.isArCore()){
+        if (ARPlatForm.isArCoreOrNone()){
             //ARCore采用多线程渲染，使用多个纹理
             cameraTextureId = new int[]{
                     GLHelper.createCameraTexture(),
