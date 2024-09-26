@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.eqr.layout.SceneViewType;
+import com.eqgis.eqr.listener.InitializeListener;
 import com.eqgis.media.component.VideoTimeLine;
 import com.google.sceneform.ExSceneView;
 import com.google.sceneform.FrameTime;
@@ -47,7 +48,7 @@ public class VideoActivity extends BaseActivity{
         sceneLayout.setSceneViewType(SceneViewType.EXTENSION).init(this);
         videoTimeLine = findViewById(R.id.time_line);
 
-        ((ExSceneView)sceneLayout.getSceneView()).setInitializeListener(new ExSceneView.InitializeListener() {
+        ((ExSceneView)sceneLayout.getSceneView()).setInitializeListener(new InitializeListener() {
             @Override
             public void initializeTexture(ExternalTexture texture) {
                 //纹理初始化成功时，触发回调

@@ -27,7 +27,7 @@ public class CameraActivity2 extends BaseActivity {
         sceneLayout.setSceneViewType(SceneViewType.CAMERA).init(this);
         sceneLayout.addIndirectLight("enviroments/light/lightroom_ibl.ktx",100);
         //todo 计算等效焦距，获取感光元件尺寸，然后计算FOV
-        sceneLayout.getCamera().setVerticalFovDegrees(45);
+        sceneLayout.getCamera().setVerticalFovDegrees(60);
 
         //节点手势控制器初始化
         NodeGestureController.getInstance()
