@@ -15,6 +15,7 @@ import com.google.android.filament.IndirectLight;
 import com.google.android.filament.Skybox;
 import com.google.android.filament.utils.KTX1Loader;
 import com.google.sceneform.Camera;
+import com.google.sceneform.CameraSceneView;
 import com.google.sceneform.ExSceneView;
 import com.google.sceneform.Node;
 import com.google.sceneform.Scene;
@@ -42,12 +43,15 @@ public class SceneLayout extends FrameLayout{
     /**
      * 是否采用ExSceneView替代SceneView
      */
-    private boolean useExSceneView = false;
+    private SceneViewType sceneViewType = SceneViewType.BASE;
 
     private LifecycleListener lifecycleListener;
 
     protected Context context;
-    public SceneView sceneView;
+    /**
+     * 场景视图
+     */
+    SceneView sceneView;
 
     //场景根节点
     private RootNode rootNode;
@@ -96,11 +100,18 @@ public class SceneLayout extends FrameLayout{
     protected void addLayout() {
         LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-        if (useExSceneView){
-            sceneView = new ExSceneView(context);
-            setTransparent(false);
-        }else {
-            sceneView = new SceneView(context);
+        switch (sceneViewType){
+            case BASE:
+                sceneView = new SceneView(context);
+                break;
+            case EXTENSION:
+                sceneView = new ExSceneView(context);
+                setTransparent(false);
+                break;
+            case CAMERA:
+                sceneView = new CameraSceneView(context);
+                setTransparent(false);
+                break;
         }
         sceneView.setLayoutParams(layoutParams);
         this.addView(sceneView);
@@ -343,23 +354,19 @@ public class SceneLayout extends FrameLayout{
     }
 
     /**
-     * 启用ExSceneView替代SceneView
+     * 设置场景视图的类型
      * <p>在{@link #init(Context)}之前调用</p>
-     * @param enable 启用状态
      */
-    public SceneLayout enableExSceneView(boolean enable){
-         useExSceneView = enable;
+    public SceneLayout setSceneViewType(SceneViewType type){
+         this.sceneViewType = type;
          return this;
     }
 
     /**
-     * 获取扩展纹理场景视图
-     * @return {@link ExSceneView}扩展纹理场景视图
+     * 获取场景视图
+     * @return 场景视图
      */
-    public ExSceneView getExSceneView(){
-        if (!useExSceneView){
-            throw new IllegalStateException("ExSceneView was disabled.");
-        }
-        return (ExSceneView) sceneView;
+    public SceneView getSceneView(){
+        return this.sceneView;
     }
 }

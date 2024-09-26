@@ -11,6 +11,7 @@ import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
+import com.google.sceneform.NodeParent;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -39,12 +40,12 @@ public class InteractiveScene implements ISampleScene{
      */
     private Node lightNode;
 
-    private Node rootNode;
+    private NodeParent rootNode;
 
     private Context context;
 
     @Override
-    public void create(Context context, Node rootNode) {
+    public void create(Context context, NodeParent rootNode) {
         this.context = context;
         this.rootNode = rootNode;
 

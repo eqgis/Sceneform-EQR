@@ -14,6 +14,7 @@ import com.eqgis.eqr.utils.PoseUtils;
 import com.eqgis.eqr.utils.ScaleTool;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
+import com.google.sceneform.NodeParent;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -42,7 +43,7 @@ public class GltfSampleScene implements ISampleScene{
     private Node lightNode;
 
     @Override
-    public void create(Context context, Node rootNode) {
+    public void create(Context context, NodeParent rootNode) {
         addGltf(context, rootNode);
 
         //添加光源
@@ -65,7 +66,7 @@ public class GltfSampleScene implements ISampleScene{
     /**
      * 加载模型
      */
-    public void addGltf(Context context, Node rootNode) {
+    public void addGltf(Context context, NodeParent rootNode) {
         modelNode = new Node();
         ModelRenderable
                 .builder()
@@ -101,7 +102,7 @@ public class GltfSampleScene implements ISampleScene{
         NodeGestureController.getInstance().select(modelNode,distance);
     }
 
-    private void addLight(Node rootNode) {
+    private void addLight(NodeParent rootNode) {
         lightNode = new Node();
         lightNode.setParent(rootNode);
 //        Light.Builder builder = Light.builder(Light.Type.POINT);
@@ -148,5 +149,13 @@ public class GltfSampleScene implements ISampleScene{
             //播放动画
             animationModel.play();
         }
+    }
+
+    public Node getModelNode() {
+        return modelNode;
+    }
+
+    public Node getLightNode() {
+        return lightNode;
     }
 }

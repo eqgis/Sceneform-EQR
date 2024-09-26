@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void checkAR(View view){
-        System.out.println();
         boolean arApkReady = ARPlugin.isARApkReady(this);
         Toast.makeText(this, "AR服务支持状态："+arApkReady, Toast.LENGTH_SHORT).show();
         if (!arApkReady){
@@ -100,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
      * 转至AR三维场景
      */
     public void toArSceneActivity(View view) {
+        checkAR(null);//跳转前需检查AR服务支持状态
         startActivity(new Intent(this, ARSceneActivity.class));
     }
 
@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
      * 转至AR三维场景
      */
     public void toArScenePlaneActivity(View view) {
+        checkAR(null);//跳转前需检查AR服务支持状态
         startActivity(new Intent(this, ARScenePlaneActivity.class));
     }
 
@@ -129,6 +130,13 @@ public class MainActivity extends AppCompatActivity {
      */
     public void toVideoActivity(View view) {
         startActivity(new Intent(this,VideoActivity.class));
+    }
+
+    /**
+     * 转至相机示例
+     */
+    public void toCameraActivity(View view) {
+        startActivity(new Intent(this,CameraActivity2.class));
     }
 
 }

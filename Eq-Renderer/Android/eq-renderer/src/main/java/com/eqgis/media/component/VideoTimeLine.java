@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.eqgis.eqr.R;
 import com.google.sceneform.ExSceneView;
+import com.google.sceneform.SceneView;
 
 /**
  * 视频时间轴
@@ -89,7 +90,7 @@ public class VideoTimeLine extends FrameLayout {
      * @param mediaPlayer 播放器
      * @return this
      */
-    public VideoTimeLine bindView(ExSceneView exSceneView, MediaPlayer mediaPlayer){
+    public VideoTimeLine bindView(SceneView exSceneView, MediaPlayer mediaPlayer){
 //        if (!(mediaPlayer.getDuration() > 0))
 //            throw new IllegalArgumentException("The duration of media was error.");
         this.mediaPlayer = mediaPlayer;

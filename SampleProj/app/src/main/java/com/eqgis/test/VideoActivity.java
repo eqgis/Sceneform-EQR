@@ -12,6 +12,7 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.eqgis.eqr.layout.SceneLayout;
+import com.eqgis.eqr.layout.SceneViewType;
 import com.eqgis.media.component.VideoTimeLine;
 import com.google.sceneform.ExSceneView;
 import com.google.sceneform.FrameTime;
@@ -43,10 +44,10 @@ public class VideoActivity extends BaseActivity{
         //普通三维场景(场景3选1)
         setContentView(R.layout.activity_video_scene);
         sceneLayout = findViewById(R.id.video_scene_layout);
-        sceneLayout.enableExSceneView(true).init(this);
+        sceneLayout.setSceneViewType(SceneViewType.EXTENSION).init(this);
         videoTimeLine = findViewById(R.id.time_line);
 
-        sceneLayout.getExSceneView().setInitializeListener(new ExSceneView.InitializeListener() {
+        ((ExSceneView)sceneLayout.getSceneView()).setInitializeListener(new ExSceneView.InitializeListener() {
             @Override
             public void initializeTexture(ExternalTexture texture) {
                 //纹理初始化成功时，触发回调
@@ -97,7 +98,7 @@ public class VideoActivity extends BaseActivity{
         AssetFileDescriptor afd = getAssets().openFd("video/eq_test_video.mp4");
         mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
         mediaPlayer.prepare();
-        videoTimeLine.bindView(sceneLayout.getExSceneView(),mediaPlayer);
+        videoTimeLine.bindView(sceneLayout.getSceneView(),mediaPlayer);
         mediaPlayer.setLooping(true);//循环播放
         mediaPlayer.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {
             @Override

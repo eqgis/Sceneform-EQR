@@ -99,7 +99,7 @@ public class CameraStream {
 
         switch (ARPlatForm.getEngineType()){
             case AR_ENGINE:
-                createBuffer(renderer.getContext(), new float[] {
+                createBuffer(new float[] {
                                 -1.0f, 1.0f, 1.0f,
                                 -1.0f, -1.0f,1.0f,
                                 1.0f, 1.0f,1.0f,
@@ -111,20 +111,21 @@ public class CameraStream {
                                 1.0f, 1.0f});
                 break;
             case CAMERA:
-                createBuffer(renderer.getContext(), new float[] {
-                        1.0f, 1.0f,1.0f,//2
-                        -1.0f, 1.0f, 1.0f,//0
-                        1.0f, -1.0f,1.0f,//3
-                        -1.0f, -1.0f,1.0f//1
-                }, new float[] {
-                        0.0f,0.0f,
-                        0.0f,1.0f,
-                        1.0f,0.0f,
-                        1.0f,1.0f});
-                break;
+//                createBuffer(new float[] {
+//                        1.0f, 1.0f,1.0f,//2
+//                        -1.0f, 1.0f, 1.0f,//0
+//                        1.0f, -1.0f,1.0f,//3
+//                        -1.0f, -1.0f,1.0f//1
+//                }, new float[] {
+//                        0.0f,0.0f,
+//                        0.0f,1.0f,
+//                        1.0f,0.0f,
+//                        1.0f,1.0f});
+                //提前返回
+                return;
             case AR_CORE:
             case NONE:
-                createBuffer(renderer.getContext(), new float[] {
+                createBuffer(new float[] {
                         -1.0f, 1.0f, 1.0f,//0
                         -1.0f, -1.0f,1.0f,//1
                         1.0f, 1.0f,1.0f,//2
@@ -137,7 +138,29 @@ public class CameraStream {
                 break;
         }
 
+        makeMaterial(renderer.getContext());
 //        setupStandardCameraMaterial(renderer);
+        //仅当启用遮挡时，才创建Occlusion材质对象
+        if (ARPlatForm.OCCLUSION_MODE == ARPlatForm.OcclusionMode.OCCLUSION_ENABLED){
+            setupOcclusionCameraMaterial(renderer);
+        }
+    }
+
+    /**
+     * 构造函数
+     * @param cameraTextureId 纹理对象ID
+     * @param renderer 渲染对象
+     * @param cameraVertices 相机的顶点坐标
+     * @param cameraUvs 相机的UV坐标
+     */
+    public CameraStream(int[] cameraTextureId, Renderer renderer,float[] cameraVertices, float[] cameraUvs) {
+        scene = renderer.getFilamentScene();
+        this.cameraTextureId = cameraTextureId;
+        engine = EngineInstance.getEngine();
+
+        createBuffer(cameraVertices,cameraUvs);
+
+        makeMaterial(renderer.getContext());
         //仅当启用遮挡时，才创建Occlusion材质对象
         if (ARPlatForm.OCCLUSION_MODE == ARPlatForm.OcclusionMode.OCCLUSION_ENABLED){
             setupOcclusionCameraMaterial(renderer);
@@ -351,6 +374,8 @@ public class CameraStream {
         if (isTextureInitialized()) {
             return;
         }
+
+        Log.i("IKKYU", "initializeTexture: 22222222222222");
         if (externalTexture == null)return;
 
         if (cameraTexture == null) {
@@ -500,7 +525,7 @@ public class CameraStream {
         }
     }
 
-    private void createBuffer(Context context, float[] cameraVertices, float[] cameraUvs){
+    private void createBuffer(float[] cameraVertices, float[] cameraUvs){
         if (cameraIndexBuffer != null){
             EngineInstance.getEngine().getFilamentEngine().destroyIndexBuffer(cameraIndexBuffer);
         }
@@ -553,6 +578,9 @@ public class CameraStream {
         cameraVertexBuffer.setBufferAt(
                 engine.getFilamentEngine(), UV_BUFFER_INDEX, transformedCameraUvCoords);
 
+    }
+
+    private void makeMaterial(Context context) {
         CompletableFuture<Material> materialFuture =
                 Material.builder()
                         .setSource(
