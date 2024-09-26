@@ -139,4 +139,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(this,CameraActivity2.class));
     }
 
+    /**
+     * 转至VR示例
+     * @param view
+     */
+    public void toVrActivity(View view) {
+        startActivity(new Intent(this,VRSceneActivity.class));
+    }
 }

@@ -61,7 +61,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     private CameraCaptureSession captureSession;
     private Size videoSize;
     private int screenRotation = Surface.ROTATION_0;
-//    public Node node;
+    public Node node;
 
     //记录初始参数（第一次通过传感器获取到的角度值）
     private boolean  rotationInitialized = false;
@@ -189,14 +189,14 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     @Override
     public void resume() {
         super.resume();
-//        openCamera();
+        openCamera();
         registerListener();
     }
 
     @Override
     public void pause() {
         unRegisterListener();
-//        closeCamera();
+        closeCamera();
         super.pause();
     }
 
@@ -382,10 +382,10 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
                 (float) Math.toDegrees(orientation[0]) - rotation[0],
                 (float) Math.toDegrees(orientation[1]) - rotation[1],
                 (float) Math.toDegrees(orientation[2]) - rotation[2]);
-//        Log.i("Pose", "processSensorOrientation2: "+df.format(Math.toDegrees(orientation[0]))
-//                +"   v2:"+ df.format(Math.toDegrees(orientation[1]))
-//                +"   v3:"+df.format(Math.toDegrees(orientation[2]))
-//        +"   Q:"+quaternion.toString() + "fov: "+ getScene().getCamera().getVerticalFovDegrees());
+        Log.i("Pose", "processSensorOrientation2: "+df.format(Math.toDegrees(orientation[0]))
+                +"   v2:"+ df.format(Math.toDegrees(orientation[1]))
+                +"   v3:"+df.format(Math.toDegrees(orientation[2]))
+        +"   Q:"+quaternion.toString() + "fov: "+ getScene().getCamera().getVerticalFovDegrees());
 //        node.setLocalRotation(quaternion);
         getScene().getCamera().setWorldRotation(quaternion);
     }

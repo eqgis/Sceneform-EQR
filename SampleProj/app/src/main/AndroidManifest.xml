@@ -36,6 +36,9 @@
             android:name=".ARSceneActivity"
             android:exported="false" />
         <activity
+            android:name=".VRSceneActivity"
+            android:exported="false" />
+        <activity
             android:name=".ARScenePlaneActivity"
             android:exported="false" />
         <activity

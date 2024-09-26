@@ -20,6 +20,7 @@ import com.google.sceneform.ExSceneView;
 import com.google.sceneform.Node;
 import com.google.sceneform.Scene;
 import com.google.sceneform.SceneView;
+import com.google.sceneform.VrSceneView;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.EngineInstance;
@@ -111,6 +112,9 @@ public class SceneLayout extends FrameLayout{
             case CAMERA:
                 sceneView = new CameraSceneView(context);
                 setTransparent(false);
+                break;
+            case VR:
+                sceneView = new VrSceneView(context);
                 break;
         }
         sceneView.setLayoutParams(layoutParams);

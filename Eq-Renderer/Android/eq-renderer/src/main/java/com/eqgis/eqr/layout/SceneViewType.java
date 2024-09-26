@@ -20,5 +20,9 @@ public enum SceneViewType {
      * 相机视图
      * <p>对应使用CameraSceneView</p>
      */
-    CAMERA
+    CAMERA,
+    /**
+     * VR视图
+     */
+    VR
 }

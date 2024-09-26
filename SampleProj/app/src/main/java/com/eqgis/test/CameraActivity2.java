@@ -49,5 +49,8 @@ public class CameraActivity2 extends BaseActivity {
             }
         });
 
+        //测试
+        CameraSceneView sceneView = (CameraSceneView) sceneLayout.getSceneView();
+        sceneView.node = ((GltfSampleScene)sampleScene).getModelNode();
     }
 }

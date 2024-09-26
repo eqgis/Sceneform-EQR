@@ -61,11 +61,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
             <Button
-                android:onClick="checkAR"
-                android:text="检查当前设备是否支持AR服务\n(ARCore或AREngine)"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
                 android:onClick="toArSceneActivity"
                 android:text="AR三维场景\n(需AR服务支持)"
                 android:layout_width="match_parent"
@@ -84,6 +79,23 @@
             <Button
                 android:onClick="toCameraActivity"
                 android:text="通用3Dof的AR场景\n(基于三轴传感器)"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
+
+            <!--VR示例-->
+            <TextView
+                android:textSize="12dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VR示例:"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <Button
+                android:onClick="toVrActivity"
+                android:text="VR示例"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"/>
 
