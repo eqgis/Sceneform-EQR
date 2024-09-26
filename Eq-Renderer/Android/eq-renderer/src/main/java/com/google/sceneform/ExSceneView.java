@@ -5,6 +5,8 @@ import android.util.AttributeSet;
 
 import androidx.annotation.Nullable;
 
+import com.eqgis.eqr.listener.BeginFrameListener;
+import com.eqgis.eqr.listener.InitializeListener;
 import com.google.sceneform.rendering.ExternalTexture;
 import com.google.sceneform.rendering.Renderer;
 import com.google.sceneform.rendering.CameraStream;
@@ -25,21 +27,6 @@ public class ExSceneView extends SceneView{
     private InitializeListener initializeListener;
     private boolean isInit = false;
     private int textureId = -1;
-
-    public interface BeginFrameListener{
-        void onBeginFrame(long frameTimeNanos);
-    }
-
-    /**
-     * 纹理初始化监听事件
-     */
-    public interface InitializeListener{
-        /**
-         * 当纹理初始化成功是触发回调
-         * @param externalTexture 扩展纹理
-         */
-        void initializeTexture(ExternalTexture externalTexture);
-    }
 
     /**
      * 构造函数

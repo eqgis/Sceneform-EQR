@@ -375,7 +375,6 @@ public class CameraStream {
             return;
         }
 
-        Log.i("IKKYU", "initializeTexture: 22222222222222");
         if (externalTexture == null)return;
 
         if (cameraTexture == null) {

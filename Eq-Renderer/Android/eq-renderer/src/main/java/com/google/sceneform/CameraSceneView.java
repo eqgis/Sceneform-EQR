@@ -13,14 +13,19 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.MediaRecorder;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
 
+import com.eqgis.eqr.listener.BeginFrameListener;
+import com.eqgis.eqr.listener.InitializeListener;
 import com.eqgis.eqr.utils.PoseUtils;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.rendering.CameraStream;
@@ -47,11 +52,10 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     @Nullable
     private ExternalTexture externalTexture;
     private Renderer renderer;
-    private com.google.sceneform.ExSceneView.BeginFrameListener beginFrameListener;
-    private com.google.sceneform.ExSceneView.InitializeListener initializeListener;
+    private BeginFrameListener beginFrameListener;
+    private InitializeListener initializeListener;
     private boolean isInit = false;
     private int textureId = -1;
-
 
     private WindowManager windowManager;
     private SensorManager mSensorManager;
@@ -59,23 +63,27 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     //Camera2相关
     private CameraDevice cameraDevice;
     private CameraCaptureSession captureSession;
-    private Size videoSize;
     private int screenRotation = Surface.ROTATION_0;
+    private int cameraWidth,cameraHeight;
+
     public Node node;
 
     //记录初始参数（第一次通过传感器获取到的角度值）
     private boolean  rotationInitialized = false;
     private float[] rotation = new float[3];
+    //目标画面比例采用4:3
+    private int desiredWidth = 1920;
+    private int desiredHeight = 1440;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         //1.
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ROTATION_VECTOR:
-                processSensorOrientation(event.values);
+                Quaternion quaternion = processSensorOrientation(event.values);
+                getScene().getCamera().setWorldRotation(quaternion);
                 break;
             default:
-                Log.e("DeviceOrientation", "Sensor event type not supported");
                 break;
         }
     }
@@ -83,23 +91,9 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         if (accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
-            Log.w("DeviceOrientation", "Orientation compass unreliable");
+            //数据精度不够
+            Log.w(CameraSceneView.class.getSimpleName(), "Orientation compass unreliable");
         }
-    }
-
-    public interface BeginFrameListener{
-        void onBeginFrame(long frameTimeNanos);
-    }
-
-    /**
-     * 纹理初始化监听事件
-     */
-    public interface InitializeListener{
-        /**
-         * 当纹理初始化成功是触发回调
-         * @param externalTexture 扩展纹理
-         */
-        void initializeTexture(ExternalTexture externalTexture);
     }
 
     /**
@@ -127,7 +121,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
      * set BeginFrameListener
      * @param beginFrameListener
      */
-    public void setBeginFrameListener(com.google.sceneform.ExSceneView.BeginFrameListener beginFrameListener) {
+    public void setBeginFrameListener(BeginFrameListener beginFrameListener) {
         this.beginFrameListener = beginFrameListener;
     }
 
@@ -191,6 +185,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         super.resume();
         openCamera();
         registerListener();
+        Log.i("IKKYU", "resume: ");
     }
 
     @Override
@@ -229,12 +224,6 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
             cameraStream.recalculateOcclusion(customDepthImage);//use
         }
 
-//        float[] transformMatrix = getTransformMatrix(90, 0);
-//        int matrixHandle = GLES30.glGetUniformLocation(program, "uMatrix");
-//        GLES30.glUniformMatrix4fv(matrixHandle, 1, false, transformMatrix, 0);
-//         绑定相机纹理并绘制
-//        GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId);
-
         if (beginFrameListener!=null){
             beginFrameListener.onBeginFrame(frameTimeNanos);
         }
@@ -254,10 +243,13 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
      * 设置纹理初始化监听事件
      * @param initializeListener 监听事件
      */
-    public void setInitializeListener(com.google.sceneform.ExSceneView.InitializeListener initializeListener) {
+    public void setInitializeListener(InitializeListener initializeListener) {
         this.initializeListener = initializeListener;
     }
 
+    /**
+     * 关闭相机
+     */
     private void closeCamera(){
         if (cameraDevice != null) {
             cameraDevice.close();
@@ -271,12 +263,37 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         try {
             String cameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-            videoSize = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    .getOutputSizes(SurfaceTexture.class)[0];
 
+            {
+                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                // 获取支持的输出尺寸
+                Size[] outputSizes = map.getOutputSizes(MediaRecorder.class);
+                // 选择合适的尺寸
+                Size selectedSize = null;
+                for (Size size : outputSizes) {
+                    if (size.getWidth() == desiredWidth && size.getHeight() == desiredHeight) {
+                        selectedSize = size;
+                        break;
+                    }
+                    Log.i("IKKYU", "openCamera: " + size.toString());
+                }
+
+                if (selectedSize != null) {
+                    cameraWidth = selectedSize.getWidth();
+                    cameraHeight = selectedSize.getHeight();
+                    Log.i(CameraSceneView.class.getSimpleName(), "IKKYU Selected video size: " + selectedSize.toString());
+                } else {
+                    // 处理未找到指定尺寸的情况
+                    Log.w(CameraSceneView.class.getSimpleName(), "IKKYU Desired size not found, using default.");
+                    // 可以选择使用第一个支持的尺寸
+                    cameraWidth = outputSizes[0].getWidth();
+                    cameraHeight = outputSizes[0].getHeight();
+                }
+            }
+            Log.i(CameraSceneView.class.getSimpleName(), "openCamera: IKKYU: video size :cameraWidth:"+cameraWidth+" cameraHeight:"+cameraHeight);
             manager.openCamera(cameraId, stateCallback, null);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Log.e(CameraSceneView.class.getSimpleName(), "openCamera: ", e);
         }
     }
 
@@ -305,10 +322,26 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
     private void startPreview() {
         try {
-            //todo，需要做尺寸校正和裁剪
             SurfaceTexture texture = externalTexture.getSurfaceTexture();
-            texture.setDefaultBufferSize(videoSize.getWidth(),videoSize.getHeight());
             Surface surface = externalTexture.getSurface();
+            Log.i("IKKYU", "startPreview: texture纹理尺寸：w："+cameraWidth + "  h:"+cameraHeight);
+            ViewGroup.LayoutParams layoutParams = getLayoutParams();
+
+            //之所以这样做，是由于相机预览画面比例为4：3，为了避免画面被拉伸
+            float scale = Math.max( Math.max(width,height) / (float)desiredWidth,Math.min(width,height) / (float)desiredHeight);
+            if (width > height){
+                //视图尺寸宽大于高，
+                layoutParams.width = (int) (desiredWidth * scale);
+                layoutParams.height = (int) (desiredHeight * scale);
+            }else {
+                layoutParams.width = (int) (desiredHeight * scale);
+                layoutParams.height = (int) (desiredWidth * scale);
+            }
+            this.setLayoutParams(layoutParams);
+            texture.setDefaultBufferSize(layoutParams.width,layoutParams.height);
+
+            Log.i(CameraSceneView.class.getSimpleName(), "Ikkyu startPreview: 控件尺寸 size:"+width + ","+height + " scale:"+scale);
+            Log.i(CameraSceneView.class.getSimpleName(), "Ikkyu startPreview: layoutParams.width:"+layoutParams.width + ","+height + " scale:"+scale);
 
             final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             builder.addTarget(surface);
@@ -335,7 +368,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
-    private void processSensorOrientation(float[] srcRotation) {
+    private Quaternion processSensorOrientation(float[] srcRotation) {
         float[] rotationMatrix = new float[9];
 //        float[] rotation = {-srcRotation[1],srcRotation[2],srcRotation[0]};
         SensorManager.getRotationMatrixFromVector(rotationMatrix, srcRotation);
@@ -375,7 +408,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
             rotation[1] = 0;
             rotation[2] = 0;
             rotationInitialized = true;
-            return;
+            return Quaternion.identity();
         }
 
         Quaternion quaternion = calculateRotation(
@@ -385,9 +418,9 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         Log.i("Pose", "processSensorOrientation2: "+df.format(Math.toDegrees(orientation[0]))
                 +"   v2:"+ df.format(Math.toDegrees(orientation[1]))
                 +"   v3:"+df.format(Math.toDegrees(orientation[2]))
-        +"   Q:"+quaternion.toString() + "fov: "+ getScene().getCamera().getVerticalFovDegrees());
+                +"   Q:"+quaternion.toString() + "fov: "+ getScene().getCamera().getVerticalFovDegrees());
 //        node.setLocalRotation(quaternion);
-        getScene().getCamera().setWorldRotation(quaternion);
+        return quaternion;
     }
 
     DecimalFormat df = new DecimalFormat("#.#");

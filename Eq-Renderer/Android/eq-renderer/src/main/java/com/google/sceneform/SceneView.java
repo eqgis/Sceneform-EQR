@@ -58,8 +58,8 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
             new MovingAverageMillisecondsTracker();
 
     private List<OnTouchListener> mOnTouchListeners;
-    private int width;
-    private int height;
+    protected int width;
+    protected int height;
 
     /**
      * 构造函数
