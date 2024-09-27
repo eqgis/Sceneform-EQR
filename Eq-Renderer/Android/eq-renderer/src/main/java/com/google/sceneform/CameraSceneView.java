@@ -18,6 +18,7 @@ import android.media.MediaRecorder;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Size;
+import android.util.SizeF;
 import android.view.Surface;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -74,6 +75,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     //目标画面比例采用4:3
     private int desiredWidth = 1920;
     private int desiredHeight = 1440;
+    private CameraCharacteristics characteristics;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -199,6 +201,14 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         super.destroy();
     }
 
+    @Override
+    public void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
+        //更新FOV
+        updateFov();
+    }
+
     /**
      * 每帧渲染前触发
      *
@@ -258,12 +268,11 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
     @SuppressLint("MissingPermission")
     private void openCamera() {
-        //todo 计算等效焦距，获取感光元件尺寸，然后计算FOV
-        getScene().getCamera().setVerticalFovDegrees(60);
+//        getScene().getCamera().setFOV();
         CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             String cameraId = manager.getCameraIdList()[0];
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+            characteristics = manager.getCameraCharacteristics(cameraId);
 
             {
                 StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -276,22 +285,22 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
                         selectedSize = size;
                         break;
                     }
-                    Log.i("IKKYU", "openCamera: " + size.toString());
+//                    Log.i("IKKYU", "openCamera: " + size.toString());
                 }
 
                 if (selectedSize != null) {
                     cameraWidth = selectedSize.getWidth();
                     cameraHeight = selectedSize.getHeight();
-                    Log.i(CameraSceneView.class.getSimpleName(), "IKKYU Selected video size: " + selectedSize.toString());
+//                    Log.i(CameraSceneView.class.getSimpleName(), "IKKYU Selected video size: " + selectedSize.toString());
                 } else {
                     // 处理未找到指定尺寸的情况
-                    Log.w(CameraSceneView.class.getSimpleName(), "IKKYU Desired size not found, using default.");
+//                    Log.w(CameraSceneView.class.getSimpleName(), "IKKYU Desired size not found, using default.");
                     // 可以选择使用第一个支持的尺寸
                     cameraWidth = outputSizes[0].getWidth();
                     cameraHeight = outputSizes[0].getHeight();
                 }
             }
-            Log.i(CameraSceneView.class.getSimpleName(), "openCamera: IKKYU: video size :cameraWidth:"+cameraWidth+" cameraHeight:"+cameraHeight);
+//            Log.i(CameraSceneView.class.getSimpleName(), "openCamera: IKKYU: video size :cameraWidth:"+cameraWidth+" cameraHeight:"+cameraHeight);
             manager.openCamera(cameraId, stateCallback, null);
         } catch (CameraAccessException e) {
             Log.e(CameraSceneView.class.getSimpleName(), "openCamera: ", e);
@@ -303,21 +312,21 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         public void onOpened(CameraDevice camera) {
             cameraDevice = camera;
             startPreview();
-            Log.i(CameraSceneView.class.getSimpleName(), "onOpened: ");
+            //Log.i(CameraSceneView.class.getSimpleName(), "onOpened: ");
         }
 
         @Override
         public void onDisconnected(CameraDevice camera) {
             camera.close();
             cameraDevice = null;
-            Log.i(CameraSceneView.class.getSimpleName(), "onDisconnected: ");
+            //Log.i(CameraSceneView.class.getSimpleName(), "onDisconnected: ");
         }
 
         @Override
         public void onError(CameraDevice camera, int error) {
             camera.close();
             cameraDevice = null;
-            Log.i(CameraSceneView.class.getSimpleName(), "onError: ");
+            //Log.i(CameraSceneView.class.getSimpleName(), "onError: ");
         }
     };
 
@@ -325,7 +334,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         try {
             SurfaceTexture texture = externalTexture.getSurfaceTexture();
             Surface surface = externalTexture.getSurface();
-            Log.i("IKKYU", "startPreview: texture纹理尺寸：w："+cameraWidth + "  h:"+cameraHeight);
+            //Log.i("IKKYU", "startPreview: texture纹理尺寸：w："+cameraWidth + "  h:"+cameraHeight);
             ViewGroup.LayoutParams layoutParams = getLayoutParams();
 
             //之所以这样做，是由于相机预览画面比例为4：3，为了避免画面被拉伸
@@ -341,8 +350,8 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
             this.setLayoutParams(layoutParams);
             texture.setDefaultBufferSize(layoutParams.width,layoutParams.height);
 
-            Log.i(CameraSceneView.class.getSimpleName(), "Ikkyu startPreview: 控件尺寸 size:"+width + ","+height + " scale:"+scale);
-            Log.i(CameraSceneView.class.getSimpleName(), "Ikkyu startPreview: layoutParams.width:"+layoutParams.width + ","+height + " scale:"+scale);
+            //Log.i(CameraSceneView.class.getSimpleName(), "Ikkyu startPreview: 控件尺寸 size:"+width + ","+height + " scale:"+scale);
+            //Log.i(CameraSceneView.class.getSimpleName(), "Ikkyu startPreview: layoutParams.width:"+layoutParams.width + ","+height + " scale:"+scale);
 
             final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             builder.addTarget(surface);
@@ -416,10 +425,10 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
                 (float) Math.toDegrees(orientation[0]) - rotation[0],
                 (float) Math.toDegrees(orientation[1]) - rotation[1],
                 (float) Math.toDegrees(orientation[2]) - rotation[2]);
-        Log.i("Pose", "processSensorOrientation2: "+df.format(Math.toDegrees(orientation[0]))
-                +"   v2:"+ df.format(Math.toDegrees(orientation[1]))
-                +"   v3:"+df.format(Math.toDegrees(orientation[2]))
-                +"   Q:"+quaternion.toString() + "fov: "+ getScene().getCamera().getVerticalFovDegrees());
+//        Log.i("Pose", "processSensorOrientation2: "+df.format(Math.toDegrees(orientation[0]))
+//                +"   v2:"+ df.format(Math.toDegrees(orientation[1]))
+//                +"   v3:"+df.format(Math.toDegrees(orientation[2]))
+//                +"   Q:"+quaternion.toString() + "fov: "+ getScene().getCamera().getVerticalFovDegrees());
 //        node.setLocalRotation(quaternion);
         return quaternion;
     }
@@ -450,4 +459,43 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         return PoseUtils.toQuaternion(-pitch, -yaw, -roll);
     }
 
+    /**
+     * 更新FOV
+     */
+    private void updateFov() {
+        try {
+            // 获取相机的焦距和传感器大小
+            float[] focalLengths = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+//            for (int i = 0; i <focalLengths.length; i++) {
+//                Log.d("CameraParams", "Ikkyu Focal Length: " + focalLengths[i]);
+//            }
+            float focalLength = focalLengths[0]; // 选择第一个焦距
+
+            // 获取相机的图像传感器尺寸
+            SizeF sensorSize = characteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
+
+            float vFov = (float) Math.toDegrees(2 * Math.atan(sensorSize.getHeight() * 0.5f / focalLength));
+            float hFov = (float) Math.toDegrees(2 * Math.atan(sensorSize.getWidth() * 0.5f / focalLength));
+            float max = Math.max(vFov, hFov);
+            float min = Math.min(vFov, hFov);
+            //Log.w("IKKYU ", "openCamera: W:"+width + "  H:"+height);
+            if (width > height){
+                //横屏
+                //Log.d("CameraParams", "Ikkyu x选择 FOV: " + min);
+                getScene().getCamera().setVerticalFovDegrees(min);
+            }else{
+                //Log.d("CameraParams", "Ikkyu x选择 FOV: " + max);
+                getScene().getCamera().setVerticalFovDegrees(max);
+            }
+            // 打印内参
+            //Log.d("CameraParams", "Ikkyu x选择 Focal Length: " + focalLength);
+            //Log.d("CameraParams", "Ikkyu Sensor Size: " + sensorSize);
+            //Log.d("CameraParams", "Ikkyu Sensor Orientation: " + sensorOrientation);
+            //Log.d("CameraParams", "Ikkyu FOV: vFov:" + vFov + "  hFov:"+hFov);
+
+        }catch (RuntimeException e){
+            //默认FOV
+            getScene().getCamera().setVerticalFovDegrees(60);
+        }
+    }
 }
