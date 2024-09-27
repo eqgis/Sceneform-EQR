@@ -70,7 +70,7 @@ public class BaseActivity extends AppCompatActivity {
     public void capture(View view){
 //        String path = getExternalCacheDir()+"/capture";
         String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
-        sceneLayout.captureScreen(path,false, new CompleteCallback() {
+        sceneLayout.captureScreen(path,true, new CompleteCallback() {
             @Override
             public void onSuccess(Object object) {
 //                ThreadPools.getThreadPoolExecutor().execute(()->{
@@ -92,7 +92,7 @@ public class BaseActivity extends AppCompatActivity {
                         intent.setDataAndType(Uri.parse(directoryPath), "image/*");
                         startActivity(intent);
                     }
-                },1500);
+                },1000);
             }
 
             @Override
