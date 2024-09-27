@@ -65,7 +65,7 @@ public class VRSceneActivity extends BaseActivity {
         planeNode.setParent(rootNode);
         CompletableFuture<Material> materialCompletableFuture = MaterialFactory.makeTransparentWithColor(
                 rootNode.getScene().getView().getContext(),
-                new Color(1, 1, 1,1)
+                new Color(1, 1, 1,0.1f)
         );
         materialCompletableFuture.thenAccept(new Consumer<Material>() {
             @Override
