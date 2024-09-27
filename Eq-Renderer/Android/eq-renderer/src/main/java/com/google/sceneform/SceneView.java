@@ -2,22 +2,27 @@ package com.google.sceneform;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Choreographer;
 import android.view.MotionEvent;
+import android.view.PixelCopy;
 import android.view.Surface;
 import android.view.SurfaceView;
 
 import androidx.annotation.Nullable;
 
+import com.eqgis.eqr.listener.CompleteCallback;
 import com.google.android.filament.IndirectLight;
 import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Renderer;
 import com.google.sceneform.rendering.ResourceManager;
+import com.google.sceneform.rendering.ThreadPools;
 import com.google.sceneform.utilities.MovingAverageMillisecondsTracker;
 import com.google.sceneform.rendering.EngineInstance;
 import com.google.sceneform.rendering.RenderableInternalFilamentAssetData;
@@ -26,7 +31,12 @@ import com.google.sceneform.utilities.Preconditions;
 import com.google.android.filament.ColorGrading;
 import com.google.android.filament.View;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 

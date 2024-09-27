@@ -66,7 +66,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     private int screenRotation = Surface.ROTATION_0;
     private int cameraWidth,cameraHeight;
 
-    public Node node;
+//    public Node node;
 
     //记录初始参数（第一次通过传感器获取到的角度值）
     private boolean  rotationInitialized = false;
@@ -128,9 +128,8 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     private void initBaseParameter(Context context) {
         ARPlatForm.setType(ARPlatForm.Type.CAMERA);
         renderer = Preconditions.checkNotNull(getRenderer());
-        int orientation = context.getResources().getConfiguration().orientation;
-
-        Log.i("IKKYU", "initBaseParameter: context.getResources().getConfiguration()->>>>>>"+orientation);
+//        int orientation = context.getResources().getConfiguration().orientation;
+//        Log.i("IKKYU", "initBaseParameter: context.getResources().getConfiguration()->>>>>>"+orientation);
 
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -259,6 +258,8 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
     @SuppressLint("MissingPermission")
     private void openCamera() {
+        //todo 计算等效焦距，获取感光元件尺寸，然后计算FOV
+        getScene().getCamera().setVerticalFovDegrees(60);
         CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             String cameraId = manager.getCameraIdList()[0];

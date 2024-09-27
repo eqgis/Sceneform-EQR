@@ -1,14 +1,20 @@
 package com.eqgis.eqr.layout;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.media.ExifInterface;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.PixelCopy;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.eqgis.eqr.core.Eqr;
+import com.eqgis.eqr.listener.CompleteCallback;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.exception.NotSupportException;
 import com.google.android.filament.Engine;
@@ -25,11 +31,16 @@ import com.google.sceneform.VrSceneView;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.EngineInstance;
+import com.google.sceneform.rendering.ThreadPools;
 import com.google.sceneform.utilities.SceneformBufferUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -100,7 +111,7 @@ public class SceneLayout extends FrameLayout{
      * @return SceneView
      */
     protected void addLayout() {
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
         layoutParams.gravity = Gravity.CENTER;
         switch (sceneViewType){
@@ -374,5 +385,110 @@ public class SceneLayout extends FrameLayout{
      */
     public SceneView getSceneView(){
         return this.sceneView;
+    }
+
+    /**
+     * 截屏
+     * @param folderPath 截屏结果保存的文件夹路径
+     * @param crop 是否裁剪，当实际画面超过布局视图的尺寸时，将进行裁剪
+     * @param completeCallback 回调事件
+     * @return 返回保存的文件名
+     */
+    public void captureScreen(String folderPath, boolean crop, CompleteCallback completeCallback) {
+        folderPath = /*去掉头尾空白的*/folderPath.trim();
+
+        if (folderPath.endsWith("/") || folderPath.endsWith("\\")){
+            //去掉最后一个字符
+            folderPath = folderPath.substring(0,folderPath.length() - 1);
+        }
+        File file = new File(folderPath);
+
+        @SuppressLint("SimpleDateFormat")
+        final String filePath = folderPath + "/" + new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new Date()) + ".jpeg";
+
+        int sceneViewWidth = sceneView.getWidth();
+        int sceneViewHeight = sceneView.getHeight();
+        int layoutWidth = SceneLayout.this.getWidth();
+        int layoutHeight = SceneLayout.this.getHeight();
+
+        ThreadPools.getThreadPoolExecutor().execute(()->{
+            if (!file.exists()){
+                file.mkdirs();
+            }
+
+            final Bitmap tmpBm= Bitmap.createBitmap(sceneViewWidth, sceneViewHeight, Bitmap.Config.ARGB_8888);
+
+            if (crop && (sceneViewWidth > layoutWidth || sceneViewHeight > layoutHeight)){
+                //需要进行尺寸校正，cameraSceneView中用到
+                int left = (sceneViewWidth - layoutWidth) / 2;
+                int top = (sceneViewHeight - layoutHeight) / 2;
+                PixelCopy.request(sceneView, tmpBm, new PixelCopy.OnPixelCopyFinishedListener() {
+                    @Override
+                    public void onPixelCopyFinished(int copyResult) {
+                        if (copyResult == PixelCopy.SUCCESS){
+                            //Step-1 裁剪图片
+                            Bitmap croppedBitmap = Bitmap.createBitmap(tmpBm, left, top, layoutWidth, layoutHeight);
+                            try {
+                                //Step-2 将位图写入jpg格式
+                                File file = new File(filePath);
+                                FileOutputStream fos = new FileOutputStream(file);
+                                croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 100,fos);
+
+                                //Step-3 读写jpg的EXIF信息
+                                ExifInterface exifInterface = new ExifInterface(filePath);
+                                exifInterface.setAttribute(ExifInterface.TAG_COPYRIGHT,"Sceneform-EQR");
+                                //desc-保存
+                                exifInterface.saveAttributes();
+
+                                fos.close();
+                                //成功回调
+                                completeCallback.onSuccess(filePath);
+                            } catch (IOException e) {
+                                Log.e("Capture Action", "onPixelCopyFinished  FileNotFoundException: ");
+                                //失败回调
+                                completeCallback.onFailed(e.getMessage());
+                            }finally {
+                                tmpBm.recycle();
+                                croppedBitmap.recycle();
+                            }
+                        }else {
+                            completeCallback.onFailed("CopyResult=" + copyResult);
+                        }
+                    }
+                },getHandler());
+            }else {
+                PixelCopy.request(sceneView, tmpBm, new PixelCopy.OnPixelCopyFinishedListener() {
+                    @Override
+                    public void onPixelCopyFinished(int copyResult) {
+                        if (copyResult == PixelCopy.SUCCESS){
+                            try {
+                                //Step-2 将位图写入jpg格式
+                                File file = new File(filePath);
+                                FileOutputStream fos = new FileOutputStream(file);
+                                tmpBm.compress(Bitmap.CompressFormat.JPEG, 100,fos);
+
+                                //Step-3 读写jpg的EXIF信息
+                                ExifInterface exifInterface = new ExifInterface(filePath);
+                                exifInterface.setAttribute(ExifInterface.TAG_COPYRIGHT,"Sceneform-EQR");
+                                //desc-保存
+                                exifInterface.saveAttributes();
+
+                                fos.close();
+                                //成功回调
+                                completeCallback.onSuccess(filePath);
+                            } catch (IOException e) {
+                                Log.e("Capture Action", "onPixelCopyFinished  FileNotFoundException: ");
+                                //失败回调
+                                completeCallback.onFailed(e.getMessage());
+                            }finally {
+                                tmpBm.recycle();
+                            }
+                        }else {
+                            completeCallback.onFailed("CopyResult=" + copyResult);
+                        }
+                    }
+                },getHandler());
+            }
+        });
     }
 }

@@ -2,7 +2,6 @@ package com.eqgis.test;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -10,9 +9,6 @@ import android.view.View;
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.layout.SceneViewType;
 import com.eqgis.test.scene.GltfSampleScene;
-import com.google.sceneform.CameraSceneView;
-import com.google.sceneform.Node;
-import com.google.sceneform.SceneView;
 
 public class CameraActivity2 extends BaseActivity {
 
@@ -26,8 +22,6 @@ public class CameraActivity2 extends BaseActivity {
         //选择相机类型后，初始化控件
         sceneLayout.setSceneViewType(SceneViewType.CAMERA).init(this);
         sceneLayout.addIndirectLight("enviroments/light/lightroom_ibl.ktx",100);
-        //todo 计算等效焦距，获取感光元件尺寸，然后计算FOV
-        sceneLayout.getCamera().setVerticalFovDegrees(60);
 
         //节点手势控制器初始化
         NodeGestureController.getInstance()
@@ -49,8 +43,5 @@ public class CameraActivity2 extends BaseActivity {
             }
         });
 
-        //测试
-        CameraSceneView sceneView = (CameraSceneView) sceneLayout.getSceneView();
-        sceneView.node = ((GltfSampleScene)sampleScene).getModelNode();
     }
 }
