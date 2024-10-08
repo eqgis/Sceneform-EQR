@@ -1,6 +1,6 @@
 plugins {
     id 'com.android.library'
-    id 'maven-publish'
+//    id 'maven-publish'
     id 'org.jetbrains.kotlin.android'
 }
 
@@ -89,30 +89,30 @@ ext {
 
     PUBLISH_VERSION = '1.0.9'//版本号，每一次更新迭代升级版本
 }
-
-afterEvaluate {
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                artifact bundleReleaseAar
-
-                groupId project.PUBLISH_GROUP_ID
-                artifactId project.PUBLISH_ARTIFACT_ID
-                version project.PUBLISH_VERSION
-
-            }
-        }
-
-        repositories {
-            maven {
-//            url = layout.buildDirectory.dir('repo')
-                def deployPath = file(project.GITHUB_REPO_PATH)
-                url = layout.buildDirectory.dir("file://${deployPath.absolutePath}")
-            }
-        }
-    }
-    java {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-}
+//
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            maven(MavenPublication) {
+//                artifact bundleReleaseAar
+//
+//                groupId project.PUBLISH_GROUP_ID
+//                artifactId project.PUBLISH_ARTIFACT_ID
+//                version project.PUBLISH_VERSION
+//
+//            }
+//        }
+//
+//        repositories {
+//            maven {
+////            url = layout.buildDirectory.dir('repo')
+//                def deployPath = file(project.GITHUB_REPO_PATH)
+//                url = layout.buildDirectory.dir("file://${deployPath.absolutePath}")
+//            }
+//        }
+//    }
+//    java {
+//        sourceCompatibility = JavaVersion.VERSION_1_8
+//        targetCompatibility = JavaVersion.VERSION_1_8
+//    }
+//}
