@@ -415,8 +415,8 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
         if (!rotationInitialized){
             rotation[0] = (float) Math.toDegrees(orientation[0]);
-            rotation[1] = 0;
-            rotation[2] = 0;
+            rotation[1] = (float) Math.toDegrees(orientation[1]);
+            rotation[2] = (float) Math.toDegrees(orientation[2]);
             rotationInitialized = true;
             return Quaternion.identity();
         }
