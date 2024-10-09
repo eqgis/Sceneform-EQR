@@ -43,6 +43,7 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
     private boolean isDoubleFingerScroll = false;
     private float distance = 1.0f;
     private float lastRotationAngle = 0f;
+    private float ROTATION_FACTOR = 5.0f;
 
     public NodeGestureListener() {
 
@@ -203,7 +204,7 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         lastRotationAxis.x = cross.x;
         lastRotationAxis.y = cross.y;
         lastRotationAxis.z = cross.z;
-        lastRotationAngle = (float) Math.toDegrees(Math.acos(cosC)*distance/*这里distance作为一个系数*/);
+        lastRotationAngle = (float) Math.toDegrees(Math.acos(cosC)) * ROTATION_FACTOR/*这里为一个经验系数*/;
         Quaternion rotation = Quaternion.axisAngle(lastRotationAxis, lastRotationAngle);
         Quaternion localRotation = target.getLocalRotation();
 //        Log.i("IKKYU", "onOneFingerScroll: " + lastRotationAxis + "  q:"+Quaternion.multiply(rotation,localRotation));
