@@ -127,10 +127,10 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         if (e2.getPointerCount() == 2) {
             onDoubleFingerScroll(e1, e2, distanceX, distanceY);
         } else if (e2.getPointerCount() == 1) {
-            float deltaY = e2.getY() - e1.getY();
-            float deltaX = e2.getX() - e1.getX();
+//            float deltaY = e2.getY() - e1.getY();
+//            float deltaX = e2.getX() - e1.getX();
 
-            Log.i("IKKYU---", "onScroll: e1:"+e1.getX()+" e2:"+e2.getX() +  " deltaX:"+deltaX + "  deltaY:"+deltaY + "  disX:"+distanceX + "  disY:"+distanceY);
+//            Log.i("IKKYU---", "onScroll: e1:"+e1.getX()+" e2:"+e2.getX() +  " deltaX:"+deltaX + "  deltaY:"+deltaY + "  disX:"+distanceX + "  disY:"+distanceY);
             onOneFingerScroll(e2,distanceX, distanceY);
         }
         return true;
