@@ -411,7 +411,7 @@ public class SceneLayout extends FrameLayout{
         int layoutWidth = SceneLayout.this.getWidth();
         int layoutHeight = SceneLayout.this.getHeight();
 
-        ThreadPools.getThreadPoolExecutor().execute(()->{
+        {
             if (!file.exists()){
                 file.mkdirs();
             }
@@ -489,6 +489,7 @@ public class SceneLayout extends FrameLayout{
                     }
                 },getHandler());
             }
-        });
+        }
+//        ThreadPools.getThreadPoolExecutor().execute(()->);
     }
 }
