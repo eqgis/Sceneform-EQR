@@ -4,3 +4,5 @@ Eq-Renderer/Android/eq-renderer/libs/armeabi-v7a/libeqr-core.so
 SampleProj/app/src/main/assets/gltf/test3.glb
 *.glb
 SampleProj/.idea/deploymentTargetSelector.xml
+SampleProj/gradle/wrapper/gradle-wrapper.properties
+SampleProj/.idea/misc.xml
