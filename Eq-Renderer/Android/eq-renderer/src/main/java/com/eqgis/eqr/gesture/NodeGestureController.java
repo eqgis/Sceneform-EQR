@@ -131,7 +131,7 @@ public class NodeGestureController {
             scaleGestureDetector.onTouchEvent(event);
         }
 
-        nodeGestureListener.rayTest(event.getX(),event.getY());
+//        nodeGestureListener.rayTest(event);
         gestureDetector.onTouchEvent(event);
 
         switch (event.getAction()){

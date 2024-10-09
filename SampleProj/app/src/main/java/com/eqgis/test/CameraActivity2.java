@@ -10,6 +10,10 @@ import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.layout.SceneViewType;
 import com.eqgis.test.scene.GltfSampleScene;
 
+/**
+ * 通用3Dof的AR场景
+ * <p>采用Camera2和方向传感器实现</p>
+ */
 public class CameraActivity2 extends BaseActivity {
 
     @SuppressLint("MissingInflatedId")

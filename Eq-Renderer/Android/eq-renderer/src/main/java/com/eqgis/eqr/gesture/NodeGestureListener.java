@@ -1,6 +1,7 @@
 package com.eqgis.eqr.gesture;
 
 
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -8,7 +9,9 @@ import android.view.ScaleGestureDetector;
 import com.eqgis.eqr.animation.ValueAnimation;
 import com.eqgis.eqr.animation.ValueAnimationEvaluator;
 import com.google.sceneform.Camera;
+import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
+import com.google.sceneform.collision.Ray;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 
@@ -39,6 +42,7 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
     private boolean isScaling = false;
     private boolean isDoubleFingerScroll = false;
     private float distance = 1.0f;
+    private float lastRotationAngle = 0f;
 
     public NodeGestureListener() {
 
@@ -49,7 +53,7 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
             @Override
             public void onValueUpdate(float current, boolean running) {
                 if (mIsFling){
-                    Quaternion quaternion = Quaternion.axisAngle(lastRotationAxis, current * 0.00005f);
+                    Quaternion quaternion = Quaternion.axisAngle(lastRotationAxis, current);
                     Quaternion localRotation = target.getLocalRotation();
                     target.setLocalRotation(Quaternion.multiply(quaternion,localRotation));
                 }else {
@@ -123,7 +127,11 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         if (e2.getPointerCount() == 2) {
             onDoubleFingerScroll(e1, e2, distanceX, distanceY);
         } else if (e2.getPointerCount() == 1) {
-            onOneFingerScroll(distanceX, distanceY);
+            float deltaY = e2.getY() - e1.getY();
+            float deltaX = e2.getX() - e1.getX();
+
+            Log.i("IKKYU---", "onScroll: e1:"+e1.getX()+" e2:"+e2.getX() +  " deltaX:"+deltaX + "  deltaY:"+deltaY + "  disX:"+distanceX + "  disY:"+distanceY);
+            onOneFingerScroll(e2,distanceX, distanceY);
         }
         return true;
     }
@@ -134,6 +142,12 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         return false;
     }
 
+    /**
+     * 根据distance实现旋转操作
+     * @param distanceX
+     * @param distanceY
+     */
+    @Deprecated
     private void onOneFingerScroll(float distanceX, float distanceY) {
         if (isScaling || isDoubleFingerScroll)return;
         //单指实现旋转
@@ -160,6 +174,42 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         target.setLocalRotation(Quaternion.multiply(rotation,localRotation));
     }
 
+    /**
+     * 单指旋转
+     */
+    private void onOneFingerScroll(MotionEvent currentEvent,float distanceX, float distanceY) {
+        if (isScaling || isDoubleFingerScroll)return;
+        //单指实现旋转(计算旋转轴和旋转角度)
+        //原理：
+        //上一触摸点转为空间坐标点A，当前触摸点转为空间触摸点B。记当前场景相机的位置为点O
+        //那么向量OA与向量OB的叉积则是旋转轴
+
+        //转为空间坐标（屏幕坐标->射线->固定距离的点）
+        Vector3 pointA = camera.screenPointToRay(currentEvent.getX() - distanceX,
+                currentEvent.getY() - distanceY).getPoint(/*外部传入*/distance);
+
+        Vector3 pointB = camera.screenPointToRay(currentEvent.getX(),currentEvent.getY()).getPoint(distance);
+        Vector3 pointO = camera.getWorldPosition();
+        Vector3 oa = Vector3.subtract(pointA, pointO);
+        Vector3 ob = Vector3.subtract(pointB, pointO);
+        float c = Vector3.subtract(pointA, pointB).length();
+        float a = oa.length();
+        float b = ob.length();
+        float cosC = (a * a + b * b - c * c) / (2 * a * b);
+        //旋转轴
+        Vector3 cross = Vector3.cross(oa, ob).normalized();
+
+        //改成使用distanceX/Y，简化后如下：
+        lastRotationAxis.x = cross.x;
+        lastRotationAxis.y = cross.y;
+        lastRotationAxis.z = cross.z;
+        lastRotationAngle = (float) Math.toDegrees(Math.acos(cosC)*distance/*这里distance作为一个系数*/);
+        Quaternion rotation = Quaternion.axisAngle(lastRotationAxis, lastRotationAngle);
+        Quaternion localRotation = target.getLocalRotation();
+//        Log.i("IKKYU", "onOneFingerScroll: " + lastRotationAxis + "  q:"+Quaternion.multiply(rotation,localRotation));
+        target.setLocalRotation(Quaternion.multiply(rotation,localRotation));
+    }
+
     private void onDoubleFingerScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         isDoubleFingerScroll = true;
         //计算当前Node的世界坐标系下的空间位置。
@@ -176,7 +226,7 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         mIsFling = true;//状态更新
 
         float vDistance = (float) Math.min(5000f,Math.sqrt((xVelocity * xVelocity + yVelocity * yVelocity)));
-        animation.updateValue(vDistance,0f);
+        animation.updateValue(lastRotationAngle,0f);
         //根据速度标量取值惯性效果最长时间约3秒
         animation.setDuration((long) (vDistance * 0.32f));
         animation.init(animationEvaluator);
@@ -195,7 +245,18 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         isDoubleFingerScroll = false;
     }
 
-    public void rayTest(float x, float y) {
-        //todo 精准指控的旋转，计划通过射线检测实现
+    void rayTest(MotionEvent event) {
+        //测试方法
+        HitTestResult hitTestResult = target.getScene().hitTest(event);
+        if (hitTestResult != null){
+            Vector3 point = hitTestResult.getPoint();
+            if (point.length() > 0.0001f){
+                Log.i("IKKYU-GESTURE", "rayTest: ikkyu hitpoint >>>> " + point.toString());
+            }
+        }
+
+        Vector3 worldPosition = target.getScene().getCamera().getWorldPosition();
+        Quaternion worldRotation = target.getScene().getCamera().getWorldRotation();
+        Log.i("IKKYU", "rayTest: CAMERA: "+worldRotation);
     }
 }
