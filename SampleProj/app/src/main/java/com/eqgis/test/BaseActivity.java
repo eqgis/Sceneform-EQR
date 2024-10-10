@@ -84,15 +84,10 @@ public class BaseActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "保存成功", Toast.LENGTH_SHORT).show();
                 Log.i("IKKYU", "保存成功\n路径："+object.toString());
 
-                sceneLayout.getHandler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        String directoryPath = object.toString();
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setDataAndType(Uri.parse(directoryPath), "image/*");
-                        startActivity(intent);
-                    }
-                },1000);
+                String directoryPath = object.toString();
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse(directoryPath), "image/*");
+                startActivity(intent);
             }
 
             @Override
