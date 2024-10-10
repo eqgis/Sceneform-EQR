@@ -185,18 +185,13 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         //上一触摸点转为空间坐标点A，当前触摸点转为空间触摸点B。记当前场景相机的位置为点O
         //那么向量OA与向量OB的叉积则是旋转轴
 
-        //转为空间坐标（屏幕坐标->射线->固定距离的点）
-        Vector3 pointA = camera.screenPointToRay(currentEvent.getX() - distanceX,
-                currentEvent.getY() - distanceY).getPoint(/*外部传入*/distance);
+        //转为空间坐标（屏幕坐标->射线->固定距离的点）oa、ob都为单位向量
+        Vector3 oa = camera.screenPointToRay(currentEvent.getX() - distanceX,
+                currentEvent.getY() - distanceY).getDirection();
 
-        Vector3 pointB = camera.screenPointToRay(currentEvent.getX(),currentEvent.getY()).getPoint(distance);
-        Vector3 pointO = camera.getWorldPosition();
-        Vector3 oa = Vector3.subtract(pointA, pointO);
-        Vector3 ob = Vector3.subtract(pointB, pointO);
-        float c = Vector3.subtract(pointA, pointB).length();
-        float a = oa.length();
-        float b = ob.length();
-        float cosC = (a * a + b * b - c * c) / (2 * a * b);
+        Vector3 ob = camera.screenPointToRay(currentEvent.getX(),currentEvent.getY()).getDirection();
+        float c = Vector3.subtract(oa, ob).length();
+        float cosC = (2 - c * c) / 2;//a、b为单位向量，模长为1
         //旋转轴
         Vector3 cross = Vector3.cross(oa, ob).normalized();
 
@@ -205,9 +200,9 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         lastRotationAxis.y = cross.y;
         lastRotationAxis.z = cross.z;
         lastRotationAngle = (float) Math.toDegrees(Math.acos(cosC)) * ROTATION_FACTOR/*这里为一个经验系数*/;
+
         Quaternion rotation = Quaternion.axisAngle(lastRotationAxis, lastRotationAngle);
         Quaternion localRotation = target.getLocalRotation();
-//        Log.i("IKKYU", "onOneFingerScroll: " + lastRotationAxis + "  q:"+Quaternion.multiply(rotation,localRotation));
         target.setLocalRotation(Quaternion.multiply(rotation,localRotation));
     }
 
