@@ -415,8 +415,8 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
         if (!rotationInitialized){
             rotation[0] = (float) Math.toDegrees(orientation[0]);
-            rotation[1] = (float) Math.toDegrees(orientation[1]);
-            rotation[2] = (float) Math.toDegrees(orientation[2]);
+//            rotation[1] = (float) Math.toDegrees(orientation[1]);
+//            rotation[2] = (float) Math.toDegrees(orientation[2]);
             rotationInitialized = true;
             return Quaternion.identity();
         }
@@ -433,7 +433,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
         return quaternion;
     }
 
-    DecimalFormat df = new DecimalFormat("#.#");
+//    DecimalFormat df = new DecimalFormat("#.#");
     public void registerListener(){
         mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_GAME);
