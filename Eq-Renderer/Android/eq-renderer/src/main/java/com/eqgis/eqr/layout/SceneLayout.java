@@ -452,6 +452,7 @@ public class SceneLayout extends FrameLayout{
                                 croppedBitmap.recycle();
                             }
                         }else {
+                            tmpBm.recycle();
                             completeCallback.onFailed("CopyResult=" + copyResult);
                         }
                     }
@@ -484,6 +485,7 @@ public class SceneLayout extends FrameLayout{
                                 tmpBm.recycle();
                             }
                         }else {
+                            tmpBm.recycle();
                             completeCallback.onFailed("CopyResult=" + copyResult);
                         }
                     }
