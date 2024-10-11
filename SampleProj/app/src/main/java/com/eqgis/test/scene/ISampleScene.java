@@ -3,8 +3,10 @@ package com.eqgis.test.scene;
 import android.content.Context;
 
 import com.eqgis.eqr.node.RootNode;
+import com.google.sceneform.Camera;
 import com.google.sceneform.Node;
 import com.google.sceneform.NodeParent;
+import com.google.sceneform.SceneView;
 
 /**
  * 场景示例通用接口
@@ -24,4 +26,10 @@ public interface ISampleScene{
      * @param context 上下文
      */
     void destroy(Context context);
+
+    /**
+     * 设置场景视图
+     * @param sceneView 场景视图
+     */
+    void setSceneView(SceneView sceneView);
 }

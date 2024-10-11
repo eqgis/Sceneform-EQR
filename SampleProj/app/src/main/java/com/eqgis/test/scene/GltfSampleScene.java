@@ -12,9 +12,12 @@ import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
 import com.eqgis.eqr.utils.ScaleTool;
+import com.google.sceneform.Camera;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
 import com.google.sceneform.NodeParent;
+import com.google.sceneform.SceneView;
+import com.google.sceneform.collision.Ray;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -41,6 +44,7 @@ public class GltfSampleScene implements ISampleScene{
      * 光源节点
      */
     private Node lightNode;
+    private SceneView sceneView;
 
     @Override
     public void create(Context context, NodeParent rootNode) {
@@ -63,11 +67,17 @@ public class GltfSampleScene implements ISampleScene{
         }
     }
 
+    @Override
+    public void setSceneView(SceneView sceneView) {
+        this.sceneView = sceneView;
+    }
+
     /**
      * 加载模型
      */
     public void addGltf(Context context, NodeParent rootNode) {
         modelNode = new Node();
+        modelNode.setEnabled(false);
         ModelRenderable
                 .builder()
                 .setSource(context, Uri.parse(modelPath))
@@ -80,7 +90,23 @@ public class GltfSampleScene implements ISampleScene{
                         //缩放成单位尺寸
                         modelNode.setLocalScale(Vector3.one()
                                 .scaled(ScaleTool.calculateUnitsScale(modelRenderable)));
-                        modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
+
+                        //当sceneView不为null时，则将在sceneView的中心作射线，在距离distance的位置加载模型
+                        if (sceneView != null){
+                            //这里需要短暂延时，避免width和height为0
+                            sceneView.getHandler().postDelayed(()->{
+                                int centerX = sceneView.getMeasuredWidth() / 2;
+                                int centerY = sceneView.getMeasuredHeight() / 2;
+                                Ray ray = sceneView.getScene().getCamera().screenPointToRay(centerX, centerY);
+                                Vector3 point = ray.getPoint(distance);
+
+                                modelNode.setLocalPosition(point);
+                                modelNode.setEnabled(true);
+                            },1000);
+                        }else {
+                            modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
+                            modelNode.setEnabled(true);
+                        }
                         modelNode.setParent(rootNode);
 
                         //创建模型动画

@@ -9,9 +9,11 @@ import android.widget.Toast;
 
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
+import com.google.sceneform.Camera;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
 import com.google.sceneform.NodeParent;
+import com.google.sceneform.SceneView;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -119,6 +121,10 @@ public class InteractiveScene implements ISampleScene{
         lightNode.setParent(null);
     }
 
+    @Override
+    public void  setSceneView(SceneView sceneView){
+
+    }
 
 
     /**
