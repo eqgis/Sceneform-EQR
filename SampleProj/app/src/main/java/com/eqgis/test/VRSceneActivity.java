@@ -74,10 +74,10 @@ public class VRSceneActivity extends BaseActivity {
                         new Vector3(0,-1.2f,0),material);
                 Log.i("IKKYU", "accept: modelRenderable");
                 planeNode.setRenderable(modelRenderable);
-                boolean shadowReceiver = planeNode.getRenderable().isShadowReceiver();
-                boolean shadowCaster = planeNode.getRenderable().isShadowCaster();
-                Toast.makeText(rootNode.getScene().getView().getContext(),
-                        "shadowReceiver:" + shadowReceiver + "\nshadowCaster:" + shadowCaster, Toast.LENGTH_SHORT).show();
+//                boolean shadowReceiver = planeNode.getRenderable().isShadowReceiver();
+//                boolean shadowCaster = planeNode.getRenderable().isShadowCaster();
+//                Toast.makeText(rootNode.getScene().getView().getContext(),
+//                        "shadowReceiver:" + shadowReceiver + "\nshadowCaster:" + shadowCaster, Toast.LENGTH_SHORT).show();
             }
         });
     }
