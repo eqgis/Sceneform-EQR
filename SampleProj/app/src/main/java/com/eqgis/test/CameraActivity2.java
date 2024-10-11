@@ -46,6 +46,7 @@ public class CameraActivity2 extends BaseActivity {
         //加载GLTF模型
         sampleScene = new GltfSampleScene();
         sampleScene.create(getApplicationContext(),sceneLayout.getRootNode());
+        sampleScene.setSceneView(sceneLayout.getSceneView());
 
         @SuppressLint({"MissingInflatedId", "LocalSuppress"})
         View touchView = findViewById(R.id.touch_view);
