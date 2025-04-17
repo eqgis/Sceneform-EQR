@@ -10,7 +10,6 @@ Sceneform是一个3D框架，具有基于物理的渲染器，针对移动设备
 
 ---
 
----
 
 ## 运行
 
@@ -35,11 +34,10 @@ Sceneform是一个3D框架，具有基于物理的渲染器，针对移动设备
 
 ---
 
----
 
 
 
-## 谷歌接口文档
+## 接口文档
 > sceneform-eqr是对sceneform的扩展，相关接口调用与sceneform大同小异。
 
 
@@ -97,13 +95,27 @@ EQ-Renderer是EQ基于sceneform（filament）扩展的一个用于安卓端的�
 
 <img src="./doc/img/g4.gif" style="zoom:67%;" />
 
-- 案例：通过渲染安卓原生View，实现一个AR桌面应用
+- 案例：AR桌面
 
-![](./doc/img/g1.gif)
+> 通过渲染安卓原生View实现
+
+<img src="./doc/img/g1.gif" style="zoom:67%;" />
 
 >支持双屏显示，常用于XR眼镜
 
-<img src="./doc/img/a2.png" style="zoom: 33%;" />
+<img src="./doc/img/a2.png" style="zoom:67%;" />
+
+- 案例：AR涂鸦（自定义纹理、流动纹理、视频纹理、移位贴图）
+
+>呼吸效果，通过Filament的matc工具编译自定义材质文件
+
+<img src="./doc/img/g5.gif" style="zoom:67%;" />
+
+>流动纹理，使用视频资源作为纹理贴图
+
+<img src="./doc/img/g6.gif" style="zoom:67%;" />
+
+
 
 ---
 
