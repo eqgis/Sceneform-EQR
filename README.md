@@ -8,6 +8,9 @@ Sceneform是一个3D框架，具有基于物理的渲染器，针对移动设备
 
 (Sceneform)EQ-Renderer是基于sceneform扩展的一个用于安卓端的三维AR渲染器。 当前接入了ARCore、AREngine、ORB-SLAM，可快速地进行AR开发。
 
+---
+
+---
 
 ## 运行
 
@@ -30,9 +33,15 @@ Sceneform是一个3D框架，具有基于物理的渲染器，针对移动设备
 2.  File > Open，选择`SampleProj`，点击"OK"
 3. 点击"Run 'app' "，运行`app`模块
 
-## 相关文档
+---
 
-### Sceneform
+---
+
+
+
+## 谷歌接口文档
+> sceneform-eqr是对sceneform的扩展，相关接口调用与sceneform大同小异。
+
 
 > sceneform相关接口使用可以参考以下文档。
 >
@@ -42,18 +51,61 @@ Google [sceneform1.16源码存档](https://github.com/google-ar/sceneform-androi
 
 Google [sceneform1.15帮助文档](https://developers.google.cn/sceneform/develop/getting-started?hl=zh-cn)
 
-### EQR使用文档
+---
 
-> sceneform-eqr是对sceneform的扩展，相关接口调用与sceneform大同小异。
+## 博客专栏
 
-[使用EQ-Renderer创建AR加载模型](https://www.eqgis.cn/2024/01/30/2024-01-30-%E4%BD%BF%E7%94%A8EQ-Renderer%E5%88%9B%E5%BB%BAAR%E5%8A%A0%E8%BD%BD%E6%A8%A1%E5%9E%8B)
+EQ-Renderer是EQ基于sceneform（filament）扩展的一个用于安卓端的渲染引擎。本专栏主要介绍如何在AndroidStudio中使用它快速地进行开发。
 
-[https://www.eqgis.cn/tags/EQ-R](https://www.eqgis.cn/tags/EQ-R)
+**CSDN平台**
 
-[Android AR渲染引擎](https://blog.csdn.net/qq_41140324/category_12571725.html)
+[Sceneform-EQR（安卓原生3D渲染引擎）](https://blog.csdn.net/qq_41140324/category_12571725.html)
+
+**博客园**
 
 [安卓原生AR开发](https://www.cnblogs.com/eqgis/tag/%E5%AE%89%E5%8D%93%E5%8E%9F%E7%94%9FAR%E5%BC%80%E5%8F%91/)
 
+**自建站**
+
+>2025年1月1日起，自建站内容不再更新。
+
+[https://www.eqgis.cn/tags/EQ-R](https://www.eqgis.cn/tags/EQ-R)
+
+---
+
+
+## 功能预览
+
+- 在普通3d场景加载GLTF格式的模型
+
+<img src="./doc/img/a3.png" style="zoom: 33%;" />
+
+- 在AR场景加载GLTF格式的模型
+
+<img src="./doc/img/a4.png" style="zoom: 33%;" />
+
+- 支持GLTF模型动画
+
+
+![](./doc/img/g3.gif)
+
+- 手势点击交互
+
+<img src="./doc/img/a1.gif" style="zoom:67%;" />
+
+- 通过手势控制模型（单指旋转、双指平移、双指缩放）
+
+<img src="./doc/img/g4.gif" style="zoom:67%;" />
+
+- 案例：通过渲染安卓原生View，实现一个AR桌面应用
+
+![](./doc/img/g1.gif)
+
+>支持双屏显示，常用于XR眼镜
+
+<img src="./doc/img/a2.png" style="zoom: 33%;" />
+
+---
 
 ## 仓库地址
 
