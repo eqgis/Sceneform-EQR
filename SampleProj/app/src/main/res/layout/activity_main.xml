@@ -98,6 +98,11 @@
                 android:text="VR示例"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"/>
+            <Button
+                android:onClick="toVr360Activity"
+                android:text="全景视频播放器示例"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
 
             <TextView
                 android:textSize="12dp"
