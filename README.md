@@ -67,11 +67,6 @@ You can refer to the following official documents for more information on Scenef
 **CnBlogs**
 [Android Native AR Development](https://www.cnblogs.com/eqgis/tag/%E5%AE%89%E5%8D%93%E5%8E%9F%E7%94%9FAR%E5%BC%80%E5%8F%91/)
 
-**Official Website**
-
-> Content updates ended on January 1, 2025.
-> [https://www.eqgis.cn/tags/EQ-R](https://www.eqgis.cn/tags/EQ-R)
-
 ---
 
 ## Feature Preview
