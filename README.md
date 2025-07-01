@@ -80,10 +80,12 @@ You can refer to the following official documents for more information on Scenef
 <img src="./doc/img/a3.png" style="zoom:33%;" />
 
 * Load **GLTF** models in AR scenes 
+
 <img src="./doc/img/a4.png" style="zoom:33%;" />
 
 * Support for **GLTF model animation**
-  ![](./doc/img/g3.gif)
+
+<img src="./doc/img/g3.gif" style="zoom:100%;" />
 
 * Tap gesture interaction
 
