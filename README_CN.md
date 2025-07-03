@@ -9,6 +9,18 @@
 
 > EQ-Renderer模块已开源，包含了sceneform中集成AREngine、ORB-SLAM，以及其它对sceneform的扩展。
 
+---
+
+[![License](https://img.shields.io/badge/License-Apache 2.0-8bb903)](./LICENSE)
+
+[![Filament](https://img.shields.io/badge/Filament-v1.53.0-8bb903)](https://github.com/google/filament)
+
+[![ARCore](https://img.shields.io/badge/ARCore-v1.45.0-8bb903)](https://github.com/google-ar/arcore-android-sdk)
+
+[![AREngine](https://img.shields.io/badge/AREngine-v4.0.0.5-8bb903)](https://developer.huawei.com/consumer/cn/doc/graphics-References/ar-engine-java-api-0000001064060313)
+
+---
+
 ## 介绍
 
 Sceneform是一个3D框架，具有基于物理的渲染器，针对移动设备进行了优化，使您可以轻松构建增强现实应用程序，而无需OpenGL。

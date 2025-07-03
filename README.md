@@ -3,11 +3,19 @@
 
 - Readme.md[中文](./README_CN.md)
 
-
-
 # Sceneform - EQR
 
 > The **EQ-Renderer** module is now open-source. It includes integrations with **AREngine**, **ORB-SLAM**, and other extensions based on Google's Sceneform SDK.
+
+---
+
+[![License](https://img.shields.io/badge/License-Apache 2.0-8bb903)](./LICENSE)
+
+[![Filament](https://img.shields.io/badge/Filament-v1.53.0-8bb903)](https://github.com/google/filament)
+
+[![ARCore](https://img.shields.io/badge/ARCore-v1.45.0-8bb903)](https://github.com/google-ar/arcore-android-sdk)
+
+[![AREngine](https://img.shields.io/badge/AREngine-v4.0.0.5-8bb903)](https://developer.huawei.com/consumer/cn/doc/graphics-References/ar-engine-java-api-0000001064060313)
 
 ---
 
