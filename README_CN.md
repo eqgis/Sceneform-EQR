@@ -11,8 +11,6 @@
 
 ---
 
-[![License](https://img.shields.io/badge/License-Apache 2.0-8bb903)](./LICENSE)
-
 [![Filament](https://img.shields.io/badge/Filament-v1.53.0-8bb903)](https://github.com/google/filament)
 
 [![ARCore](https://img.shields.io/badge/ARCore-v1.45.0-8bb903)](https://github.com/google-ar/arcore-android-sdk)
