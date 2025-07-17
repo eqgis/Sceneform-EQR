@@ -7,6 +7,8 @@
 
 # Sceneform - EQR
 
+![Sceneform - EQR](https://gitcode.com/EQXR/Sceneform-EQR/star/badge.svg)
+
 > EQ-Renderer模块已开源，包含了sceneform中集成AREngine、ORB-SLAM，以及其它对sceneform的扩展。
 
 ---
