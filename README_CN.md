@@ -11,7 +11,9 @@
 
 ---
 
-GitCode：[Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)    ![Sceneform - EQR](https://gitcode.com/EQXR/Sceneform-EQR/star/badge.svg)
+**GitHub**：[eqgis/Sceneform-EQR](https://github.com/eqgis/Sceneform-EQR)   [![GitHub stars](https://img.shields.io/github/stars/eqgis/Sceneform-EQR?style=flat-square)](https://github.com/eqgis/Sceneform-EQR)
+
+**GitCode**：[EQXR/Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)   [![Sceneform - EQR](https://gitcode.com/EQXR/Sceneform-EQR/star/badge.svg)](https://gitcode.com/EQXR/Sceneform-EQR)
 
 ---
 
