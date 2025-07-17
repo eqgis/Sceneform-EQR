@@ -5,9 +5,11 @@
 
 # Sceneform - EQR
 
-![Sceneform - EQR](https://gitcode.com/EQXR/Sceneform-EQR/star/badge.svg)
-
 > The **EQ-Renderer** module is now open-source. It includes integrations with **AREngine**, **ORB-SLAM**, and other extensions based on Google's Sceneform SDK.
+
+---
+
+GitCode：[Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)    ![Sceneform - EQR](https://gitcode.com/EQXR/Sceneform-EQR/star/badge.svg)
 
 ---
 
