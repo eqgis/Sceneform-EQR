@@ -161,16 +161,10 @@ maven {
 
 > 本节记录项目的推广动态、社区活跃度与多平台建设进展。
 
-- ✅ **2025-07 更新**：项目已完成 **GitHub ⇌ GitCode** 双向同步，支持国内外用户无障碍访问与协作。
-- ✅ **平台推广情况**：
-  - 🔗 **[「安卓原生3D开源渲染引擎」：Sceneform‑EQR的开源故事](https://eqgis.blog.csdn.net/article/details/148944195)**  
-
 - ✅ **多平台共建进展**：
   - GitHub：[eqgis/Sceneform-EQR](https://github.com/eqgis/Sceneform-EQR)  
   - GitCode：[EQXR/Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)  
-  -  支持任意平台提 Issue / PR，共享社区反馈与修复流程
-- ✅ **社区互动邀请**：
-  - 💬 提交 [Issue](https://github.com/eqgis/Sceneform-EQR/issues) 反馈使用问题或功能建议
-  - 欢迎贡献代码、完善文档、参与多语言翻译与模块优化
+  
+- ✅ **2025-07 更新**：项目已完成 **GitHub ⇌ GitCode** 双向同步，支持国内外用户无障碍访问与协作。
 
 📌 *本模块将持续更新，如你在其他平台发现了该项目的推广信息或媒体报道，欢迎通过 Issue 留言告知，一起建设更完善的生态社区！*
