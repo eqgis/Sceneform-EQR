@@ -153,13 +153,13 @@ maven {
   - 🔗 **[The Open Source Story of Sceneform‑EQR](https://eqgis.blog.csdn.net/article/details/148944195)** 
 
 - ✅ **Multi-Platform Collaboration Progress**:  
-  - 🐙 GitHub: [eqgis/Sceneform-EQR](https://github.com/eqgis/Sceneform-EQR)  
-  - 🐬 GitCode: [EQXR/Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)  
-  - 📌 Issues and PRs are welcome on both platforms — feedback and fixes are shared across the community.
+  - GitHub: [eqgis/Sceneform-EQR](https://github.com/eqgis/Sceneform-EQR)  
+  -  GitCode: [EQXR/Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)  
+  - Issues and PRs are welcome on both platforms — feedback and fixes are shared across the community.
 
 - ✅ **Community Collaboration Invitation**:  
   - 💬 Submit [Issues](https://github.com/eqgis/Sceneform-EQR/issues) to report problems or suggest new features.  
-  - 🙌 Contributions are welcome — including code, documentation, translations, and module improvements.
+  - Contributions are welcome — including code, documentation, translations, and module improvements.
 
 📌 *This section will be continuously updated. If you discover promotional content or media coverage about this project on other platforms, feel free to let us know via an Issue. Let's build a better open-source ecosystem together!*
 
