@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    tools:context=".VideoActivity">
+    tools:context=".samples.VideoActivity">
     <com.eqgis.eqr.layout.SceneLayout
         android:id="@+id/video_scene_layout"
         android:layout_width="match_parent"

@@ -1,4 +1,4 @@
-package com.eqgis.test;
+package com.eqgis.test.samples;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -9,19 +9,24 @@ import android.widget.TextView;
 
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.layout.SceneViewType;
-import com.eqgis.eqr.utils.PoseUtils;
+import com.eqgis.test.BaseActivity;
+import com.eqgis.test.R;
 import com.eqgis.test.scene.GltfSampleScene;
-import com.google.sceneform.Camera;
-import com.google.sceneform.FrameTime;
-import com.google.sceneform.Scene;
-import com.google.sceneform.math.Quaternion;
-import com.google.sceneform.math.Vector3;
 
 /**
  * 通用3Dof的AR场景
- * <p>采用Camera2和方向传感器实现</p>
+ * <p>基于Camera与设备方向传感器实现的三自由度（3DoF）增强现实场景。</p>
+ * <p>该类负责初始化基于摄像头背景的SceneView环境，支持环境光照、模型加载、
+ * 以及通过手势控制器(NodeGestureController)实现的模型旋转与缩放交互。</p>
+ * <p>主要特性包括：</p>
+ * <ul>
+ *     <li>使用相机视频流作为视频背景，实现现实场景叠加渲染</li>
+ *     <li>通过方向传感器计算设备姿态，实现相机视角控制</li>
+ *     <li>支持GLTF模型异步加载与显示</li>
+ *     <li>支持多点触控的旋转、缩放、拖拽交互</li>
+ * </ul>
  */
-public class CameraActivity2 extends BaseActivity {
+public class CameraActivity extends BaseActivity {
     private TextView tipsView;
 
     @SuppressLint("MissingInflatedId")

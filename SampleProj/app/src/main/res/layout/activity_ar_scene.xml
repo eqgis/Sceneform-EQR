@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ARSceneActivity">
+    tools:context=".samples.ARSceneActivity">
     <com.eqgis.eqr.layout.ARSceneLayout
         android:id="@+id/ar_scene_layout"
         android:layout_width="match_parent"

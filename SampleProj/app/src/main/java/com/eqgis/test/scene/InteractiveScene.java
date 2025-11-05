@@ -23,9 +23,36 @@ import com.google.sceneform.rendering.ViewRenderable;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-
 /**
- * 简单的手势（点击）交互示例场景
+ * InteractiveScene
+ * <p>
+ * 这是一个基于 Sceneform 实现的简单交互场景示例，用于演示如何在 3D 场景中实现
+ * 模型加载、光照设置以及节点点击（Tap）交互功能。
+ * </p>
+ *
+ * <h3>主要功能：</h3>
+ * <ul>
+ *     <li>加载一个 GLTF 格式的 3D 模型文件（默认路径："gltf/table.glb"）</li>
+ *     <li>为场景添加一个可调节角度与强度的平行光源（模拟日光）</li>
+ *     <li>实现模型点击事件的响应，打印节点姿态与射线碰撞信息</li>
+ *     <li>在点击位置动态添加一个文字标记（ViewRenderable）</li>
+ * </ul>
+ *
+ * <h3>使用说明：</h3>
+ * <ol>
+ *     <li>实现接口 {@link ISampleScene}，由外部的 Scene 容器调用 {@link #create(Context, NodeParent)} 初始化。</li>
+ *     <li>调用 {@link #destroy(Context)} 可释放渲染资源，防止内存泄漏。</li>
+ *     <li>场景中的所有节点（模型节点、光照节点、UI节点）均挂载在外部传入的 {@code rootNode} 下。</li>
+ * </ol>
+ *
+ * <h3>示例交互：</h3>
+ * 当用户点击模型时，系统将计算射线与包围盒的碰撞点，
+ * 在该位置生成一个带有 "T" 的标记对象，并输出点击信息至日志与 Toast。
+ *
+ * <h3>适用场景：</h3>
+ * 本类常用于 SLAM、AR 及三维互动演示系统的入门示例，
+ * 展示如何通过 Sceneform 实现模型渲染与节点交互。
+ *
  * @author tanyx 2024/1/31
  * @version 1.0
  **/

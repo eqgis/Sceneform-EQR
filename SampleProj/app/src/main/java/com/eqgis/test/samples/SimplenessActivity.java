@@ -1,4 +1,4 @@
-package com.eqgis.test;
+package com.eqgis.test.samples;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,30 +8,48 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.ScaleTool;
+import com.eqgis.test.R;
 import com.google.sceneform.Node;
-import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.ModelRenderable;
 
 /**
- * 最简单的示例
- * <pre>
- *     演示如何加载3D模型。
- *     最简的代码示例！！！！！！
- * </pre>
+ * 最简化3D模型加载示例
+ * <p>
+ * 本示例展示了如何在SceneLayout中加载单个GLTF模型，代码尽量精简，
+ * 适合作为初学者快速了解3D模型渲染流程的入门示例。
+ * </p>
+ *
+ * <p>主要功能：</p>
+ * <ul>
+ *     <li>获取场景根节点（RootNode）</li>
+ *     <li>创建节点（Node）并加载GLTF模型</li>
+ *     <li>设置模型的缩放、位置</li>
+ *     <li>将模型节点关联到场景根节点，实现可视化显示</li>
+ * </ul>
+ *
+ * <p>适用场景：</p>
+ * <ul>
+ *     <li>初学者快速测试3D模型加载</li>
+ *     <li>演示SceneLayout和ModelRenderable的最基础用法</li>
+ * </ul>
+ *
  */
 public class SimplenessActivity extends AppCompatActivity {
 
     private String modelPath = "gltf/bee.glb";
     private SceneLayout sceneLayout;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_base_scene);
         sceneLayout = findViewById(R.id.base_scene_layout);
+
         //获取场景的根节点
         RootNode rootNode = sceneLayout.getRootNode();
         //创建节点
         Node modelNode = new Node();
+
         ModelRenderable
                 .builder()
                 .setSource(this, Uri.parse(modelPath))

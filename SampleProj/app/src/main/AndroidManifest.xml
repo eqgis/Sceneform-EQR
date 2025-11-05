@@ -22,33 +22,36 @@
         android:theme="@style/Theme.MyApplication"
         tools:targetApi="31">
         <activity
-            android:name=".CameraActivity2"
+            android:name=".samples.EarthActivity"
+            android:exported="false" />
+        <activity
+            android:name=".samples.CameraActivity"
             android:exported="false"/>
         <activity
-            android:name=".VideoActivity"
+            android:name=".samples.VideoActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
         <activity
-            android:name=".SlamSceneActivity"
+            android:name=".samples.SlamSceneActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
         <activity
-            android:name=".ARSceneActivity"
+            android:name=".samples.ARSceneActivity"
             android:exported="false" />
         <activity
-            android:name=".VRSceneActivity"
+            android:name=".samples.VRSceneActivity"
             android:exported="false" />
         <activity
-            android:name=".VRScene360Activity"
+            android:name=".samples.VRScene360Activity"
             android:exported="false" />
         <activity
-            android:name=".ARScenePlaneActivity"
+            android:name=".samples.ARScenePlaneActivity"
             android:exported="false" />
         <activity
-            android:name=".InteractiveActivity"
+            android:name=".samples.InteractiveActivity"
             android:exported="false" />
         <activity
-            android:name=".BaseSceneActivity"
+            android:name=".samples.BaseSceneActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

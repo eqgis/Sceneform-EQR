@@ -16,6 +16,16 @@ import android.widget.Toast;
 
 import com.eqgis.ar.ARPlugin;
 import com.eqgis.eqr.core.Eqr;
+import com.eqgis.test.samples.ARSceneActivity;
+import com.eqgis.test.samples.ARScenePlaneActivity;
+import com.eqgis.test.samples.BaseSceneActivity;
+import com.eqgis.test.samples.CameraActivity;
+import com.eqgis.test.samples.EarthActivity;
+import com.eqgis.test.samples.InteractiveActivity;
+import com.eqgis.test.samples.SlamSceneActivity;
+import com.eqgis.test.samples.VRScene360Activity;
+import com.eqgis.test.samples.VRSceneActivity;
+import com.eqgis.test.samples.VideoActivity;
 import com.google.sceneform.ARPlatForm;
 
 public class MainActivity extends AppCompatActivity {
@@ -123,21 +133,21 @@ public class MainActivity extends AppCompatActivity {
      * 转至手势交互示例
      */
     public void toInteractiveActivity(View view) {
-        startActivity(new Intent(this,InteractiveActivity.class));
+        startActivity(new Intent(this, InteractiveActivity.class));
     }
 
     /**
      * 转至视频播放器示例
      */
     public void toVideoActivity(View view) {
-        startActivity(new Intent(this,VideoActivity.class));
+        startActivity(new Intent(this, VideoActivity.class));
     }
 
     /**
      * 转至相机示例
      */
     public void toCameraActivity(View view) {
-        startActivity(new Intent(this,CameraActivity2.class));
+        startActivity(new Intent(this, CameraActivity.class));
     }
 
     /**
@@ -145,13 +155,21 @@ public class MainActivity extends AppCompatActivity {
      * @param view
      */
     public void toVrActivity(View view) {
-        startActivity(new Intent(this,VRSceneActivity.class));
+        startActivity(new Intent(this, VRSceneActivity.class));
     }
     /**
      * 转至VR示例
      * @param view
      */
     public void toVr360Activity(View view) {
-        startActivity(new Intent(this,VRScene360Activity.class));
+        startActivity(new Intent(this, VRScene360Activity.class));
+    }
+
+    /**
+     * 转至地球示例
+     * @param view
+     */
+    public void toEarthActivity(View view) {
+        startActivity(new Intent(this, EarthActivity.class));
     }
 }

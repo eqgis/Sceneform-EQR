@@ -120,6 +120,11 @@
                 android:text="视频播放器示例"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"/>
+            <Button
+                android:onClick="toEarthActivity"
+                android:text="地球（球体绘制）示例"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
         </LinearLayout>
     </ScrollView>
 

@@ -1,4 +1,4 @@
-package com.eqgis.test;
+package com.eqgis.test.samples;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
@@ -12,6 +12,8 @@ import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.ScaleTool;
+import com.eqgis.test.BaseActivity;
+import com.eqgis.test.R;
 import com.eqgis.test.scene.GltfSampleScene;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
@@ -20,13 +22,28 @@ import com.google.sceneform.rendering.Material;
 import com.google.sceneform.rendering.MaterialFactory;
 import com.google.sceneform.rendering.ModelRenderable;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * 基础三维场景
+ * 基础三维场景示例
+ * <p>该示例展示了如何在常规的三维场景（非AR、非VR）中使用 SceneView 渲染GLTF模型，
+ * 并通过手势控制器（{@link com.eqgis.eqr.gesture.NodeGestureController}）实现模型交互。</p>
+ *
+ * <p>主要特性包括：</p>
+ * <ul>
+ *     <li>基于 {@link com.eqgis.eqr.layout.SceneLayout} 初始化基础3D场景</li>
+ *     <li>支持加载GLTF模型文件（异步加载）</li>
+ *     <li>支持节点的旋转、缩放、平移等多点触控交互操作</li>
+ *     <li>通过 {@link com.eqgis.eqr.geometry.GeometryUtils#makePlane(Vector3, Vector3, Material)}
+ *     创建平面几何对象，用于模拟地面或参照物</li>
+ *     <li>支持环境光照与相机视锥参数（FOV、远裁剪面）自定义</li>
+ *     <li>示例中展示了如何使用 {@link com.google.sceneform.rendering.MaterialFactory}
+ *     创建透明材质并应用到平面节点</li>
+ * </ul>
+ *
+ * <p>本类主要用于3D渲染与模型交互逻辑的基础验证，也是AR与VR场景构建的前置演示样例。</p>
  */
 public class BaseSceneActivity extends BaseActivity {
     @SuppressLint({"ClickableViewAccessibility", "MissingInflatedId"})

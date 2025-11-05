@@ -1,16 +1,20 @@
-package com.eqgis.test;
+package com.eqgis.test.samples;
 
 import android.os.Bundle;
 
 import com.eqgis.eqr.layout.EqSlamSceneLayout;
+import com.eqgis.test.BaseActivity;
+import com.eqgis.test.R;
 import com.eqgis.test.scene.InteractiveScene;
 
 /**
  * 简单交互示例
- * @author tanyx 2024/1/31
- * @version 1.0
+ * <p>
+ * 这是一个基于 Sceneform 实现的简单交互场景示例{@link InteractiveScene}，用于演示如何在 3D 场景中实现
+ * 模型加载、光照设置以及节点点击（Tap）交互功能。
+ * </p>
  **/
-public class InteractiveActivity extends BaseActivity{
+public class InteractiveActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
