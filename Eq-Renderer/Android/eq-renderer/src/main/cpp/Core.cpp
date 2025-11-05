@@ -4,7 +4,7 @@ using namespace std;
 
 
 //版本信息
-string EQR_CORE_VERSION = "EQ-Renderer_v1.0.9";
+string EQR_CORE_VERSION = "EQ-Renderer_v1.1.0";
 string FILAMENT_VERSION = "v1.53.4";
 
 //更新核心模块状态值
