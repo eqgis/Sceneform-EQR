@@ -110,9 +110,13 @@ EQ-Renderer是EQ基于sceneform（filament）扩展的一个用于安卓端的�
 
 ![](./doc/img/g3.gif)
 
+- 渲染一个球体（采用等距圆柱投影的地图作为其纹理）
+
+<img src="./doc/img/sample-earth.gif" style="zoom:80%;" />
+
 - 手势点击交互
 
-<img src="./doc/img/a1.gif" style="zoom:67%;" />
+<img src="./doc/img/a1.gif" style="zoom:60%;" />
 
 - 通过手势控制模型（单指旋转、双指平移、双指缩放）
 
@@ -137,8 +141,6 @@ EQ-Renderer是EQ基于sceneform（filament）扩展的一个用于安卓端的�
 >流动纹理，使用视频资源作为纹理贴图
 
 <img src="./doc/img/g6.gif" style="zoom:67%;" />
-
-
 
 ---
 

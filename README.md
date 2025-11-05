@@ -84,11 +84,15 @@ You can refer to the following official documents for more information on Scenef
 ## Feature Preview
 
 * Load **GLTF** models in standard 3D scenes 
-<img src="./doc/img/a3.png" style="zoom:33%;" />
+* <img src="./doc/img/a3.png" style="zoom:33%;" />
 
 * Load **GLTF** models in AR scenes 
 
 <img src="./doc/img/a4.png" style="zoom:33%;" />
+
+* Render a sphere (using an equirectangular projection map as the texture)
+
+<img src="./doc/img/sample-earth.gif" style="zoom:80%;" />
 
 * Support for **GLTF model animation**
 
@@ -96,7 +100,7 @@ You can refer to the following official documents for more information on Scenef
 
 * Tap gesture interaction
 
-<img src="./doc/img/a1.gif" style="zoom:67%;" />
+<img src="./doc/img/a1.gif" style="zoom:60%;" />
 
 * Gesture-based model manipulation:
   (One-finger rotate, two-finger pan, two-finger zoom)
