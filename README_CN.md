@@ -112,7 +112,7 @@ EQ-Renderer是EQ基于sceneform（filament）扩展的一个用于安卓端的�
 
 - 渲染一个球体（采用等距圆柱投影的地图作为其纹理）
 
-<img src="./doc/img/sample-earth.gif" style="zoom:80%;" />
+<img src="./doc/img/earth.gif" style="zoom:80%;" />
 
 - 手势点击交互
 

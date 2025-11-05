@@ -92,7 +92,7 @@ You can refer to the following official documents for more information on Scenef
 
 * Render a sphere (using an equirectangular projection map as the texture)
 
-<img src="./doc/img/sample-earth.gif" style="zoom:80%;" />
+<img src="./doc/img/earth.gif" style="zoom:80%;" />
 
 * Support for **GLTF model animation**
 
