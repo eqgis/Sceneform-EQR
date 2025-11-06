@@ -84,7 +84,8 @@ You can refer to the following official documents for more information on Scenef
 ## Feature Preview
 
 * Load **GLTF** models in standard 3D scenes 
-* <img src="./doc/img/a3.png" style="zoom:33%;" />
+
+<img src="./doc/img/a3.png" style="zoom:33%;" />
 
 * Load **GLTF** models in AR scenes 
 
