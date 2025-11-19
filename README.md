@@ -147,6 +147,36 @@ maven {
 
 ---
 
+## License Notice
+
+This repository contains multiple branches with different licensing policies:
+
+- **Branches that include or depend on eq-slam**
+   ORB-SLAM3 is licensed under **GPLv3**, a strong copyleft license, and the eq-slam library incorporates ORB-SLAM3.
+   Therefore, any branch that **includes eq-slam, modifies eq-slam, or directly links to eq-slam via JNI**
+   **must be distributed under the GPLv3 license**.
+- **Branches that do not include eq-slam**
+   The `main` branch is released under the **Apache License 2.0** by default and is **not affected by GPLv3**.
+
+### Why This Structure?
+
+GPLv3 requires that derivative works be distributed under GPLv3.
+ To avoid imposing GPLv3 on the entire repository, we separate GPL-affected code into dedicated branches.
+ Other branches that do not include GPL-related components remain Apache-licensed.
+
+### Important Notes
+
+- If you create a new branch based on a GPL branch, the new branch **must also remain GPLv3**.
+- If you remove all GPL-related code and dependencies, you may switch that branch back to **Apache 2.0**.
+- The licensing difference applies at a **branch level**, not the entire repository.
+
+For full license text, refer to:
+
+- `LICENSE-GPLv3` (for GPLv3 branches)
+- `LICENSE` (Apache 2.0 for other branches)
+
+---
+
 ## 📣 Latest Project Updates
 
 > This section records the latest promotional activities, community engagement, and multi-platform development progress of the project.
