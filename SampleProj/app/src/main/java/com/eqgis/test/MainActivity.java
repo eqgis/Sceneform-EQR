@@ -22,7 +22,7 @@ import com.eqgis.test.samples.BaseSceneActivity;
 import com.eqgis.test.samples.CameraActivity;
 import com.eqgis.test.samples.EarthActivity;
 import com.eqgis.test.samples.InteractiveActivity;
-import com.eqgis.test.samples.SlamSceneActivity;
+//import com.eqgis.test.samples.SlamSceneActivity;
 import com.eqgis.test.samples.VRScene360Activity;
 import com.eqgis.test.samples.VRSceneActivity;
 import com.eqgis.test.samples.VideoActivity;
@@ -122,12 +122,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(this, ARScenePlaneActivity.class));
     }
 
-    /**
-     * 转至使用EQ Slam的三维场景（AR）
-     */
-    public void toSlamSceneActivity(View view) {
-        startActivity(new Intent(this, SlamSceneActivity.class));
-    }
+//    /**
+//     * 转至使用EQ Slam的三维场景（AR）
+//     */
+//    public void toSlamSceneActivity(View view) {
+//        startActivity(new Intent(this, SlamSceneActivity.class));
+//    }
 
     /**
      * 转至手势交互示例

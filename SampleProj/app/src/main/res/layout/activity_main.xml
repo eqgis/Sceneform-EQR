@@ -70,11 +70,11 @@
                 android:text="AR平面识别\n(需AR服务支持)"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"/>
-            <Button
+<!--            <Button
                 android:onClick="toSlamSceneActivity"
                 android:text="AR三维场景\n(基于EQ-SLAM)"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"/>
+                android:layout_height="60dp"/>-->
 
             <Button
                 android:onClick="toCameraActivity"

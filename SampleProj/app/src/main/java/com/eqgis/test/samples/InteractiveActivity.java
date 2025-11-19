@@ -2,7 +2,6 @@ package com.eqgis.test.samples;
 
 import android.os.Bundle;
 
-import com.eqgis.eqr.layout.EqSlamSceneLayout;
 import com.eqgis.test.BaseActivity;
 import com.eqgis.test.R;
 import com.eqgis.test.scene.InteractiveScene;

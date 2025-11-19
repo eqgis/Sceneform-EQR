@@ -31,10 +31,10 @@
             android:name=".samples.VideoActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-        <activity
-            android:name=".samples.SlamSceneActivity"
-            android:exported="false"
-            android:screenOrientation="landscape" />
+<!--        <activity-->
+<!--            android:name=".samples.SlamSceneActivity"-->
+<!--            android:exported="false"-->
+<!--            android:screenOrientation="landscape" />-->
         <activity
             android:name=".samples.ARSceneActivity"
             android:exported="false" />
