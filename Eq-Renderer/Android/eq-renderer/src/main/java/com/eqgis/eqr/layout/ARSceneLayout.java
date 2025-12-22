@@ -113,7 +113,11 @@ public class ARSceneLayout extends SceneLayout{
                 if (ARPlugin.isHuawei()){
                     text = "请在应用商店安装最新版本的华为AREngine服务";
                 }else {
-                    text = "请在应用商店安装最新版本的“Google Play Services for AR”";
+                    if (e.getCause().getCause() instanceof com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException){
+                        text = "当前机型不支持使用ARCore\n即：“Google Play Services for AR”";
+                    }else {
+                        text = "请在应用商店安装最新版本的“Google Play Services for AR”";
+                    }
                 }
 //                SceneLayoutUtils.displayError(context,text,e);
                 Toast.makeText(context, text, Toast.LENGTH_SHORT).show();

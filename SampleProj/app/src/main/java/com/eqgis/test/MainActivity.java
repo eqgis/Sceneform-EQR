@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkAR(View view){
         boolean arApkReady = ARPlugin.isARApkReady(this);
-        Toast.makeText(this, "AR服务支持状态："+arApkReady, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "AR服务安装状态："+arApkReady, Toast.LENGTH_SHORT).show();
         if (!arApkReady){
             if (ARPlugin.isHuawei()){
                 ARPlatForm.setType(ARPlatForm.Type.AR_ENGINE);

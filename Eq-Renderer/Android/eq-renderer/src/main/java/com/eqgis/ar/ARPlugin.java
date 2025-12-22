@@ -100,7 +100,7 @@ public class ARPlugin {
     }
 
     /**
-     * 判断AR服务的APK是否已就绪
+     * 判断AR服务的APK是否已安装
      * @param mContext 上下文
      * @return
      */
