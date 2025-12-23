@@ -17,6 +17,7 @@ package com.eqgis.eqr.layout;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -83,7 +84,13 @@ class SceneLayoutUtils {
     if (session.isDepthModeSupported()) {
       config.openDepth();
     }
-    session.configure(config);
+    try {
+        session.configure(config);
+    }catch (RuntimeException e){
+//        if (e instanceof com.huawei.hiar.exceptions.ARUnavailableServiceNotInstalledException){
+//        }
+        throw new ARSessionException(e);
+    }
 
     return new Object[]{session,config};
   }

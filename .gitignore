@@ -6,3 +6,4 @@ SampleProj/app/src/main/assets/gltf/test3.glb
 SampleProj/.idea/deploymentTargetSelector.xml
 SampleProj/gradle/wrapper/gradle-wrapper.properties
 SampleProj/.idea/misc.xml
+/Tool/out
