@@ -332,7 +332,7 @@ public class RenderableManager {
         }
 
         /**
-         * Set the channel this renderable is associated to. There can be 4 channels.
+         * Set the channel this renderable is associated to. There can be 8 channels.
          *
          * <p>All renderables in a given channel are rendered together, regardless of anything else.
          * They are sorted as usual within a channel.</p>
@@ -342,7 +342,7 @@ public class RenderableManager {
          * <p>Channels 0 and 1 may not have render primitives using a material with `refractionType`
          * set to `screenspace`.</p>
          *
-         * @param channel clamped to the range [0..3], defaults to 2.
+         * @param channel clamped to the range [0..7], defaults to 2.
          *
          * @return Builder reference for chaining calls.
          *
@@ -351,7 +351,7 @@ public class RenderableManager {
          * @see RenderableManager::setBlendOrderAt()
          */
         @NonNull
-        public Builder channel(@IntRange(from = 0, to = 3) int channel) {
+        public Builder channel(@IntRange(from = 0, to = 7) int channel) {
             nBuilderChannel(mNativeBuilder, channel);
             return this;
         }
@@ -730,7 +730,7 @@ public class RenderableManager {
      *
      * @see Builder#channel
      */
-    public void setChannel(@EntityInstance int i, @IntRange(from = 0, to = 3) int channel) {
+    public void setChannel(@EntityInstance int i, @IntRange(from = 0, to = 7) int channel) {
         nSetChannel(mNativeObject, i, channel);
     }
 
@@ -852,6 +852,14 @@ public class RenderableManager {
     }
 
     /**
+     * Gets the immutable number of instances in the given renderable.
+     */
+    @IntRange(from = 0)
+    public int getInstanceCount(@EntityInstance int i) {
+        return nGetInstanceCount(mNativeObject, i);
+    }
+
+    /**
      * Changes the material instance binding for the given primitive.
      *
      * @see Builder#material
@@ -867,6 +875,13 @@ public class RenderableManager {
                     + " do no satisfy required attributes " + materialInstance.getMaterial().getRequiredAttributes());
         }
         nSetMaterialInstanceAt(mNativeObject, i, primitiveIndex, materialInstance.getNativeObject());
+    }
+
+    /**
+     * Clears the material instance for the given primitive.
+     */
+    public void clearMaterialInstanceAt(@EntityInstance int i, @IntRange(from = 0) int primitiveIndex) {
+        nClearMaterialInstanceAt(mNativeObject, i, primitiveIndex);
     }
 
     /**
@@ -1011,7 +1026,9 @@ public class RenderableManager {
     private static native boolean nIsShadowReceiver(long nativeRenderableManager, int i);
     private static native void nGetAxisAlignedBoundingBox(long nativeRenderableManager, int i, float[] center, float[] halfExtent);
     private static native int nGetPrimitiveCount(long nativeRenderableManager, int i);
+    private static native int nGetInstanceCount(long nativeRenderableManager, int i);
     private static native void nSetMaterialInstanceAt(long nativeRenderableManager, int i, int primitiveIndex, long nativeMaterialInstance);
+    private static native void nClearMaterialInstanceAt(long nativeRenderableManager, int i, int primitiveIndex);
     private static native long nGetMaterialInstanceAt(long nativeRenderableManager, int i, int primitiveIndex);
     private static native void nSetGeometryAt(long nativeRenderableManager, int i, int primitiveIndex, int primitiveType, long nativeVertexBuffer, long nativeIndexBuffer, int offset, int count);
     private static native void nSetBlendOrderAt(long nativeRenderableManager, int i, int primitiveIndex, int blendOrder);

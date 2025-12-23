@@ -139,6 +139,10 @@ public class Engine {
          */
         METAL,
         /**
+         * Select the WebGPU driver if platform supports it.
+         */
+        WEBGPU,
+        /**
          * Selects the no-op driver for testing purposes.
          */
         NOOP,
@@ -169,6 +173,36 @@ public class Engine {
         INSTANCED,
         /** Stereoscopic rendering is performed using the multiview feature from the graphics backend. */
         MULTIVIEW,
+    };
+
+    /**
+     * This controls the priority level for GPU work scheduling, which helps prioritize the
+     * submitted GPU work and enables preemption.
+     */
+    public enum GpuContextPriority {
+        /**
+         * Backend default GPU context priority (typically MEDIUM)
+         */
+        DEFAULT,
+        /**
+         * For non-interactive, deferrable workloads. This should not interfere with standard
+         * applications.
+         */
+        LOW,
+        /**
+         * The default priority level for standard applications.
+         */
+        MEDIUM,
+        /**
+         * For high-priority, latency-sensitive workloads that are more important than standard
+         * applications.
+         */
+        HIGH,
+        /**
+         * The highest priority, intended for system-critical, real-time applications where missing
+         * deadlines is unacceptable (e.g., VR/AR compositors or other system-critical tasks).
+         */
+        REALTIME,
     };
 
     /**
@@ -224,13 +258,14 @@ public class Engine {
             nSetBuilderConfig(mNativeBuilder, config.commandBufferSizeMB,
                     config.perRenderPassArenaSizeMB, config.driverHandleArenaSizeMB,
                     config.minCommandBufferSizeMB, config.perFrameCommandsSizeMB,
-                    config.jobSystemThreadCount,
-                    config.textureUseAfterFreePoolSize, config.disableParallelShaderCompile,
+                    config.jobSystemThreadCount, config.disableParallelShaderCompile,
                     config.stereoscopicType.ordinal(), config.stereoscopicEyeCount,
                     config.resourceAllocatorCacheSizeMB, config.resourceAllocatorCacheMaxAge,
                     config.disableHandleUseAfterFreeCheck,
                     config.preferredShaderLanguage.ordinal(),
-                    config.forceGLES2Context);
+                    config.forceGLES2Context, config.assertNativeWindowIsValid,
+                    config.gpuContextPriority.ordinal(),
+                    config.sharedUboInitialSizeInBytes);
             return this;
         }
 
@@ -256,6 +291,17 @@ public class Engine {
          */
         public Builder paused(boolean paused) {
             nSetBuilderPaused(mNativeBuilder, paused);
+            return this;
+        }
+
+        /**
+         * Set a feature flag value. This is the only way to set constant feature flags.
+         * @param name feature name
+         * @param value true to enable, false to disable
+         * @return A reference to this Builder for chaining calls.
+         */
+        public Builder feature(@NonNull String name, boolean value) {
+            nSetBuilderFeature(mNativeBuilder, name, value);
             return this;
         }
 
@@ -394,6 +440,7 @@ public class Engine {
         /**
          * Set to `true` to forcibly disable parallel shader compilation in the backend.
          * Currently only honored by the GL backend.
+         * @Deprecated use "backend.disable_parallel_shader_compile" feature flag instead
          */
         public boolean disableParallelShaderCompile = false;
 
@@ -419,12 +466,12 @@ public class Engine {
          */
         public long stereoscopicEyeCount = 2;
 
-        /*
+        /**
          * @Deprecated This value is no longer used.
          */
         public long resourceAllocatorCacheSizeMB = 64;
 
-        /*
+        /**
          * This value determines how many frames texture entries are kept for in the cache. This
          * is a soft limit, meaning some texture older than this are allowed to stay in the cache.
          * Typically only one texture is evicted per frame.
@@ -432,12 +479,13 @@ public class Engine {
          */
         public long resourceAllocatorCacheMaxAge = 1;
 
-        /*
+        /**
          * Disable backend handles use-after-free checks.
+         * @Deprecated use "backend.disable_handle_use_after_free_check" feature flag instead
          */
         public boolean disableHandleUseAfterFreeCheck = false;
 
-        /*
+        /**
          * Sets a preferred shader language for Filament to use.
          *
          * The Metal backend supports two shader languages: MSL (Metal Shading Language) and
@@ -459,12 +507,35 @@ public class Engine {
         };
         public ShaderLanguage preferredShaderLanguage = ShaderLanguage.DEFAULT;
 
-        /*
+        /**
          * When the OpenGL ES backend is used, setting this value to true will force a GLES2.0
          * context if supported by the Platform, or if not, will have the backend pretend
          * it's a GLES2 context. Ignored on other backends.
          */
         public boolean forceGLES2Context = false;
+
+        /**
+         * Assert the native window associated to a SwapChain is valid when calling makeCurrent().
+         * This is only supported for:
+         *      - PlatformEGLAndroid
+         * @Deprecated use "backend.opengl.assert_native_window_is_valid" feature flag instead
+         */
+        public boolean assertNativeWindowIsValid = false;
+
+        /**
+         * GPU context priority level. Controls GPU work scheduling and preemption.
+         */
+        public GpuContextPriority gpuContextPriority = GpuContextPriority.DEFAULT;
+
+        /**
+         * The initial size in bytes of the shared uniform buffer used for material instance batching.
+         *
+         * If the buffer runs out of space during a frame, it will be automatically reallocated
+         * with a larger capacity. Setting an appropriate initial size can help avoid runtime
+         * reallocations, which can cause a minor performance stutter, at the cost of higher
+         * initial memory usage.
+         */
+        public long sharedUboInitialSizeInBytes = 256 * 64;
     }
 
     private Engine(long nativeEngine, Config config) {
@@ -687,11 +758,11 @@ public class Engine {
 
     /**
      * Returns the maximum number of stereoscopic eyes supported by Filament. The actual number of
-     * eyes rendered is set at Engine creation time with the {@link
-     * Engine#Config#stereoscopicEyeCount} setting.
+     * eyes rendered is set at Engine creation time with the {@link Config#stereoscopicEyeCount}
+     * setting.
      *
      * @return the max number of stereoscopic eyes supported
-     * @see Engine#Config#stereoscopicEyeCount
+     * @see Config#stereoscopicEyeCount
      */
     public long getMaxStereoscopicEyes() {
         return nGetMaxStereoscopicEyes(getNativeObject());
@@ -888,7 +959,8 @@ public class Engine {
 
     /**
      * Returns whether the object is valid.
-     * @param object Object to check for validity
+     * @param ma Material
+     * @param mi MaterialInstance to check for validity
      * @return returns true if the specified object is valid.
      */
     public boolean isValidMaterialInstance(@NonNull Material ma, MaterialInstance mi) {
@@ -1250,7 +1322,28 @@ public class Engine {
      * {@link  android.view.SurfaceHolder.Callback#surfaceDestroyed surfaceDestroyed}.</p>
      */
     public void flushAndWait() {
-        nFlushAndWait(getNativeObject());
+        boolean unused = flushAndWait(Fence.WAIT_FOR_EVER);
+    }
+
+    /**
+     * Kicks the hardware thread (e.g. the OpenGL, Vulkan or Metal thread) and blocks until
+     * all commands to this point are executed. Note that does guarantee that the
+     * hardware is actually finished.
+     *
+     * A timeout can be specified, if for some reason this flushAndWait doesn't complete before the timeout, it will
+     * return false, true otherwise.
+     *
+     * <p>This is typically used right after destroying the <code>SwapChain</code>,
+     * in cases where a guarantee about the <code>SwapChain</code> destruction is needed in a
+     * timely fashion, such as when responding to Android's
+     * <code>android.view.SurfaceHolder.Callback.surfaceDestroyed</code></p>
+     *
+     * @param timeout A timeout in nanoseconds
+     * @return true if successful, false if flushAndWait timed out, in which case it wasn't successful and commands
+     * might still be executing on both the CPU and GPU sides.
+     */
+    public boolean flushAndWait(long timeout) {
+        return nFlushAndWait(getNativeObject(), timeout);
     }
 
     /**
@@ -1309,6 +1402,39 @@ public class Engine {
      * @see Renderer#beginFrame
      */
     public static native long getSteadyClockTimeNano();
+
+
+    /**
+     * Checks if a feature flag exists
+     * @param name name of the feature flag to check
+     * @return true if it exists false otherwise
+     */
+    public boolean hasFeatureFlag(@NonNull String name) {
+        return nHasFeatureFlag(mNativeObject, name);
+    }
+
+    /**
+     * Set the value of a non-constant feature flag.
+     * @param name name of the feature flag to set
+     * @param value value to set
+     * @return true if the value was set, false if the feature flag is constant or doesn't exist.
+     */
+    public boolean setFeatureFlag(@NonNull String name, boolean value) {
+        return nSetFeatureFlag(mNativeObject, name, value);
+    }
+
+    /**
+     * Retrieves the value of any feature flag.
+     * @param name name of the feature flag
+     * @return the value of the flag if it exists
+     * @exception IllegalArgumentException is thrown if the feature flag doesn't exist
+     */
+    public boolean getFeatureFlag(@NonNull String name) {
+        if (!hasFeatureFlag(name)) {
+            throw new IllegalArgumentException("The feature flag \"" + name + "\" doesn't exist");
+        }
+        return nGetFeatureFlag(mNativeObject, name);
+    }
 
     @UsedByReflection("TextureHelper.java")
     public long getNativeObject() {
@@ -1383,7 +1509,7 @@ public class Engine {
     private static native boolean nIsValidRenderTarget(long nativeEngine, long nativeTarget);
     private static native boolean nIsValidSwapChain(long nativeEngine, long nativeSwapChain);
     private static native void nDestroyEntity(long nativeEngine, int entity);
-    private static native void nFlushAndWait(long nativeEngine);
+    private static native boolean nFlushAndWait(long nativeEngine, long timeout);
     private static native void nFlush(long nativeEngine);
     private static native boolean nIsPaused(long nativeEngine);
     private static native void nSetPaused(long nativeEngine, boolean paused);
@@ -1399,6 +1525,9 @@ public class Engine {
     private static native int nGetSupportedFeatureLevel(long nativeEngine);
     private static native int nSetActiveFeatureLevel(long nativeEngine, int ordinal);
     private static native int nGetActiveFeatureLevel(long nativeEngine);
+    private static native boolean nHasFeatureFlag(long nativeEngine, String name);
+    private static native boolean nSetFeatureFlag(long nativeEngine, String name, boolean value);
+    private static native boolean nGetFeatureFlag(long nativeEngine, String name);
 
     private static native long nCreateBuilder();
     private static native void nDestroyBuilder(long nativeBuilder);
@@ -1406,14 +1535,16 @@ public class Engine {
     private static native void nSetBuilderConfig(long nativeBuilder, long commandBufferSizeMB,
             long perRenderPassArenaSizeMB, long driverHandleArenaSizeMB,
             long minCommandBufferSizeMB, long perFrameCommandsSizeMB, long jobSystemThreadCount,
-            long textureUseAfterFreePoolSize, boolean disableParallelShaderCompile,
-            int stereoscopicType, long stereoscopicEyeCount,
+            boolean disableParallelShaderCompile, int stereoscopicType, long stereoscopicEyeCount,
             long resourceAllocatorCacheSizeMB, long resourceAllocatorCacheMaxAge,
             boolean disableHandleUseAfterFreeCheck,
             int preferredShaderLanguage,
-            boolean forceGLES2Context);
+            boolean forceGLES2Context, boolean assertNativeWindowIsValid,
+            int gpuContextPriority,
+            long sharedUboInitialSizeInBytes);
     private static native void nSetBuilderFeatureLevel(long nativeBuilder, int ordinal);
     private static native void nSetBuilderSharedContext(long nativeBuilder, long sharedContext);
     private static native void nSetBuilderPaused(long nativeBuilder, boolean paused);
+    private static native void nSetBuilderFeature(long nativeBuilder, String name, boolean value);
     private static native long nBuilderBuild(long nativeBuilder);
 }

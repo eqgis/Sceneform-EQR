@@ -86,9 +86,10 @@ class SceneLayoutUtils {
     }
     try {
         session.configure(config);
-    }catch (RuntimeException e){
-//        if (e instanceof com.huawei.hiar.exceptions.ARUnavailableServiceNotInstalledException){
-//        }
+    }catch (Exception e){
+        if (e instanceof com.huawei.hiar.exceptions.ARUnavailableServiceNotInstalledException){
+            Log.e(TAG, "createArSession: ", e);
+        }
         throw new ARSessionException(e);
     }
 

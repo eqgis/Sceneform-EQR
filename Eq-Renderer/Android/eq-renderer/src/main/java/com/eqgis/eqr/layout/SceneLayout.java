@@ -147,9 +147,12 @@ public class SceneLayout extends FrameLayout{
             if (byteBuffer != null && sceneView.getRenderer() != null){
                 Engine engine = EngineInstance.getEngine().getFilamentEngine();
 
+                //filament版本由1.53.4升级至1.67.1，接口变更
                 IndirectLight light = KTX1Loader.INSTANCE
-                        .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options());
-                light.setIntensity(100);
+                        .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options()).getIndirectLight();
+                if (light != null) {
+                    light.setIntensity(100);
+                }
                 setIndirectLight(light);
             }
         } catch (IOException e) {
@@ -172,9 +175,14 @@ public class SceneLayout extends FrameLayout{
             if (byteBuffer != null && sceneView.getRenderer() != null){
                 Engine engine = EngineInstance.getEngine().getFilamentEngine();
 
+//                IndirectLight light = KTX1Loader.INSTANCE
+//                        .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options());
+                //filament版本由1.53.4升级至1.67.1，接口变更
                 IndirectLight light = KTX1Loader.INSTANCE
-                        .createIndirectLight(engine, byteBuffer,new KTX1Loader.Options());
-                light.setIntensity(intensity);
+                        .createIndirectLight(engine, byteBuffer, new KTX1Loader.Options()).getIndirectLight();
+                if (light != null) {
+                    light.setIntensity(intensity);
+                }
                 setIndirectLight(light);
             }
         } catch (IOException e) {
@@ -345,9 +353,14 @@ public class SceneLayout extends FrameLayout{
             if (byteBuffer != null && sceneView.getRenderer() != null){
                 Engine engine = EngineInstance.getEngine().getFilamentEngine();
 
-                Skybox skybox = KTX1Loader.INSTANCE.createSkybox(engine,
+//                Skybox skybox = KTX1Loader.INSTANCE.createSkybox(engine,
+//                        byteBuffer, new KTX1Loader.Options());
+//                setSkybox(skybox);
+
+                //filament版本由1.53.4升级至1.67.1，接口变更
+                KTX1Loader.SkyboxBundle skyboxBundle = KTX1Loader.INSTANCE.createSkybox(engine,
                         byteBuffer, new KTX1Loader.Options());
-                setSkybox(skybox);
+                setSkybox(skyboxBundle.getSkybox());
             }
         } catch (IOException e) {
             throw new IllegalStateException("*.ktx was not found.");

@@ -149,8 +149,9 @@ public class VRScene360Activity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        tempNode.destroy();
-        super.onDestroy();
+//        tempNode.destroy();
+        //在 Filament 中，destroyMaterialInstance() 永远不能早于“Engine 中所有 Renderable Entity 的 destroy”，否则必崩。
+        super.onDestroy();//，升级Filament至1.67.1时更新，现已在super.onDestroy()带有销毁entity
 
         if (mediaPlayer != null){
             mediaPlayer.release();

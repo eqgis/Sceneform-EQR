@@ -239,8 +239,25 @@ public class Material {
         FRONT_AND_BACK
     }
 
+    /**
+     * Shader compiler priority queue
+     *
+     * On platforms which support parallel shader compilation, compilation requests will be
+     * processed in order of priority, then insertion order.
+     *
+     * See {@link #compile(CompilerPriorityQueue, int, Object, Runnable)}.
+     */
     public enum CompilerPriorityQueue {
+        /** We need this program NOW.
+         *
+         * When passed as an argument to {@link #compile(CompilerPriorityQueue, int, Object,
+         * Runnable)}, if the platform doesn't support parallel compilation, but does support
+         * amortized shader compilation, the given shader program will be synchronously compiled.
+         */
+        CRITICAL,
+        /** We will need this program soon. */
         HIGH,
+        /** We will need this program eventually. */
         LOW
     }
 
@@ -344,9 +361,18 @@ public class Material {
     }
 
     public static class Builder {
+        public enum ShadowSamplingQuality {
+            /** 2x2 PCF */
+            HARD,
+            /** 3x3 gaussian filter */
+            LOW,
+        }
+
         private Buffer mBuffer;
         private int mSize;
         private int mShBandCount = 0;
+        private ShadowSamplingQuality mShadowSamplingQuality = ShadowSamplingQuality.LOW;
+
 
         /**
          * Specifies the material data. The material data is a binary blob produced by
@@ -379,6 +405,18 @@ public class Material {
         }
 
         /**
+         * Set the quality of shadow sampling. This is only taken into account
+         * if this material is lit and in the surface domain.
+         * @param quality
+         * @return Reference to this Builder for chaining calls.
+         */
+        @NonNull
+        public Builder shadowSamplingQuality(ShadowSamplingQuality quality) {
+            mShadowSamplingQuality = quality;
+            return this;
+        }
+
+        /**
          * Creates and returns the Material object.
          *
          * @param engine reference to the Engine instance to associate this Material with
@@ -390,7 +428,7 @@ public class Material {
         @NonNull
         public Material build(@NonNull Engine engine) {
             long nativeMaterial = nBuilderBuild(engine.getNativeObject(),
-                mBuffer, mSize, mShBandCount);
+                mBuffer, mSize, mShBandCount, mShadowSamplingQuality.ordinal());
             if (nativeMaterial == 0) throw new IllegalStateException("Couldn't create Material");
             return new Material(nativeMaterial);
         }
@@ -750,6 +788,21 @@ public class Material {
     }
 
     /**
+     * 
+     * Returns the name of the transform parameter associated with the given sampler parameter.
+     * In the case the parameter doesn't have a transform name field, it will return an empty string.
+     * 
+     * @param samplerName the name of the sampler parameter to query.
+     * 
+     * @see
+     * <a href="https://google.github.io/filament/Materials.html#materialdefinitions/materialblock/general:parameters">
+     * General: parameters</a>
+     */
+    public String getParameterTransformName(@NonNull String samplerName) {
+        return nGetParameterTransformName(getNativeObject(), samplerName);
+    }
+
+    /**
      * Sets the value of a bool parameter on this material's default instance.
      *
      * @param name the name of the material parameter
@@ -1041,7 +1094,7 @@ public class Material {
         mNativeObject = 0;
     }
 
-    private static native long nBuilderBuild(long nativeEngine, @NonNull Buffer buffer, int size, int shBandCount);
+    private static native long nBuilderBuild(long nativeEngine, @NonNull Buffer buffer, int size, int shBandCount, int shadowQuality);
     private static native long nCreateInstance(long nativeMaterial);
     private static native long nCreateInstanceWithName(long nativeMaterial, @NonNull String name);
     private static native long nGetDefaultInstance(long nativeMaterial);
@@ -1073,4 +1126,5 @@ public class Material {
     private static native int nGetRequiredAttributes(long nativeMaterial);
 
     private static native boolean nHasParameter(long nativeMaterial, @NonNull String name);
+    private static native String nGetParameterTransformName(long nativeMaterial, @NonNull String samplerName);
 }

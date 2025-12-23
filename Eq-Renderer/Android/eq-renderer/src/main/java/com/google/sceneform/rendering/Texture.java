@@ -39,9 +39,9 @@ public class Texture {
     DATA
   }
 
-  //将mipCount设置为最大数量的级别，filament将根据需要夹紧它。
-  //这将确保所有的mip级别被填满，直到1x1。
-  private static final int MIP_LEVELS_TO_GENERATE = 0xff;
+//  //将mipCount设置为最大数量的级别，filament将根据需要夹紧它。
+//  //这将确保所有的mip级别被填满，直到1x1。
+//  private static final int MIP_LEVELS_TO_GENERATE = 0xff;
 
   @Nullable private final TextureInternalData textureData;
 
@@ -274,7 +274,7 @@ public class Texture {
                 bitmapFuture.thenApplyAsync(
                         loadedBitmap -> {
                           TextureInternalData textureData =
-                                  makeTextureData(loadedBitmap, sampler, usage, MIP_LEVELS_TO_GENERATE);
+                                  makeTextureData(loadedBitmap, sampler, usage);
                           return new Texture(textureData);
                         },
                         ThreadPools.getMainExecutor());
@@ -322,7 +322,7 @@ public class Texture {
     }
 
     private static TextureInternalData makeTextureData(
-            Bitmap bitmap, Sampler sampler, Usage usage, int mipLevels) {
+            Bitmap bitmap, Sampler sampler, Usage usage) {
       IEngine engine = EngineInstance.getEngine();
 
       // Due to fun ambiguities between Texture (RenderCore) and Texture (Filament)
@@ -338,16 +338,18 @@ public class Texture {
                       .width(bitmap.getWidth())
                       .height(bitmap.getHeight())
                       .depth(1)
-                      .levels(mipLevels)
+                      .levels(0xff)
+                      //创建一个可被 shader 采样的 2D 纹理，并允许 Filament 根据纹理尺寸，在 GPU 上自动生成完整 mipmap 层级。
+                      .usage(com.google.android.filament.Texture.Usage.DEFAULT | com.google.android.filament.Texture.Usage.GEN_MIPMAPPABLE)
                       .sampler(textureSampler)
                       .format(textureInternalFormat)
                       .build(engine.getFilamentEngine());
 
       TextureHelper.setBitmap(engine.getFilamentEngine(), filamentTexture, 0, bitmap);
 
-      if (mipLevels > 1) {
-        filamentTexture.generateMipmaps(engine.getFilamentEngine());
-      }
+//      if (mipLevels > 1) {
+//        filamentTexture.generateMipmaps(engine.getFilamentEngine());
+//      }
 
       return new TextureInternalData(filamentTexture, sampler);
     }
