@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2024 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "BackendTest.h"
+
+#include "Lifetimes.h"
+#include "Skip.h"
+
+using namespace filament;
+using namespace filament::backend;
+
+namespace test {
+
+TEST_F(BackendTest, FrameScheduledCallback) {
+    auto& api = getDriverApi();
+
+    // Create a SwapChain.
+    // In order for the frameScheduledCallback to be called, this must be a real SwapChain (not
+    // headless) so we obtain a drawable.
+    auto swapChain = addCleanup(createSwapChain());
+
+    Handle<HwRenderTarget> renderTarget = addCleanup(api.createDefaultRenderTarget());
+
+    int callbackCountA = 0;
+    api.setFrameScheduledCallback(
+            swapChain, nullptr,
+            [&callbackCountA](PresentCallable callable) {
+                callable();
+                callbackCountA++;
+            },
+            0);
+
+    // Render the first frame.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.beginRenderPass(renderTarget, {});
+    api.endRenderPass(0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    // Render the next frame. The same callback should be called.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.beginRenderPass(renderTarget, {});
+    api.endRenderPass(0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    // Now switch out the callback.
+    int callbackCountB = 0;
+    api.setFrameScheduledCallback(swapChain, nullptr, [&callbackCountB](PresentCallable callable) {
+        callable();
+        callbackCountB++;
+    }, 0);
+
+    // Render another frame.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.beginRenderPass(renderTarget, {});
+    api.endRenderPass(0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    // Now, unset the callback
+    api.setFrameScheduledCallback(swapChain, nullptr, {}, 0);
+
+    // Render a final frame. This time no callback should be called.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.beginRenderPass(renderTarget, {});
+    api.endRenderPass(0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    api.finish();
+
+    executeCommands();
+    getDriver().purge();
+
+    EXPECT_EQ(callbackCountA, 2);
+    EXPECT_EQ(callbackCountB, 1);
+}
+
+TEST_F(BackendTest, FrameCompletedCallback) {
+    SKIP_IF(Backend::OPENGL, "Frame callbacks are unsupported in OpenGL");
+    SKIP_IF(Backend::VULKAN, "Frame callbacks are unsupported in Vulkan, see b/417254479");
+    SKIP_IF(Backend::WEBGPU, "Frame callbacks are unsupported in WebGPU");
+
+    auto& api = getDriverApi();
+
+    // Create a SwapChain.
+    auto swapChain = addCleanup(createSwapChain());
+
+    int callbackCountA = 0;
+    api.setFrameCompletedCallback(swapChain, nullptr,
+            [&callbackCountA]() { callbackCountA++; });
+
+    // Render the first frame.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    // Render the next frame. The same callback should be called.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    // Now switch out the callback.
+    int callbackCountB = 0;
+    api.setFrameCompletedCallback(swapChain, nullptr,
+            [&callbackCountB]() { callbackCountB++; });
+
+    // Render one final frame.
+    api.makeCurrent(swapChain, swapChain);
+    api.beginFrame(0, 0, 0);
+    api.commit(swapChain);
+    api.endFrame(0);
+
+    api.finish();
+
+    executeCommands();
+    getDriver().purge();
+
+    EXPECT_EQ(callbackCountA, 2);
+    EXPECT_EQ(callbackCountB, 1);
+}
+
+} // namespace test

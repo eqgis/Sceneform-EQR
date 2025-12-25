@@ -30,6 +30,18 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    packagingOptions {
+        jniLibs {
+            pickFirsts += [
+                    "lib/**/libc++_shared.so"
+            ]
+        }
+    }
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/libfilament-jni.so'
+        pickFirst '**/libgltfio-jni.so'
+    }
 }
 
 dependencies {

@@ -110,28 +110,28 @@ public class EngineInstance {
   private static void createEngine() {
     if (engine == null) {
 
-      if (!filamentInitialized) {
-        try {
-          gltfioInit();
-          //加载工具so
-          System.loadLibrary("filament-utils-jni");
-        } catch (UnsatisfiedLinkError err) {
-          // Fallthrough and allow regular Filament to initialize.
-        }
-      }
-      if (!filamentInitialized) {
-        try {
-          Filament.init();
-          filamentInitialized = true;
-        } catch (UnsatisfiedLinkError err) {
-          // For Scene Viewer Filament's jni is included in another lib, try that before failing.
-          if (loadUnifiedJni()) {
-            filamentInitialized = true;
-          } else {
-            throw err;
-          }
-        }
-      }
+//      if (!filamentInitialized) {
+//        try {
+//          gltfioInit();
+//          //加载工具so
+//          System.loadLibrary("filament-utils-jni");
+//        } catch (UnsatisfiedLinkError err) {
+//          // Fallthrough and allow regular Filament to initialize.
+//        }
+//      }
+//      if (!filamentInitialized) {
+//        try {
+//          Filament.init();
+//          filamentInitialized = true;
+//        } catch (UnsatisfiedLinkError err) {
+//          // For Scene Viewer Filament's jni is included in another lib, try that before failing.
+//          if (loadUnifiedJni()) {
+//            filamentInitialized = true;
+//          } else {
+//            throw err;
+//          }
+//        }
+//      }
 
       engine = new FilamentEngineWrapper(createFilamentEngine());
 
