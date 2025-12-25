@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.eqgis.test'
-    compileSdk 33
 
     defaultConfig {
         applicationId "com.eqgis.eqr.sample"
-        minSdk 24
-        targetSdk 33
+        minSdk versions.minSdk
+        compileSdk versions.compileSdk
+        targetSdk versions.targetSdk
         versionCode 2
         versionName "1.1"
 

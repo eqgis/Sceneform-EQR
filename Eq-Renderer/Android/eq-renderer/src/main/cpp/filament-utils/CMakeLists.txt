@@ -9,7 +9,7 @@ option(FILAMENT_SUPPORTS_WEBGPU "Enables WebGPU on Android" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(FILAMENT_DIR ${FILAMENT_DIST_DIR})
+set(FILAMENT_DIR ${CMAKE_SOURCE_DIR}/filament-android-native)
 set(IMAGEIO_DIR ../libs/imageio)
 
 add_subdirectory(../gltfio-android ${CMAKE_CURRENT_BINARY_DIR}/gltfio-android)

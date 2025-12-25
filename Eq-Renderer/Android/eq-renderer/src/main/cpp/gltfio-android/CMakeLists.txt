@@ -9,7 +9,7 @@ option(FILAMENT_SUPPORTS_WEBGPU "Enables WebGPU on Android" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(FILAMENT_DIR ${FILAMENT_DIST_DIR})
+set(FILAMENT_DIR ${CMAKE_SOURCE_DIR}/filament-android-native)
 set(DRACO_DIR ../third_party/draco)
 
 add_subdirectory(../filament-android ${CMAKE_CURRENT_BINARY_DIR}/filament-android)

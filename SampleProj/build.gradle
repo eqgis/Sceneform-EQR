@@ -3,15 +3,6 @@
 
 buildscript {
 
-    // ---------- Filament dist dir ----------
-    def filamentDistDirProvider = providers.gradleProperty(
-            "com.google.android.filament.dist-dir"
-    ).orElse("${rootProject.projectDir}/filament-v1.67.1-android-native")
-
-    def filamentPathProvider = filamentDistDirProvider.map {
-        new File(it).absolutePath.replace(File.separator, '/')
-    }
-
     // ---------- Feature flags ----------
     def excludeVulkan = providers
             .gradleProperty("com.google.android.filament.exclude-vulkan")
@@ -33,9 +24,6 @@ buildscript {
             .gradleProperty("com.google.android.filament.matnopt")
             .isPresent()
 
-    // ---------- ABI ----------
-    def abis = ["arm64-v8a"/*, "armeabi-v7a", "x86_64", "x86"*/]
-
     def abiProp = providers
             .gradleProperty("com.google.android.filament.abis")
             .orNull
@@ -50,7 +38,7 @@ buildscript {
     // ---------- Versions ----------
     ext.versions = [
             jdk              : 17,
-            minSdk          : 21,
+            minSdk          : 24,
             targetSdk       : 34,
             compileSdk      : 34,
             kotlin          : '2.0.21',
@@ -89,7 +77,6 @@ buildscript {
             "-DANDROID_PIE=ON",
             "-DANDROID_PLATFORM=21",
             "-DANDROID_STL=c++_static",
-            "-DFILAMENT_DIST_DIR=${filamentPathProvider.get()}",
             "-DFILAMENT_SUPPORTS_VULKAN=${excludeVulkan ? 'OFF' : 'ON'}",
             "-DFILAMENT_SUPPORTS_WEBGPU=${includeWebGPU ? 'ON' : 'OFF'}",
             "-DFILAMENT_ENABLE_FGVIEWER=${fgviewer ? 'ON' : 'OFF'}",
@@ -121,7 +108,6 @@ buildscript {
             "-Wl,--hash-style=both", // Required to support API levels below 23
     ]
 
-    ext.abis = abis
     ext.agp_version = '8.1.0'
 }
 
