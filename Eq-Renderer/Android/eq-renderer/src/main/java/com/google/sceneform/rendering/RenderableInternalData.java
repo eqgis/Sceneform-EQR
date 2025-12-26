@@ -184,8 +184,6 @@ class RenderableInternalData implements IRenderableInternalData {
     }
 
 
-    private void setupSkeleton(RenderableManager.Builder builder) {return ;}
-
     /**
      * 更新图元类型
      * <p>
@@ -249,8 +247,6 @@ class RenderableInternalData implements IRenderableInternalData {
                             .castShadows(renderable.isShadowCaster())
                             .receiveShadows(renderable.isShadowReceiver());
 
-            setupSkeleton(builder);
-
             builder.build(EngineInstance.getEngine().getFilamentEngine(), renderedEntity);
 
             renderableInstance = renderableManager.getInstance(renderedEntity);
@@ -299,22 +295,6 @@ class RenderableInternalData implements IRenderableInternalData {
         }
     }
 
-    @Override
-    public void setAnimationNames(@NonNull List<String> animationNames) {}
-
-
-    /** @hide */
-    @Override
-    protected void finalize() throws Throwable {
-        //2024年8月19日21:29:17 Ikkyu备注：渲染的自定义Mesh不再在此处执行销毁操作
-//    try {
-//      ThreadPools.getMainExecutor().execute(() -> dispose());
-//    } catch (Exception e) {
-//      Log.e(TAG, "Error while Finalizing Renderable Internal Data.", e);
-//    } finally {
-//      super.finalize();
-//    }
-    }
 
     /**
      * Removes any memory used by the object.
@@ -339,5 +319,10 @@ class RenderableInternalData implements IRenderableInternalData {
             engine.destroyIndexBuffer(indexBuffer);
             indexBuffer = null;
         }
+    }
+
+    @Override
+    public void create(RenderableInstance renderableInstance) {
+        //自定义Mesh，建议用buildInstanceData();
     }
 }

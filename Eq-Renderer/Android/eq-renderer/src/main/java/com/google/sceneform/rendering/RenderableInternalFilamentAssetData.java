@@ -58,7 +58,8 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
     ResourceLoader resourceLoader;
     @Nullable Function<String, Uri> urlResolver;
 
-    public FilamentAsset createFilamentAsset(Renderable renderable) {
+    public void create(RenderableInstance instance) {
+        Renderable renderable = instance.getRenderable();
         //updated by ikkyu
         assetsLoader = new AssetLoader(
                 EngineInstance.getEngine().getFilamentEngine(),
@@ -101,7 +102,6 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
             resourceLoader.loadResources(filamentAsset);
         }
 
-        return filamentAsset;
     }
 
     public FilamentAsset getFilamentAsset(){
@@ -263,13 +263,12 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
     }
 
     @Override
-    public void setAnimationNames(@NonNull List<String> animationNames) {
-        // Not Implemented
-    }
-
-    @Override
     public void buildInstanceData(RenderableInstance instance, int renderedEntity) {
-
+        TransformManager transformManager = EngineInstance.getEngine().getTransformManager();
+        @EntityInstance int rootInstance = transformManager.getInstance(filamentAsset.getRoot());
+        @EntityInstance
+        int parentInstance = transformManager.getInstance(renderedEntity);
+        transformManager.setParent(rootInstance, parentInstance);
     }
 
     @Override
@@ -294,6 +293,13 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
     public void dispose() {
         //desc- ikkyu loader源于gltfio.jar，AssetLoader主要用于加载gltf模型，在场景生成filamentAsset对象
         if (assetsLoader == null)return;
+        if (resourceLoader != null){
+            resourceLoader.asyncCancelLoad();
+            resourceLoader.evictResourceData();
+            resourceLoader.destroy();
+            resourceLoader = null;
+        }
+
         if (filamentAsset != null){
             filamentAsset.releaseSourceData();
             assetsLoader.destroyAsset(filamentAsset);
@@ -302,9 +308,6 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
             assetsLoader = null;
         }
     }
-
-
-
 
 
 }

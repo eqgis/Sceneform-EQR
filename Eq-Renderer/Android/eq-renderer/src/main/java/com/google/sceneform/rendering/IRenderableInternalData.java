@@ -19,66 +19,66 @@ import java.util.List;
 // TODO: Split IRenderableInternalData into RenderableInternalSfbData and RenderableInternalDefinitionData
 interface IRenderableInternalData {
 
-  void setCenterAabb(Vector3 minAabb);
+    void setCenterAabb(Vector3 minAabb);
 
-  Vector3 getCenterAabb();
+    Vector3 getCenterAabb();
 
-  void setExtentsAabb(Vector3 maxAabb);
+    void setExtentsAabb(Vector3 maxAabb);
 
-  Vector3 getExtentsAabb();
+    Vector3 getExtentsAabb();
 
-  Vector3 getSizeAabb();
+    Vector3 getSizeAabb();
 
-  void setTransformScale(float scale);
+    void setTransformScale(float scale);
 
-  float getTransformScale();
+    float getTransformScale();
 
-  void setTransformOffset(Vector3 offset);
+    void setTransformOffset(Vector3 offset);
 
-  Vector3 getTransformOffset();
+    Vector3 getTransformOffset();
 
-  ArrayList<MeshData> getMeshes();
+    ArrayList<MeshData> getMeshes();
 
-  void setIndexBuffer(@Nullable IndexBuffer indexBuffer);
+    void setIndexBuffer(@Nullable IndexBuffer indexBuffer);
 
-  @Nullable
-  IndexBuffer getIndexBuffer();
+    @Nullable
+    IndexBuffer getIndexBuffer();
 
-  void setVertexBuffer(@Nullable VertexBuffer vertexBuffer);
+    void setVertexBuffer(@Nullable VertexBuffer vertexBuffer);
 
-  @Nullable
-  VertexBuffer getVertexBuffer();
+    @Nullable
+    VertexBuffer getVertexBuffer();
 
-  void setRawIndexBuffer(@Nullable IntBuffer rawIndexBuffer);
+    void setRawIndexBuffer(@Nullable IntBuffer rawIndexBuffer);
 
-  @Nullable
-  IntBuffer getRawIndexBuffer();
+    @Nullable
+    IntBuffer getRawIndexBuffer();
 
-  void setRawPositionBuffer(@Nullable FloatBuffer rawPositionBuffer);
+    void setRawPositionBuffer(@Nullable FloatBuffer rawPositionBuffer);
 
-  @Nullable
-  FloatBuffer getRawPositionBuffer();
+    @Nullable
+    FloatBuffer getRawPositionBuffer();
 
-  void setRawTangentsBuffer(@Nullable FloatBuffer rawTangentsBuffer);
+    void setRawTangentsBuffer(@Nullable FloatBuffer rawTangentsBuffer);
 
-  @Nullable
-  FloatBuffer getRawTangentsBuffer();
+    @Nullable
+    FloatBuffer getRawTangentsBuffer();
 
-  void setRawUvBuffer(@Nullable FloatBuffer rawUvBuffer);
+    void setRawUvBuffer(@Nullable FloatBuffer rawUvBuffer);
 
-  @Nullable
-  FloatBuffer getRawUvBuffer();
+    @Nullable
+    FloatBuffer getRawUvBuffer();
 
-  void setRawColorBuffer(@Nullable FloatBuffer rawColorBuffer);
+    void setRawColorBuffer(@Nullable FloatBuffer rawColorBuffer);
 
-  @Nullable
-  FloatBuffer getRawColorBuffer();
+    @Nullable
+    FloatBuffer getRawColorBuffer();
 
-  void setAnimationNames(@NonNull List<String> animationNames);
+    void buildInstanceData(RenderableInstance instance, @Entity int renderedEntity);
 
-  void buildInstanceData(RenderableInstance instance, @Entity int renderedEntity);
+    void changePrimitiveType(RenderableInstance instance, RenderableManager.PrimitiveType type);
 
-  void changePrimitiveType(RenderableInstance instance, RenderableManager.PrimitiveType type);
+    void dispose();
 
-  void dispose();
+    void create(RenderableInstance renderableInstance);
 }

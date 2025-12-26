@@ -68,29 +68,26 @@ public class RenderableInstance implements AnimatableModel {
         this.materialNames = new ArrayList<>(renderable.getMaterialNames());
         entity = createFilamentEntity(EngineInstance.getEngine());
 
-
         //源模型->SFA->SFB这种加载方式，为早期scenefrom(1.15以及以前的版本使用)，现不再使用了
-        //当前版本，仅支持通过gltfio库导入gltf2.0格式的模型
-        if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
-            createFilamentAssets(renderable);
+        IRenderableInternalData renderableData = renderable.getRenderableData();
+        renderableData.create(this);
+
+        if (renderableData instanceof RenderableInternalFilamentAssetData) {
+            //当前版本，通过gltfio库导入gltf2.0格式的模型,缓存下材质信息
+            handleFilamentAsset(renderable);
         }
-        //修改为prepareForDraw();时，第一帧统一创建
 
         ResourceManager.getInstance()
                 .getRenderableInstanceCleanupRegistry()
                 .register(this, new CleanupCallback(entity, childEntity));
     }
 
-    private void createFilamentAssets(Renderable renderable) {
-        RenderableInternalFilamentAssetData renderableData =
-                (RenderableInternalFilamentAssetData) renderable.getRenderableData();
-        FilamentAsset createdAsset = renderableData.createFilamentAsset(renderable);
-
+    private void handleFilamentAsset(Renderable renderable) {
         RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
-
+        FilamentAsset filamentAsset = getFilamentAsset();
         this.materialBindings.clear();
         this.materialNames.clear();
-        for (int entity : createdAsset.getEntities()) {
+        for (int entity : filamentAsset.getEntities()) {
             @EntityInstance int renderableInstance = renderableManager.getInstance(entity);
             if (renderableInstance == 0) {
                 continue;
@@ -104,19 +101,11 @@ public class RenderableInstance implements AnimatableModel {
             materialBindings.add(material);
         }
 
-        TransformManager transformManager = EngineInstance.getEngine().getTransformManager();
-
-        @EntityInstance int rootInstance = transformManager.getInstance(createdAsset.getRoot());
-        @EntityInstance
-        int parentInstance = transformManager.getInstance(childEntity == 0 ? entity : childEntity);
-
-        transformManager.setParent(rootInstance, parentInstance);
-
         setRenderPriority(renderable.getRenderPriority());
         setShadowCaster(renderable.isShadowCaster());
         setShadowReceiver(renderable.isShadowReceiver());
 
-        filamentAnimator = createdAsset.getInstance().getAnimator();
+        filamentAnimator = filamentAsset.getInstance().getAnimator();
         animations = new ArrayList<>();
         for (int i = 0; i < filamentAnimator.getAnimationCount(); i++) {
             animations.add(new ModelAnimation(this, filamentAnimator.getAnimationName(i), i,
@@ -369,16 +358,12 @@ public class RenderableInstance implements AnimatableModel {
         return animations.size();
     }
 
-    // We use our own {@link android.view.Choreographer} to update the animations so just return
-    // false (not applied)
+    // 由于采用 Animator实现动画，因此这里必须返回false
     @Override
     public boolean applyAnimationChange(ModelAnimation animation) {
         return false;
     }
 
-    private void setupSkeleton(IRenderableInternalData renderableInternalData) {
-        return;
-    }
 
     /**
      * 更改图元类型
@@ -399,7 +384,6 @@ public class RenderableInstance implements AnimatableModel {
         ChangeId changeId = renderable.getId();
         if (changeId.checkChanged(renderableId)) {
             IRenderableInternalData renderableInternalData = renderable.getRenderableData();
-            setupSkeleton(renderableInternalData);
             renderableInternalData.buildInstanceData(this, getRenderedEntity());
             renderableId = changeId.get();
             // 第一次渲染，所以总是更新蒙皮skinning，即使我们没有动画和没有skinModifier
@@ -457,37 +441,26 @@ public class RenderableInstance implements AnimatableModel {
      * @author Ikkyu
      */
     public void destroy() {
-        //释放源数据，主要包含一些URI信息|Mesh缓存（VB+IB）
-        FilamentAsset filamentAsset = getFilamentAsset();
-
         EntityManager entityManager = EntityManager.get();
 
-        Renderer rendererToDetach = attachedRenderer;
-        if (rendererToDetach != null) {
+        if (attachedRenderer != null) {
             //desc- ikkyu （对于gltf模型，直接执行destroyGltfAsset();即可释放所有关联的对象）
             {
+                FilamentAsset filamentAsset = getFilamentAsset();
                 if (filamentAsset != null) {
                     int[] entities = filamentAsset.getEntities();
-                    rendererToDetach.scene.removeEntities(entities);
+                    attachedRenderer.scene.removeEntities(entities);
                     entityManager.destroy(entities);
 
                     int root = filamentAsset.getRoot();
-                    rendererToDetach.scene.removeEntity(root);
+                    attachedRenderer.scene.removeEntity(root);
                     entityManager.destroy(root);
                 }
             }
-            rendererToDetach.removeInstance(this);
+            attachedRenderer.removeInstance(this);
             renderable.detatchFromRenderer();//as View
         }
 
-        //(RenderableInternalFilamentAssetData) renderable.getRenderableData();
-        if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
-            RenderableInternalFilamentAssetData renderableData =
-                    (RenderableInternalFilamentAssetData) renderable.getRenderableData();
-            renderableData.resourceLoader.asyncCancelLoad();
-            renderableData.resourceLoader.evictResourceData();
-//            renderableData.resourceLoader.destroy();
-        }
         renderable.getRenderableData().dispose();//Other RenderableData dispose
 
         for (Material material : renderable.getMaterialBindings()) {
