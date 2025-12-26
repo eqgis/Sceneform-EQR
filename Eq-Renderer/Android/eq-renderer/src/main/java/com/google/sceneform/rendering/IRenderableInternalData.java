@@ -76,9 +76,6 @@ interface IRenderableInternalData {
 
   void setAnimationNames(@NonNull List<String> animationNames);
 
-  @NonNull
-  List<String> getAnimationNames();
-
   void buildInstanceData(RenderableInstance instance, @Entity int renderedEntity);
 
   void changePrimitiveType(RenderableInstance instance, RenderableManager.PrimitiveType type);

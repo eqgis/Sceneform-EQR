@@ -302,28 +302,6 @@ class RenderableInternalData implements IRenderableInternalData {
     @Override
     public void setAnimationNames(@NonNull List<String> animationNames) {}
 
-    @NonNull
-    @Override
-    public List<String> getAnimationNames() {
-        return Collections.emptyList();
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /** @hide */
     @Override

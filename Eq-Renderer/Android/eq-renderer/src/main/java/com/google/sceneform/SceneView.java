@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 
 import androidx.annotation.Nullable;
 
+import com.eqgis.eqr.core.FilamentMaterialProviderManager;
 import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Renderer;
 import com.google.sceneform.rendering.ResourceManager;
@@ -200,7 +201,7 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
         }
 
         ResourceManager.getInstance().destroyAllResources();
-        RenderableInternalFilamentAssetData.destroy();
+        FilamentMaterialProviderManager.destroy();
         EngineInstance.destroyEngine();
 //        destroyAllResources();
     }
