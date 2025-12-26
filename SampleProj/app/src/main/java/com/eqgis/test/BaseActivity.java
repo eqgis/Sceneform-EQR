@@ -17,9 +17,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.eqr.listener.CompleteCallback;
 import com.eqgis.test.scene.ISampleScene;
+import com.google.android.filament.RenderableManager;
+import com.google.sceneform.Node;
 import com.google.sceneform.rendering.ThreadPools;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 /**
  * 基础场景
@@ -95,5 +98,15 @@ public class BaseActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "出错了", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    protected void changePrimitiveType(RenderableManager.PrimitiveType type){
+        List<Node> children = sceneLayout.getRootNode().getChildren();
+        for (int i = 0; i < children.size(); i++) {
+            Node node = children.get(i);
+            if (node.getRenderableInstance() != null) {
+                node.getRenderableInstance().changePrimitive(type);
+            }
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.google.sceneform.rendering;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.filament.RenderableManager;
 import com.google.sceneform.math.Vector3;
 import com.google.android.filament.Entity;
 import com.google.android.filament.IndexBuffer;
@@ -79,6 +80,8 @@ interface IRenderableInternalData {
   List<String> getAnimationNames();
 
   void buildInstanceData(RenderableInstance instance, @Entity int renderedEntity);
+
+  void changePrimitiveType(RenderableInstance instance, RenderableManager.PrimitiveType type);
 
   void dispose();
 }

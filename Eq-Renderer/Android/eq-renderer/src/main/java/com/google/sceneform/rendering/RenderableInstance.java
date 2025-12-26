@@ -491,6 +491,16 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
+     * 更改图元类型
+     */
+    public void changePrimitive(RenderableManager.PrimitiveType primitiveType){
+        IRenderableInternalData renderableData = renderable.getRenderableData();
+        if (renderableData != null){
+            renderableData.changePrimitiveType(this, primitiveType);
+        }
+    }
+
+    /**
      * @hide
      */
     public void prepareForDraw() {

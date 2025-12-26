@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.eqgis.eqr.geometry.GeometryUtils;
@@ -15,6 +17,7 @@ import com.eqgis.eqr.utils.ScaleTool;
 import com.eqgis.test.BaseActivity;
 import com.eqgis.test.R;
 import com.eqgis.test.scene.GltfSampleScene;
+import com.google.android.filament.RenderableManager;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -58,6 +61,17 @@ public class BaseSceneActivity extends BaseActivity {
         sceneLayout.getCamera().setFarClipPlane(100);
 //        sceneLayout.setTransparent(false);
 //        sceneLayout.setSkybox("enviroments/pillars_2k_skybox.ktx");
+
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        Switch aSwitch = findViewById(R.id.switch_primitive);
+        aSwitch.setVisibility(View.VISIBLE);
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                changePrimitiveType(b ? RenderableManager.PrimitiveType.LINES : RenderableManager.PrimitiveType.TRIANGLES);
+            }
+        });
+
         //节点手势控制器初始化
         NodeGestureController.getInstance()
                 .setCamera(sceneLayout.getCamera())

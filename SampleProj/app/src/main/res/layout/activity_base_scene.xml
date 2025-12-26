@@ -27,6 +27,7 @@
         android:layout_height="match_parent"/>
 
     <Button
+        android:id="@+id/btn_capture"
         android:layout_marginRight="10dp"
         android:layout_marginBottom="20dp"
         android:text="Capture"
@@ -36,4 +37,17 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="100dp"
         android:layout_height="wrap_content"/>
+
+    <Switch
+        android:visibility="gone"
+        android:id="@+id/switch_primitive"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_capture"
+        android:layout_width="wrap_content"
+        android:text="Change primitive   "
+        android:textColor="#fff"
+        android:layout_height="wrap_content"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
 </androidx.constraintlayout.widget.ConstraintLayout>

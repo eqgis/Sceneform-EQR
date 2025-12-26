@@ -6,6 +6,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.filament.RenderableManager;
 import com.google.sceneform.math.Vector3;
 import com.google.android.filament.gltfio.UbershaderProvider;
 import com.google.android.filament.IndexBuffer;
@@ -220,6 +221,11 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
   public void buildInstanceData(RenderableInstance instance, int renderedEntity) {
   }
 
-  @Override
+    @Override
+    public void changePrimitiveType(RenderableInstance instance, RenderableManager.PrimitiveType type) {
+
+    }
+
+    @Override
   public void dispose() {}
 }
