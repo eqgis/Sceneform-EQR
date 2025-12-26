@@ -58,8 +58,6 @@ static void rebuildFromMeshCache(
             );
         }
     }
-
-
 }
 
 

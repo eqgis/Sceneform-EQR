@@ -1,10 +1,7 @@
 package com.eqgis.eqr.core;
 
 /**
- * <p></p>
- * <pre>SampleCode:
- * </pre>
- *
+ * FilamentAsset的图元工具类
  * @author tanyx 2025/12/26
  * @version 1.0
  **/
