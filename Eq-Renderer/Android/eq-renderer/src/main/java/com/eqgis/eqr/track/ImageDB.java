@@ -112,7 +112,7 @@ class ImageDB {
     public void init(){
         config.setAugmentedImageDatabase(augmentedImageDatabase);
 
-        config.setUpdateMode(ARConfig.UpdateMode.LATEST_CAMERA_IMAGE);
+        config.setUpdateMode(ARConfig.UpdateMode.BLOCKING);
         config.setFocusMode(ARConfig.FocusMode.AUTO_FOCUS);
         mSession.configure(config);
     }
