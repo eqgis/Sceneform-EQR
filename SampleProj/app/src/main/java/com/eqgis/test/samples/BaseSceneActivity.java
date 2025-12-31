@@ -162,6 +162,5 @@ public class BaseSceneActivity extends BaseActivity {
         super.onDestroy();
         Toast.makeText(this, "onDestroy", Toast.LENGTH_SHORT).show();
 //        deleteNode(sceneLayout.getRootNode());
-        sceneLayout.destroy();
     }
 }
