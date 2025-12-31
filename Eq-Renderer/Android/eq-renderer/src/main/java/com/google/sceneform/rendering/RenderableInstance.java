@@ -1,8 +1,6 @@
 package com.google.sceneform.rendering;
 
-import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.Nullable;
@@ -10,16 +8,11 @@ import androidx.annotation.Size;
 
 import com.google.sceneform.animation.AnimatableModel;
 import com.google.sceneform.animation.ModelAnimation;
-import com.google.sceneform.collision.Box;
 import com.google.sceneform.common.TransformProvider;
 import com.google.sceneform.math.Matrix;
-import com.google.sceneform.math.Vector3;
 import com.google.sceneform.utilities.AndroidPreconditions;
 import com.google.sceneform.utilities.ChangeId;
-import com.google.sceneform.utilities.LoadHelper;
 import com.google.sceneform.utilities.Preconditions;
-import com.google.sceneform.utilities.SceneformBufferUtils;
-import com.google.android.filament.Engine;
 import com.google.android.filament.Entity;
 import com.google.android.filament.EntityInstance;
 import com.google.android.filament.EntityManager;
@@ -27,15 +20,10 @@ import com.google.android.filament.MaterialInstance;
 import com.google.android.filament.RenderableManager;
 import com.google.android.filament.TransformManager;
 import com.google.android.filament.gltfio.Animator;
-import com.google.android.filament.gltfio.AssetLoader;
 import com.google.android.filament.gltfio.FilamentAsset;
 
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
+import java.util.Objects;
 
 /**
  * 渲染实例
@@ -47,28 +35,6 @@ import java.util.function.Function;
  */
 @SuppressWarnings("AndroidJdkLibsChecker")
 public class RenderableInstance implements AnimatableModel {
-
-    //desc added by ikkyu 2022年3月19日
-    private AssetLoader loader;//若加载gltf资源，会使用到该类
-
-    /**
-     * 为这个特定的RenderableInstance修改骨骼转换的接口。
-     * 由SkeletonNode使用，可以通过移动节点来控制骨骼。
-     */
-    public interface SkinningModifier {
-
-        /**
-         * 获取原始的boneTransforms并输出用于渲染网格的新boneTransforms。
-         *
-         * @param originalBuffer 包含骨架从当前动画状态转换而来的骨架，缓冲区为只读
-         */
-        FloatBuffer modifyMaterialBoneTransformsBuffer(FloatBuffer originalBuffer);
-
-        boolean isModifiedSinceLastRender();
-    }
-
-    private static final String TAG = RenderableInstance.class.getSimpleName();
-
     private final TransformProvider transformProvider;
     private final Renderable renderable;
     @Nullable
@@ -80,14 +46,10 @@ public class RenderableInstance implements AnimatableModel {
     int renderableId = ChangeId.EMPTY_ID;
 
     @Nullable
-    FilamentAsset filamentAsset;
-    @Nullable
     Animator filamentAnimator;
 
     private ArrayList<ModelAnimation> animations = new ArrayList<>();
 
-    @Nullable
-    private SkinningModifier skinningModifier;
 
     private int renderPriority = Renderable.RENDER_PRIORITY_DEFAULT;
     private boolean isShadowCaster = true;
@@ -96,10 +58,6 @@ public class RenderableInstance implements AnimatableModel {
     private ArrayList<Material> materialBindings;
     private ArrayList<String> materialNames;
 
-    @Nullable
-    private Matrix cachedRelativeTransform;
-    @Nullable
-    private Matrix cachedRelativeTransformInverse;
 
     @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
     public RenderableInstance(TransformProvider transformProvider, Renderable renderable) {
@@ -111,23 +69,47 @@ public class RenderableInstance implements AnimatableModel {
         this.materialNames = new ArrayList<>(renderable.getMaterialNames());
         entity = createFilamentEntity(EngineInstance.getEngine());
 
-        // SFB可以通过重新定心或缩放来导入;而不是执行这些操作
-        // 导入时的顶点(和骨骼，&c)，我们将顶点数据保存在同一个单元中
-        // 源资源，并在运行时通过此相对转换应用于子实体。如果我们得到
-        // 返回null时，相对转换为identity，子实体路径可以跳过。
-//        @Nullable Matrix relativeTransform = getRelativeTransform();
-//        if (relativeTransform != null) {
-//            childEntity =
-//                    createFilamentChildEntity(EngineInstance.getEngine(), entity, relativeTransform);
-//        }
-
         //源模型->SFA->SFB这种加载方式，为早期scenefrom(1.15以及以前的版本使用)，现不再使用了
-        //当前版本，仅支持通过gltfio库导入gltf2.0格式的模型
-        createFilamentAssetModelInstance();
+        IRenderableInternalData renderableData = renderable.getRenderableData();
+        renderableData.create(this);
+
+        if (renderableData instanceof RenderableInternalFilamentAssetData) {
+            //当前版本，通过gltfio库导入gltf2.0格式的模型,缓存下材质信息
+            handleFilamentAsset(Objects.requireNonNull(getFilamentAsset()));
+        }
 
         ResourceManager.getInstance()
                 .getRenderableInstanceCleanupRegistry()
                 .register(this, new CleanupCallback(entity, childEntity));
+    }
+
+    private void handleFilamentAsset(FilamentAsset filamentAsset) {
+        RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
+        this.materialBindings.clear();
+        this.materialNames.clear();
+        for (int entity : filamentAsset.getEntities()) {
+            @EntityInstance int renderableInstance = renderableManager.getInstance(entity);
+            if (renderableInstance == 0) {
+                continue;
+            }
+            MaterialInstance materialInstance = renderableManager.getMaterialInstanceAt(renderableInstance, 0);
+            materialNames.add(materialInstance.getName());
+
+            MaterialInternalDataGltfImpl materialData = new MaterialInternalDataGltfImpl(materialInstance.getMaterial());
+            Material material = new Material(materialData);
+            material.updateGltfMaterialInstance(materialInstance);//注：Java层绑定材质实例，否则SceneView销毁时无法触发destroyMaterialInstance
+            materialBindings.add(material);
+        }
+
+        setDefaultAttr();
+
+        filamentAnimator = filamentAsset.getInstance().getAnimator();
+        animations = new ArrayList<>();
+        for (int i = 0; i < filamentAnimator.getAnimationCount(); i++) {
+            animations.add(new ModelAnimation(this, filamentAnimator.getAnimationName(i), i,
+                    filamentAnimator.getAnimationDuration(i),
+                    getRenderable().getAnimationFrameRate()));
+        }
     }
 
     /**
@@ -144,107 +126,14 @@ public class RenderableInstance implements AnimatableModel {
         return 1.0f;
     }
 
-    void createFilamentAssetModelInstance() {
-        if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
-            RenderableInternalFilamentAssetData renderableData =
-                    (RenderableInternalFilamentAssetData) renderable.getRenderableData();
-
-            Engine engine = EngineInstance.getEngine().getFilamentEngine();
-
-            //updated by ikkyu
-            loader = new AssetLoader(
-                            engine,
-                            RenderableInternalFilamentAssetData.getMaterialProvider()/*static object*/,
-                            EntityManager.get());
-
-            //当前版本，不用再判断是否是glb了，直接通过createAssets即可创建。因此isGltfBinary的set方法，后续版本会删除。
-            FilamentAsset createdAsset = loader.createAsset(renderableData.gltfByteBuffer);
-//            FilamentAsset createdAsset = renderableData.isGltfBinary ? loader.createAssetFromBinary(renderableData.gltfByteBuffer)
-//                    : loader.createAssetFromJson(renderableData.gltfByteBuffer);
-
-            if (createdAsset == null) {
-                throw new IllegalStateException("Failed to load gltf");
-            }
-
-            if (renderable.collisionShape == null) {
-                com.google.android.filament.Box box = createdAsset.getBoundingBox();
-                float[] halfExtent = box.getHalfExtent();
-                float[] center = box.getCenter();
-                renderable.collisionShape =
-                        new Box(
-                                new Vector3(halfExtent[0], halfExtent[1], halfExtent[2]).scaled(2.0f),
-                                new Vector3(center[0], center[1], center[2]));
-            }
-
-            Function<String, Uri> urlResolver = renderableData.urlResolver;
-            for (String uri : createdAsset.getResourceUris()) {
-                if (urlResolver == null) {
-                    Log.e(TAG, "Failed to download uri " + uri + " no url resolver.");
-                    continue;
-                }
-                Uri dataUri = urlResolver.apply(uri);
-                try {
-                    Callable<InputStream> callable = LoadHelper.fromUri(renderableData.context, dataUri);
-                    renderableData.resourceLoader.addResourceData(
-                            uri, ByteBuffer.wrap(SceneformBufferUtils.inputStreamCallableToByteArray(callable)));
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to download data uri " + dataUri, e);
-                }
-            }
-
-            if(renderable.asyncLoadEnabled) {
-                renderableData.resourceLoader.asyncBeginLoad(createdAsset);
-            } else {
-                renderableData.resourceLoader.loadResources(createdAsset);
-            }
-
-            RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
-
-            this.materialBindings.clear();
-            this.materialNames.clear();
-            for (int entity : createdAsset.getEntities()) {
-                @EntityInstance int renderableInstance = renderableManager.getInstance(entity);
-                if (renderableInstance == 0) {
-                    continue;
-                }
-                MaterialInstance materialInstance = renderableManager.getMaterialInstanceAt(renderableInstance, 0);
-                materialNames.add(materialInstance.getName());
-
-                MaterialInternalDataGltfImpl materialData = new MaterialInternalDataGltfImpl(materialInstance.getMaterial());
-                Material material = new Material(materialData);
-                material.updateGltfMaterialInstance(materialInstance);
-                materialBindings.add(material);
-            }
-
-            TransformManager transformManager = EngineInstance.getEngine().getTransformManager();
-
-            @EntityInstance int rootInstance = transformManager.getInstance(createdAsset.getRoot());
-            @EntityInstance
-            int parentInstance = transformManager.getInstance(childEntity == 0 ? entity : childEntity);
-
-            transformManager.setParent(rootInstance, parentInstance);
-
-            filamentAsset = createdAsset;
-
-            setRenderPriority(renderable.getRenderPriority());
-            setShadowCaster(renderable.isShadowCaster());
-            setShadowReceiver(renderable.isShadowReceiver());
-
-            filamentAnimator = createdAsset.getInstance().getAnimator();
-            animations = new ArrayList<>();
-            for (int i = 0; i < filamentAnimator.getAnimationCount(); i++) {
-                animations.add(new ModelAnimation(this, filamentAnimator.getAnimationName(i), i,
-                        filamentAnimator.getAnimationDuration(i),
-                        getRenderable().getAnimationFrameRate()));
-            }
-            //释放源数据，主要包含一些URI信息
-            createdAsset.releaseSourceData();//added by ikkyu 2024/07/30
-        }
-    }
-
     @Nullable
     public FilamentAsset getFilamentAsset() {
-        return filamentAsset;
+        if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData){
+            RenderableInternalFilamentAssetData renderableData =
+                    (RenderableInternalFilamentAssetData) renderable.getRenderableData();
+            return renderableData.getFilamentAsset();
+        }
+        return null;
     }
 
     /**
@@ -353,7 +242,7 @@ public class RenderableInstance implements AnimatableModel {
         RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
         @EntityInstance int renderableInstance = renderableManager.getInstance(getEntity());
         if (renderableInstance != 0) {
-            renderableManager.setCastShadows(renderableInstance, isShadowCaster);
+            renderableManager.setReceiveShadows(renderableInstance, isShadowReceiver);
         }
         //TODO : Verify if we don't need to apply the parameter to child entities
 //        for (int i = 0; i < entities.length; i++) {
@@ -363,13 +252,15 @@ public class RenderableInstance implements AnimatableModel {
 //            }
 //        }
     }
+    private void setDefaultAttr() {
+        RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
+        @EntityInstance int renderableInstance = renderableManager.getInstance(getEntity());
+        if (renderableInstance != 0) {
+            renderableManager.setCastShadows(renderableInstance, isShadowCaster);
+            renderableManager.setReceiveShadows(renderableInstance, isShadowReceiver);
+            renderableManager.setPriority(renderableInstance, this.renderPriority);
+        }
 
-    ArrayList<Material> getMaterialBindings() {
-        return materialBindings;
-    }
-
-    ArrayList<String> getMaterialNames() {
-        return materialNames;
     }
 
     /**
@@ -457,10 +348,6 @@ public class RenderableInstance implements AnimatableModel {
         return renderable.getFinalModelMatrix(transformProvider.getWorldModelMatrix());
     }
 
-    public void setSkinningModifier(@Nullable SkinningModifier skinningModifier) {
-        this.skinningModifier = skinningModifier;
-    }
-
     /**
      * 获取模型动画
      *  @param animationIndex 从0开始的索引值
@@ -479,15 +366,21 @@ public class RenderableInstance implements AnimatableModel {
         return animations.size();
     }
 
-    // We use our own {@link android.view.Choreographer} to update the animations so just return
-    // false (not applied)
+    // 由于采用 Animator实现动画，因此这里必须返回false
     @Override
     public boolean applyAnimationChange(ModelAnimation animation) {
         return false;
     }
 
-    private void setupSkeleton(IRenderableInternalData renderableInternalData) {
-        return;
+
+    /**
+     * 更改图元类型
+     */
+    public void changePrimitive(RenderableManager.PrimitiveType primitiveType){
+        IRenderableInternalData renderableData = renderable.getRenderableData();
+        if (renderableData != null){
+            renderableData.changePrimitiveType(this, primitiveType);
+        }
     }
 
     /**
@@ -499,7 +392,6 @@ public class RenderableInstance implements AnimatableModel {
         ChangeId changeId = renderable.getId();
         if (changeId.checkChanged(renderableId)) {
             IRenderableInternalData renderableInternalData = renderable.getRenderableData();
-            setupSkeleton(renderableInternalData);
             renderableInternalData.buildInstanceData(this, getRenderedEntity());
             renderableId = changeId.get();
             // 第一次渲染，所以总是更新蒙皮skinning，即使我们没有动画和没有skinModifier
@@ -513,7 +405,7 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     private void attachFilamentAssetToRenderer() {
-        FilamentAsset currentFilamentAsset = filamentAsset;
+        FilamentAsset currentFilamentAsset = getFilamentAsset();
         if (currentFilamentAsset != null) {
             int[] entities = currentFilamentAsset.getEntities();
             Preconditions.checkNotNull(attachedRenderer)
@@ -537,7 +429,7 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     void detachFilamentAssetFromRenderer() {
-        FilamentAsset currentFilamentAsset = filamentAsset;
+        FilamentAsset currentFilamentAsset = getFilamentAsset();
         if (currentFilamentAsset != null) {
             int[] entities = currentFilamentAsset.getEntities();
             for (int entity : entities) {
@@ -559,42 +451,29 @@ public class RenderableInstance implements AnimatableModel {
     public void destroy() {
         EntityManager entityManager = EntityManager.get();
 
-        Renderer rendererToDetach = attachedRenderer;
-        if (rendererToDetach != null) {
+        if (attachedRenderer != null) {
             //desc- ikkyu （对于gltf模型，直接执行destroyGltfAsset();即可释放所有关联的对象）
             {
-                FilamentAsset currentFilamentAsset = filamentAsset;
-                if (currentFilamentAsset != null) {
-                    int[] entities = currentFilamentAsset.getEntities();
-                    rendererToDetach.scene.removeEntities(entities);
+                FilamentAsset filamentAsset = getFilamentAsset();
+                if (filamentAsset != null) {
+                    int[] entities = filamentAsset.getEntities();
+                    attachedRenderer.scene.removeEntities(entities);
                     entityManager.destroy(entities);
 
-                    int root = currentFilamentAsset.getRoot();
-                    rendererToDetach.scene.removeEntity(root);
+                    int root = filamentAsset.getRoot();
+                    attachedRenderer.scene.removeEntity(root);
                     entityManager.destroy(root);
                 }
             }
-            rendererToDetach.removeInstance(this);
+            attachedRenderer.removeInstance(this);
             renderable.detatchFromRenderer();//as View
         }
 
-        //(RenderableInternalFilamentAssetData) renderable.getRenderableData();
-        if (renderable.getRenderableData() instanceof RenderableInternalFilamentAssetData) {
-            RenderableInternalFilamentAssetData renderableData =
-                    (RenderableInternalFilamentAssetData) renderable.getRenderableData();
-            renderableData.resourceLoader.asyncCancelLoad();
-            renderableData.resourceLoader.evictResourceData();
-//            renderableData.resourceLoader.destroy();
-        }
         renderable.getRenderableData().dispose();//Other RenderableData dispose
 
         for (Material material : renderable.getMaterialBindings()) {
-            material.internalMaterialInstance.dispose();
+            material.internalMaterialInstance.disposeInstance();
         }
-
-        //<editor-fold>update by Ikkyu 2022/03/10 to solve MemoryLeak
-        //desc-ikkyu 释放gltf模型带来的图形内存占用
-        destroyGltfAsset();
 
         if (childEntity != 0) {
             entityManager.destroy(childEntity);
@@ -606,32 +485,6 @@ public class RenderableInstance implements AnimatableModel {
     }
 
     /**
-     * 释放gltf模型资源
-     */
-    public void destroyGltfAsset(){
-        //desc- ikkyu loader源于gltfio.jar，AssetLoader主要用于加载gltf模型，在场景生成filamentAsset对象
-        if (loader == null)return;
-
-        if (filamentAsset != null){
-            loader.destroyAsset(filamentAsset);
-            filamentAsset = null;
-        }
-
-//        if (materialProvider != null){
-//            materialProvider.destroyMaterials();
-//            materialProvider = null;
-//        }
-
-        //desc- ikkyu，通过destroy释放loader的native内存和材质缓存
-//        loader.destroy();
-
-//        if (filamentAsset != null) {
-//            loader.destroyAsset(filamentAsset);
-//            filamentAsset = null;
-//        }
-    }
-
-    /**
      * @hide
      */
     public void detachFromRenderer() {
@@ -639,7 +492,7 @@ public class RenderableInstance implements AnimatableModel {
         if (rendererToDetach != null) {
             detachFilamentAssetFromRenderer();
             //todo
-            destroyGltfAsset();
+            renderable.getRenderableData().dispose();
             rendererToDetach.removeInstance(this);
             renderable.detatchFromRenderer();
         }

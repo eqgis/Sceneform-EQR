@@ -102,7 +102,7 @@ public class RenderableManager {
 
         private final int mType;
         PrimitiveType(int value) { mType = value; }
-        int getValue() { return mType; }
+        public int getValue() { return mType; }
     }
 
     /**

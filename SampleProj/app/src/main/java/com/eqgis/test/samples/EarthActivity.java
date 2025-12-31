@@ -5,17 +5,22 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 
 import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.test.BaseActivity;
 import com.eqgis.test.R;
 import com.eqgis.test.utils.AssetImageLoader;
+import com.google.android.filament.RenderableManager;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.MaterialFactory;
 import com.google.sceneform.rendering.ModelRenderable;
 import com.google.sceneform.rendering.Texture;
+
+import java.util.List;
 
 /**
  * 地球场景示例（EarthActivity）
@@ -75,6 +80,16 @@ public class EarthActivity extends BaseActivity {
         sceneLayout.getCamera().setFarClipPlane(100);
         sceneLayout.setSkybox("enviroments/pillars_2k_skybox.ktx");
 
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        Switch aSwitch = findViewById(R.id.switch_primitive);
+        aSwitch.setVisibility(View.VISIBLE);
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                changePrimitiveType(b ? RenderableManager.PrimitiveType.LINES : RenderableManager.PrimitiveType.TRIANGLES);
+            }
+        });
+
         //节点手势控制器初始化
         NodeGestureController.getInstance()
                 .setCamera(sceneLayout.getCamera())
@@ -93,7 +108,6 @@ public class EarthActivity extends BaseActivity {
         //创建地球
         createEarth(sceneLayout.getRootNode());
     }
-
 
     public void createEarth(Node parentNode) {
         Node tempNode = new Node();

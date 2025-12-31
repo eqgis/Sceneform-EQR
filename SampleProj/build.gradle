@@ -1,5 +1,117 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+
+buildscript {
+
+    // ---------- Feature flags ----------
+    def excludeVulkan = providers
+            .gradleProperty("com.google.android.filament.exclude-vulkan")
+            .isPresent()
+
+    def includeWebGPU = providers
+            .gradleProperty("com.google.android.filament.include-webgpu")
+            .isPresent()
+
+    def fgviewer = providers
+            .gradleProperty("com.google.android.filament.fgviewer")
+            .isPresent()
+
+    def matdbg = providers
+            .gradleProperty("com.google.android.filament.matdbg")
+            .isPresent()
+
+    def matnopt = providers
+            .gradleProperty("com.google.android.filament.matnopt")
+            .isPresent()
+
+    def abiProp = providers
+            .gradleProperty("com.google.android.filament.abis")
+            .orNull
+
+    if (abiProp != null) {
+        def newAbis = abiProp.split(',')
+        if (!newAbis.contains("all")) {
+            abis = newAbis
+        }
+    }
+
+    // ---------- Versions ----------
+    ext.versions = [
+            jdk              : 17,
+            minSdk          : 24,
+            targetSdk       : 34,
+            compileSdk      : 34,
+            kotlin          : '2.0.21',
+            kotlin_coroutines: '1.9.0',
+            buildTools      : '35.0.0',
+            ndk             : '27.3.13750724',
+            androidx_core   : '1.13.1',
+            androidx_annotations: '1.9.0'
+    ]
+
+    ext.deps = [
+            androidx: [
+                    annotations: "androidx.annotation:annotation:${versions.androidx_annotations}",
+                    core       : "androidx.core:core:${versions.androidx_core}",
+            ],
+            kotlin    : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${versions.kotlin}",
+            coroutines: [
+                    core   : "org.jetbrains.kotlinx:kotlinx-coroutines-core:${versions.kotlin_coroutines}",
+                    android: "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.kotlin_coroutines}",
+            ]
+    ]
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.1.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+    }
+
+    // ---------- CMake ----------
+    ext.cmakeArgs = [
+            "--no-warn-unused-cli",
+            "-DANDROID_PIE=ON",
+            "-DANDROID_PLATFORM=21",
+            "-DANDROID_STL=c++_static",
+            "-DFILAMENT_SUPPORTS_VULKAN=${excludeVulkan ? 'OFF' : 'ON'}",
+            "-DFILAMENT_SUPPORTS_WEBGPU=${includeWebGPU ? 'ON' : 'OFF'}",
+            "-DFILAMENT_ENABLE_FGVIEWER=${fgviewer ? 'ON' : 'OFF'}",
+            "-DFILAMENT_ENABLE_MATDBG=${matdbg ? 'ON' : 'OFF'}",
+            "-DFILAMENT_DISABLE_MATOPT=${matnopt ? 'ON' : 'OFF'}"
+    ]
+
+    ext.cppFlags = [
+            "-std=c++17",
+            "-fno-stack-protector",
+            "-fno-exceptions",
+            "-fno-unwind-tables",
+            "-fno-asynchronous-unwind-tables",
+            "-fno-rtti",
+            "-ffast-math",
+            "-fno-finite-math-only",
+            "-ffp-contract=fast",
+            "-fvisibility-inlines-hidden",
+            "-fvisibility=hidden",
+            "-fomit-frame-pointer",
+            "-ffunction-sections",
+            "-fdata-sections",
+            "-no-canonical-prefixes",
+            "-Wformat",
+            "-Werror=format-security",
+            "-Wno-unused-command-line-argument",
+            "-Wl,--gc-sections",
+            "-Wl,-Bsymbolic-functions",
+            "-Wl,--hash-style=both", // Required to support API levels below 23
+    ]
+
+    ext.agp_version = '8.1.0'
+}
+
 plugins {
-id 'com.android.application' version '8.1.0' apply false
+    id 'com.android.application' version '8.1.0' apply false
     id 'org.jetbrains.kotlin.android' version '2.0.10' apply false
 }

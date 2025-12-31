@@ -62,7 +62,7 @@ public class FilamentAsset {
         return mPrimaryInstance;
     }
 
-    long getNativeObject() {
+    public long getNativeObject() {
         return mNativeObject;
     }
 

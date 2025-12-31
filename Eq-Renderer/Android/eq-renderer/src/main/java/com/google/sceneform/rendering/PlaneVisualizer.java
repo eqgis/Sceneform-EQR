@@ -175,7 +175,7 @@ class PlaneVisualizer implements TransformProvider {
     }
   }
 
-  void release() {
+  void removeInstance() {
     removePlaneFromScene();
 
     planeRenderable = null;

@@ -66,7 +66,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
     private Camera camera;
     public Scene scene;
     private IndirectLight indirectLight;
-    private Skybox skybox;
     private boolean recreateSwapChain;
 
     private float cameraAperature;
@@ -332,7 +331,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
                     renderer.endFrame();
                 }
 
-                reclaimReleasedResources();
+                reclaimReleasedResources();//每帧调用
             }
         }
     }
@@ -342,7 +341,6 @@ public class Renderer implements EqUiHelper.RendererCallback {
      * @param skybox 天空和
      */
     public void setSkybox(Skybox skybox){
-        this.skybox = skybox;
         if (skybox != null){
             scene.setSkybox(skybox);
             Log.i("IKKYU ", "setSkybox: "+skybox.toString());
@@ -354,7 +352,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
      * @return 天空盒
      */
     public Skybox getSkybox(){
-        return this.skybox;
+        return this.scene.getSkybox();
     }
 
     /**
@@ -380,30 +378,10 @@ public class Renderer implements EqUiHelper.RendererCallback {
         return indirectLight;
     }
 
-    /** @hide
-     * 仅断开渲染链路
-     * */
-    public void dispose() {
-        filamentHelper.detach(); // call this before destroying the Engine (it could call back)
-
-        final IEngine engine = EngineInstance.getEngine();
-        if (indirectLight != null) {
-            engine.destroyIndirectLight(indirectLight);
-            indirectLight = null;
-        }
-        if (skybox != null){
-            engine.destroySkybox(skybox);
-            skybox = null;
-        }
-        engine.destroyRenderer(renderer);
-        engine.destroyView(view);
-        reclaimReleasedResources();
-    }
-
     /**
      * 释放所有资源
      */
-    public void dispose2() {
+    public void destroyEntities() {
         filamentHelper.detach();
         final IEngine engine = EngineInstance.getEngine();
 
@@ -424,31 +402,22 @@ public class Renderer implements EqUiHelper.RendererCallback {
             indirectLight = null;
         }
 
-        if (skybox != null) {
-            engine.destroySkybox(skybox);
-            skybox = null;
-        }
-
         //desc-3 再销毁 Renderer / View / Camera
         engine.destroyRenderer(renderer);
         engine.destroyView(view);
         engine.destroyView(emptyView);
         engine.destroyCamera(camera);
 
-        //desc-4 Scene 自己持有的 Skybox（防御性）
+        //desc-4 Scene 自己持有的 Skybox
         if (scene.getSkybox() != null) {
             engine.destroySkybox(scene.getSkybox());
         }
-        //desc-5 再销毁 Scene
-        engine.destroyScene(scene);
         //desc-6 SwapChain
         if (swapChain != null) {
             engine.destroySwapChain(swapChain);
             swapChain = null;
         }
 
-        //desc-7 最后回收释放资源
-        reclaimReleasedResources();
     }
 
     public Context getContext() {

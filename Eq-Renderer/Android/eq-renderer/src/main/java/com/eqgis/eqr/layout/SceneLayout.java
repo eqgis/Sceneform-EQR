@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.ExifInterface;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -31,7 +30,6 @@ import com.google.sceneform.VrSceneView;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.EngineInstance;
-import com.google.sceneform.rendering.ThreadPools;
 import com.google.sceneform.utilities.SceneformBufferUtils;
 
 import java.io.File;
@@ -265,9 +263,12 @@ public class SceneLayout extends FrameLayout{
         if (sceneView !=null) {
             //deleteNode(rootNode);
             sceneView.destroy();
+            sceneView = null;
         }
-        if (lifecycleListener != null)
+        if (lifecycleListener != null){
             lifecycleListener.onDestroy();
+            lifecycleListener = null;
+        }
     }
 
     /**

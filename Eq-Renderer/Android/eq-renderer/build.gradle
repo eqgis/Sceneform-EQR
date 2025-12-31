@@ -1,28 +1,30 @@
 plugins {
     id 'com.android.library'
-//    id 'maven-publish'
+    id 'maven-publish'
     id 'org.jetbrains.kotlin.android'
 }
 
 android {
     namespace 'com.eqgis.eqr'
-    compileSdk 28
+    ndkVersion versions.ndk
 
     defaultConfig {
-        minSdk 24
-        targetSdk 28
+        minSdk versions.minSdk
+        targetSdk versions.targetSdk
+        compileSdk versions.compileSdk
         versionCode 12
         versionName "1.2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         ndk{
-            abiFilters 'armeabi-v7a','arm64-v8a'
+            abiFilters /*'armeabi-v7a',*/'arm64-v8a'
         }
         
         externalNativeBuild {
             cmake {
-                cppFlags '-std=c++11'
+                arguments.addAll(rootProject.ext.cmakeArgs)
+                cppFlags.addAll(rootProject.ext.cppFlags)
             }
         }
     }
@@ -46,13 +48,15 @@ android {
     }
     externalNativeBuild {
         cmake {
-//            path file('src/main/cpp/CMakeLists.txt')
-            path file('CMakeLists.txt')
+            path file('src/main/cpp/CMakeLists.txt')
             version '3.22.1'
         }
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
     }
 }
 
@@ -68,11 +72,6 @@ dependencies {
 
     compileOnly 'com.huawei.hms:arenginesdk:4.0.0.5'
 
-    //离线依赖，注：需要相应so库,现为方便调试，引入filament-源码
-//    implementation files("libs/filament-v1.12.0-android.jar")
-//    implementation files("libs/gltfio-v1.12.0-android.jar")
-//    implementation files("libs/filament-utils-v1.12.0.jar")
-
     //slam库 不再引入，已将EqSlamLayout移至app模块
 //    compileOnly files("libs/eq-slam.jar")//若要使用”eq-slam“的功能，需单独引用”eq-slam-1.x.x.aar“,这里仅在编译时使用
     //opencv 的java部分代码库，注意：这里要剔除opencv.so和libc++_shared.so，用户使用时单独引用opencv，不合并在这个模块中
@@ -87,32 +86,32 @@ ext {
 
     PUBLISH_ARTIFACT_ID = 'eq-renderer'//自定义名
 
-    PUBLISH_VERSION = '1.1.0'//版本号，每一次更新迭代升级版本
+    PUBLISH_VERSION = '1.2.0'//版本号，每一次更新迭代升级版本
 }
-//
-//afterEvaluate {
-//    publishing {
-//        publications {
-//            maven(MavenPublication) {
-//                artifact bundleReleaseAar
-//
-//                groupId project.PUBLISH_GROUP_ID
-//                artifactId project.PUBLISH_ARTIFACT_ID
-//                version project.PUBLISH_VERSION
-//
-//            }
-//        }
-//
-//        repositories {
-//            maven {
-////            url = layout.buildDirectory.dir('repo')
-//                def deployPath = file(project.GITHUB_REPO_PATH)
-//                url = layout.buildDirectory.dir("file://${deployPath.absolutePath}")
-//            }
-//        }
-//    }
-//    java {
-//        sourceCompatibility = JavaVersion.VERSION_1_8
-//        targetCompatibility = JavaVersion.VERSION_1_8
-//    }
-//}
+
+afterEvaluate {
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                artifact bundleReleaseAar
+
+                groupId project.PUBLISH_GROUP_ID
+                artifactId project.PUBLISH_ARTIFACT_ID
+                version project.PUBLISH_VERSION
+
+            }
+        }
+
+        repositories {
+            maven {
+//            url = layout.buildDirectory.dir('repo')
+                def deployPath = file(project.GITHUB_REPO_PATH)
+                url = layout.buildDirectory.dir("file://${deployPath.absolutePath}")
+            }
+        }
+    }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}

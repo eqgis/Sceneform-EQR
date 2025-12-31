@@ -68,9 +68,7 @@ public abstract class Renderable {
         Preconditions.checkNotNull(builder, "Parameter \"builder\" was null.");
         if (builder.isFilamentAsset) {
             renderableData = new RenderableInternalFilamentAssetData();
-        } else if (builder.isGltf) {
-            renderableData = createRenderableInternalGltfData();
-        } else {
+        }else {
             renderableData = new RenderableInternalData();
         }
         if (builder.definition != null) {
@@ -327,9 +325,6 @@ public abstract class Renderable {
                         + ").");
     }
 
-    private IRenderableInternalData createRenderableInternalGltfData() {
-        return null;
-    }
 
     /**
      * 移除没有实例的数据，释放内存

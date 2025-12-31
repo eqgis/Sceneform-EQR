@@ -69,7 +69,7 @@ class SceneLayoutUtils {
 
     // IMPORTANT!!!  ArSceneView needs to use the non-blocking update mode.
     ARConfig config = new ARConfig(session);
-    config.setUpdateMode(ARConfig.UpdateMode.LATEST_CAMERA_IMAGE);
+    config.setUpdateMode(ARConfig.UpdateMode.BLOCKING);
 
     //@updated by tanyx_ikkyu 2021/08/04
 //    config.setLightEstimationMode(Config.LightEstimationMode.DISABLED);

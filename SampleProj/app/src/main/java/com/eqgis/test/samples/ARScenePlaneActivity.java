@@ -59,7 +59,7 @@ public class ARScenePlaneActivity extends BaseActivity {
 
         sceneLayout = findViewById(R.id.ar_scene_layout);
         sceneLayout.init(this);
-//        sceneLayout.addIndirectLight("enviroments/light/lightroom_ibl.ktx",100);
+        sceneLayout.addIndirectLight("enviroments/light/lightroom_ibl.ktx",100);
         arSceneLayout = (ARSceneLayout) sceneLayout;
         arSceneLayout.setPlaneRendererEnabled(true);
 
