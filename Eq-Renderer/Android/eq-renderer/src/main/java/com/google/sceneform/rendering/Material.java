@@ -225,10 +225,10 @@ public class Material {
         if (materialData instanceof MaterialInternalDataImpl) {
             // Do the legacy thing.
             internalMaterialInstance =
-                    new InternalMaterialInstance(materialData.getFilamentMaterial().createInstance());
+                    new InternalMaterialInstance(materialData.getFilamentMaterial());
         } else {
             // Do the glTF thing.
-            internalMaterialInstance = new InternalGltfMaterialInstance();
+            internalMaterialInstance = new InternalGltfMaterialInstance(materialData.getFilamentMaterial());
         }
 
         ResourceManager.getInstance()
@@ -265,10 +265,10 @@ public class Material {
         if (materialData instanceof MaterialInternalDataImpl) {
             // Do the legacy thing.
             internalMaterialInstance =
-                    new InternalMaterialInstance(materialData.getFilamentMaterial().createInstance());
+                    new InternalMaterialInstance(materialData.getFilamentMaterial());
         } else {
             // Do the glTF thing.
-            InternalGltfMaterialInstance internalGltfMaterialInstance = new InternalGltfMaterialInstance();
+            InternalGltfMaterialInstance internalGltfMaterialInstance = new InternalGltfMaterialInstance(materialData.getFilamentMaterial());
             if (isSetMatInstance){
                 internalGltfMaterialInstance.setMaterialInstance(materialData.getFilamentMaterial().createInstance());
             }
@@ -526,15 +526,17 @@ public class Material {
 
         boolean isValidInstance();
 
-        void dispose();
+        void disposeInstance();
     }
 
     // Represents a filament material instance created in Sceneform.
     static class InternalMaterialInstance implements IMaterialInstance {
         final MaterialInstance instance;
+        final com.google.android.filament.Material material;
 
-        public InternalMaterialInstance(MaterialInstance instance) {
-            this.instance = instance;
+        public InternalMaterialInstance(com.google.android.filament.Material material) {
+            this.material = material;
+            this.instance = material.createInstance();
         }
 
         @Override
@@ -548,15 +550,17 @@ public class Material {
         }
 
         @Override
-        public void dispose() {
+        public void disposeInstance() {
             IEngine engine = EngineInstance.getEngine();
             if (engine != null && engine.isValid()) {
                 try{
                     instance.getNativeObject();
-                }catch (IllegalStateException e){
-                    return;
+                    if (engine.getFilamentEngine().isValidMaterialInstance(material,instance)){
+                        engine.destroyMaterialInstance(instance);
+                    }
+                    //备注：Material通过materialCleanupRegistry最后释放
+                }catch (IllegalStateException ignored){
                 }
-                engine.destroyMaterialInstance(instance);
             }
         }
     }
@@ -564,8 +568,10 @@ public class Material {
     // A filament material instance created and managed in the native loader.
     static class InternalGltfMaterialInstance implements IMaterialInstance {
         MaterialInstance instance;
+        final com.google.android.filament.Material material;
 
-        public InternalGltfMaterialInstance() {
+        public InternalGltfMaterialInstance(com.google.android.filament.Material mat) {
+            this.material = mat;
         }
 
         void setMaterialInstance(MaterialInstance instance) {
@@ -583,13 +589,23 @@ public class Material {
         }
 
         @Override
-        public void dispose() {
-            // Material is tracked natively.
+        public void disposeInstance() {
+            IEngine engine = EngineInstance.getEngine();
+            if (engine != null && engine.isValid()) {
+                try{
+                    instance.getNativeObject();
+                    if (engine.getFilamentEngine().isValidMaterialInstance(material,instance)){
+                        engine.destroyMaterialInstance(instance);
+                    }
+                    //备注：Material通过materialInternalData.release()最后释放
+                }catch (IllegalStateException ignored){
+                }
+            }
         }
     }
 
     /**
-     * Cleanup filament objects after garbage collection
+     * 资源清理回调
      */
     private static final class CleanupCallback implements Runnable {
         @Nullable
@@ -608,7 +624,7 @@ public class Material {
         public void run() {
             AndroidPreconditions.checkUiThread();
             if (materialInstance != null) {
-                materialInstance.dispose();
+                materialInstance.disposeInstance();
             }
 
             if (materialInternalData != null) {

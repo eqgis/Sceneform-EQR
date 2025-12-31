@@ -53,12 +53,10 @@ class ARSceneHelper {
      * 销毁
      */
     public void destroy(){
-        IEngine engine = EngineInstance.getEngine();
-        if (gestureDetector != null)gestureDetector = null;
-        if (planeMaterial != null){
-            MaterialInstance filamentMaterialInstance = planeMaterial.getFilamentMaterialInstance();
-            engine.destroyMaterialInstance(filamentMaterialInstance);
+        if (arSceneView.getPlaneRenderer() != null){
+            arSceneView.getPlaneRenderer().release();
         }
+        gestureDetector = null;
     }
 
     /**

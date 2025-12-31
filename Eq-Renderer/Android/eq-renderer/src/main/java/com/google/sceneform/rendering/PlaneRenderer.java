@@ -73,7 +73,8 @@ public class PlaneRenderer {
     // Per-plane overrides
     private final Map<com.huawei.hiar.ARPlane, Material> materialOverridesAREngine = new HashMap<>();
     private CompletableFuture<Material> planeMaterialFuture;
-    private Material shadowMaterial;
+    private Material mPlaneMaterial;
+    private Material mShadowMaterial;
     private boolean isEnabled = false;
     private boolean isVisible = true;
     private boolean isShadowReceiver = true;
@@ -312,8 +313,8 @@ public class PlaneRenderer {
             } else if (planeMaterial != null) {
                 planeVisualizer.setPlaneMaterial(planeMaterial);
             }
-            if (shadowMaterial != null) {
-                planeVisualizer.setShadowMaterial(shadowMaterial);
+            if (mShadowMaterial != null) {
+                planeVisualizer.setShadowMaterial(mShadowMaterial);
             }
             planeVisualizer.setShadowReceiver(isShadowReceiver);
             planeVisualizer.setVisible(isVisible);
@@ -340,8 +341,8 @@ public class PlaneRenderer {
             } else if (planeMaterial != null) {
                 planeVisualizer.setPlaneMaterial(planeMaterial);
             }
-            if (shadowMaterial != null) {
-                planeVisualizer.setShadowMaterial(shadowMaterial);
+            if (mShadowMaterial != null) {
+                planeVisualizer.setShadowMaterial(mShadowMaterial);
             }
             planeVisualizer.setShadowReceiver(isShadowReceiver);
             planeVisualizer.setVisible(isVisible);
@@ -352,6 +353,17 @@ public class PlaneRenderer {
         // Update the plane visualizer.
         Optional.ofNullable(planeVisualizer)
                 .ifPresent(PlaneVisualizer::updatePlane);
+    }
+
+    public void release(){
+        for (Map.Entry<Plane, PlaneVisualizer> planePlaneVisualizerEntry : visualizerMap.entrySet()) {
+            planePlaneVisualizerEntry.getValue().removeInstance();
+        }
+        visualizerMap.clear();
+        //仅从场景中移动Entity，不销毁MaterialInstance，
+//        IEngine engine = EngineInstance.getEngine();
+//        engine.destroyMaterialInstance(mPlaneMaterial.internalMaterialInstance.getInstance());
+//        engine.destroyMaterialInstance(mShadowMaterial.internalMaterialInstance.getInstance());
     }
 
     /**
@@ -370,7 +382,7 @@ public class PlaneRenderer {
                 // If this plane was subsumed by another plane or it has permanently stopped tracking,
                 // remove it.
                 if (plane.getSubsumedBy() != null || plane.getTrackingState() == TrackingState.STOPPED) {
-                    planeVisualizer.release();
+                    planeVisualizer.removeInstance();
                     iter.remove();
                     continue;
                 }
@@ -386,7 +398,7 @@ public class PlaneRenderer {
                 // If this plane was subsumed by another plane or it has permanently stopped tracking,
                 // remove it.
                 if (plane.getSubsumedBy() != null || plane.getTrackingState() == com.huawei.hiar.ARTrackable.TrackingState.STOPPED) {
-                    planeVisualizer.release();
+                    planeVisualizer.removeInstance();
                     iter.remove();
                     continue;
                 }
@@ -405,9 +417,9 @@ public class PlaneRenderer {
                 .build()
                 .thenAccept(
                         material -> {
-                            shadowMaterial = material;
+                            mShadowMaterial = material;
                             for (PlaneVisualizer visualizer : visualizerMap.values()) {
-                                visualizer.setShadowMaterial(shadowMaterial);
+                                visualizer.setShadowMaterial(mShadowMaterial);
                             }
                         })
                 .exceptionally(
@@ -460,6 +472,7 @@ public class PlaneRenderer {
                                             entry.getValue().setPlaneMaterial(material);
                                         }
                                     }
+                                    mPlaneMaterial = material;
                                     return material;
                                 });
     }

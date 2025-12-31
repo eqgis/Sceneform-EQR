@@ -23,6 +23,7 @@ import com.google.android.filament.gltfio.Animator;
 import com.google.android.filament.gltfio.FilamentAsset;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * 渲染实例
@@ -74,7 +75,7 @@ public class RenderableInstance implements AnimatableModel {
 
         if (renderableData instanceof RenderableInternalFilamentAssetData) {
             //当前版本，通过gltfio库导入gltf2.0格式的模型,缓存下材质信息
-            handleFilamentAsset(renderable);
+            handleFilamentAsset(Objects.requireNonNull(getFilamentAsset()));
         }
 
         ResourceManager.getInstance()
@@ -82,9 +83,8 @@ public class RenderableInstance implements AnimatableModel {
                 .register(this, new CleanupCallback(entity, childEntity));
     }
 
-    private void handleFilamentAsset(Renderable renderable) {
+    private void handleFilamentAsset(FilamentAsset filamentAsset) {
         RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
-        FilamentAsset filamentAsset = getFilamentAsset();
         this.materialBindings.clear();
         this.materialNames.clear();
         for (int entity : filamentAsset.getEntities()) {
@@ -97,13 +97,11 @@ public class RenderableInstance implements AnimatableModel {
 
             MaterialInternalDataGltfImpl materialData = new MaterialInternalDataGltfImpl(materialInstance.getMaterial());
             Material material = new Material(materialData);
-            material.updateGltfMaterialInstance(materialInstance);
+            material.updateGltfMaterialInstance(materialInstance);//注：Java层绑定材质实例，否则SceneView销毁时无法触发destroyMaterialInstance
             materialBindings.add(material);
         }
 
-        setRenderPriority(renderable.getRenderPriority());
-        setShadowCaster(renderable.isShadowCaster());
-        setShadowReceiver(renderable.isShadowReceiver());
+        setDefaultAttr();
 
         filamentAnimator = filamentAsset.getInstance().getAnimator();
         animations = new ArrayList<>();
@@ -244,7 +242,7 @@ public class RenderableInstance implements AnimatableModel {
         RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
         @EntityInstance int renderableInstance = renderableManager.getInstance(getEntity());
         if (renderableInstance != 0) {
-            renderableManager.setCastShadows(renderableInstance, isShadowCaster);
+            renderableManager.setReceiveShadows(renderableInstance, isShadowReceiver);
         }
         //TODO : Verify if we don't need to apply the parameter to child entities
 //        for (int i = 0; i < entities.length; i++) {
@@ -253,6 +251,16 @@ public class RenderableInstance implements AnimatableModel {
 //                renderableManager.setReceiveShadows(renderableInstance, isShadowReceiver);
 //            }
 //        }
+    }
+    private void setDefaultAttr() {
+        RenderableManager renderableManager = EngineInstance.getEngine().getRenderableManager();
+        @EntityInstance int renderableInstance = renderableManager.getInstance(getEntity());
+        if (renderableInstance != 0) {
+            renderableManager.setCastShadows(renderableInstance, isShadowCaster);
+            renderableManager.setReceiveShadows(renderableInstance, isShadowReceiver);
+            renderableManager.setPriority(renderableInstance, this.renderPriority);
+        }
+
     }
 
     /**
@@ -464,7 +472,7 @@ public class RenderableInstance implements AnimatableModel {
         renderable.getRenderableData().dispose();//Other RenderableData dispose
 
         for (Material material : renderable.getMaterialBindings()) {
-            material.internalMaterialInstance.dispose();
+            material.internalMaterialInstance.disposeInstance();
         }
 
         if (childEntity != 0) {

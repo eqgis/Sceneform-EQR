@@ -141,13 +141,12 @@ public class ARSceneLayout extends SceneLayout{
 
     @Override
     public void destroy() {
-        if (arSceneHelper != null){
-            arSceneView.getPlaneRenderer().setEnabled(false);
-            arSceneHelper.destroy();
-        }
         if (session != null){
             session.close();
             session = null;
+        }
+        if (arSceneHelper != null){
+            arSceneHelper.destroy();
         }
         super.destroy();
     }

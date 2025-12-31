@@ -263,9 +263,12 @@ public class SceneLayout extends FrameLayout{
         if (sceneView !=null) {
             //deleteNode(rootNode);
             sceneView.destroy();
+            sceneView = null;
         }
-        if (lifecycleListener != null)
+        if (lifecycleListener != null){
             lifecycleListener.onDestroy();
+            lifecycleListener = null;
+        }
     }
 
     /**

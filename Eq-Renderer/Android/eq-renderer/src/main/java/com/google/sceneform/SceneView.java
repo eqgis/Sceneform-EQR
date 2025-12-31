@@ -188,11 +188,8 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
 
         if (renderer != null) {
 
-            //todo check_free memory_: add this method to release memory
             try {
-//                reclaimReleasedResources();//'renderer.dispose()' has call this method.
-
-                renderer.dispose2();//包含renderer和filamentView、indirectLight
+                renderer.destroyEntities();//包含renderer和filamentView、indirectLight
             }catch (IllegalStateException e){
                 Log.w(TAG, "destroy: ", e);
             }finally {
@@ -201,9 +198,12 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
         }
 
         ResourceManager.getInstance().destroyAllResources();
+        if (renderer != null && renderer.scene != null){
+            EngineInstance.getEngine().destroyScene(renderer.scene);
+        }
+
         FilamentMaterialProviderManager.destroy();
         EngineInstance.destroyEngine();
-//        destroyAllResources();
     }
 
     /**
