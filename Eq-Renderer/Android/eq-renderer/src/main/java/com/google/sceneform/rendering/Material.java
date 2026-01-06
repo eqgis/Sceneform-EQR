@@ -359,7 +359,9 @@ public class Material {
          * @return {@link Builder} for chaining setup calls
          */
         public Builder setSource(Context context, int resource) {
-            registryId = context.getResources().getResourceName(resource);
+            if (registryId == null){
+                registryId = context.getResources().getResourceName(resource);
+            }
             inputStreamCreator = LoadHelper.fromResource(context, resource);
             sourceBuffer = null;
             return this;

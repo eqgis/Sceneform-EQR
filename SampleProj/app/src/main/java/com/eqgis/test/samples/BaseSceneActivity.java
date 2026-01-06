@@ -17,6 +17,7 @@ import com.eqgis.eqr.utils.ScaleTool;
 import com.eqgis.test.BaseActivity;
 import com.eqgis.test.R;
 import com.eqgis.test.scene.GltfSampleScene;
+import com.eqgis.test.scene.PlyDataScene;
 import com.google.android.filament.RenderableManager;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
@@ -79,7 +80,8 @@ public class BaseSceneActivity extends BaseActivity {
                 .setEnabled(true);
 
         //加载GLTF模型
-        sampleScene = new GltfSampleScene();
+//        sampleScene = new GltfSampleScene();
+        sampleScene = new PlyDataScene();
         sampleScene.create(this,sceneLayout.getRootNode());
 
         View touchView = findViewById(R.id.touch_view);
@@ -90,7 +92,7 @@ public class BaseSceneActivity extends BaseActivity {
                 return true;
             }
         });
-        addPlane(sceneLayout.getRootNode());
+//        addPlane(sceneLayout.getRootNode());
     }
 
     public void remove(View view) {

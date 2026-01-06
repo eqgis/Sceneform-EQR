@@ -172,7 +172,7 @@ public final class MaterialFactory {
         });
   }
 
-  private static void applyDefaultPbrParams(Material material) {
+  public static void applyDefaultPbrParams(Material material) {
     material.setFloat(MATERIAL_METALLIC, DEFAULT_METALLIC_PROPERTY);
     material.setFloat(MATERIAL_ROUGHNESS, DEFAULT_ROUGHNESS_PROPERTY);
     material.setFloat(MATERIAL_REFLECTANCE, DEFAULT_REFLECTANCE_PROPERTY);
