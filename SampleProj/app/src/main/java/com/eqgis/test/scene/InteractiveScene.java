@@ -7,9 +7,8 @@ import android.view.MotionEvent;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.eqgis.eqr.node.RootNode;
 import com.eqgis.eqr.utils.PoseUtils;
-import com.google.sceneform.Camera;
+import com.eqgis.test.R;
 import com.google.sceneform.HitTestResult;
 import com.google.sceneform.Node;
 import com.google.sceneform.NodeParent;
@@ -165,7 +164,8 @@ public class InteractiveScene implements ISampleScene{
         TextView textView = new TextView(context);
         //Scenefrom默认情况下，250dp对应世界坐标系下的1m，
         textView.setTextSize(16);
-        textView.setText("T");
+        textView.setTextColor(context.getColor(R.color.white));
+        textView.setText("Y");
         ViewRenderable.builder()
                 .setView(context,textView)
                 /*底部居中显示*/

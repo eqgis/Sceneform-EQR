@@ -27,7 +27,9 @@ import java.util.function.Function;
  * @version 1.0
  **/
 public class PlyDataScene implements ISampleScene{
-    private String plyPath = "sofa_ascii.ply";
+//    private String plyPath = "temp/test_color.ply";
+    private String plyPath = "temp/cactus_splat3_30kSteps_142k_splats.ply";
+//    private String plyPath = "sofa.ply";
     public float distance = 3.6f;
     /**
      * 模型节点
