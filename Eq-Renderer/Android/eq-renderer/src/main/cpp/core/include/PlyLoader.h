@@ -23,36 +23,38 @@ using namespace filament;
 using namespace filament::math;
 using namespace utils;
 
-struct PlyAsset
-{
-    std::shared_ptr<tinyply::PlyData> vertices, normals, colors, texcoords, tripstrip,faces;
+namespace EQR{
+    struct PlyAsset
+    {
+        std::shared_ptr<tinyply::PlyData> vertices, normals, colors, texcoords, tripstrip,faces;
 
 
-    math::float3 aabbMin;
-    math::float3 aabbMax;
+        math::float3 aabbMin;
+        math::float3 aabbMax;
 
-};
+    };
 
-void setIntArray(JNIEnv* env, jobject obj, jfieldID fieldId, jint* data, jsize length) {
-    jintArray array = env->NewIntArray(length);
-    env->SetIntArrayRegion(array, 0, length, data);
-    env->SetObjectField(obj, fieldId, array);
-    env->DeleteLocalRef(array);
-}
+    inline void setIntArray(JNIEnv* env, jobject obj, jfieldID fieldId, jint* data, jsize length) {
+        jintArray array = env->NewIntArray(length);
+        env->SetIntArrayRegion(array, 0, length, data);
+        env->SetObjectField(obj, fieldId, array);
+        env->DeleteLocalRef(array);
+    }
 
 
-static void setFloatArray(
-        JNIEnv* env,
-        jobject obj,
-        jfieldID field,
-        const float* data,
-        size_t count)
-{
-    if (!data || count == 0) return;
+    inline void setFloatArray(
+            JNIEnv* env,
+            jobject obj,
+            jfieldID field,
+            const float* data,
+            size_t count)
+    {
+        if (!data || count == 0) return;
 
-    jfloatArray arr = env->NewFloatArray(count);
-    env->SetFloatArrayRegion(arr, 0, count, data);
-    env->SetObjectField(obj, field, arr);
+        jfloatArray arr = env->NewFloatArray(count);
+        env->SetFloatArrayRegion(arr, 0, count, data);
+        env->SetObjectField(obj, field, arr);
+    }
 }
 
 

@@ -26,6 +26,7 @@
 using namespace filament;
 
 using namespace tinyply;
+using namespace EQR;
 
 inline std::vector<uint8_t> read_file_binary(const std::string & pathToFile)
 {
