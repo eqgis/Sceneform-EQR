@@ -1,6 +1,5 @@
 package com.google.sceneform.rendering;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.filament.RenderableManager;
@@ -13,10 +12,11 @@ import com.google.sceneform.rendering.RenderableInternalData.MeshData;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 
-// TODO: Split IRenderableInternalData into RenderableInternalSfbData and RenderableInternalDefinitionData
+/**
+ * 通用渲染数据接口
+ */
 interface IRenderableInternalData {
 
     void setCenterAabb(Vector3 minAabb);

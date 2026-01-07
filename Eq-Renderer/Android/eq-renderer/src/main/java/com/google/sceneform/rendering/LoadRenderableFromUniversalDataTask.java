@@ -6,14 +6,11 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.filament.gltfio.ResourceLoader;
 import com.google.sceneform.utilities.Preconditions;
 import com.google.sceneform.utilities.SceneformBufferUtils;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;

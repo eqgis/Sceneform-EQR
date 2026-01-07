@@ -1,21 +1,32 @@
 package com.eqgis.eqr.data;
 
-import com.google.android.filament.Box;
+import androidx.annotation.Keep;
 
 /**
- * <p></p>
- * <pre>SampleCode:
- * </pre>
- *
- * @author tanyx 2026/1/6
- * @version 1.0
- **/
+ * Ply数据
+ * <p>在Native创建，供Java读取</p>
+ */
+@Keep
 public class JPlyAsset {
+
+    @Keep
     public float[] vertices;
+
+    @Keep
     public float[] normals;
+
+    @Keep
     public float[] texcoords;
+
+    @Keep
     public float[] colors;
+
+    @Keep
     public int[] faces;
-    public float[] tripstrip;
+
+    @Keep
+    public int[] tripstrip;
+
+    @Keep
     public float[] aabb;
 }
