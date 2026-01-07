@@ -469,18 +469,20 @@ public class RenderableInstance implements AnimatableModel {
             renderable.detatchFromRenderer();//as View
         }
 
-        renderable.getRenderableData().dispose();//Other RenderableData dispose
-
-        for (Material material : renderable.getMaterialBindings()) {
-            material.internalMaterialInstance.disposeInstance();
-        }
-
+        //注意：需Entity需要在Material之前销毁
         if (childEntity != 0) {
             entityManager.destroy(childEntity);
         }
         if (entity != 0) {
             entityManager.destroy(entity);
         }
+
+        renderable.getRenderableData().dispose();//Other RenderableData dispose
+
+        for (Material material : renderable.getMaterialBindings()) {
+            material.internalMaterialInstance.disposeInstance();
+        }
+
         //</editor-fold>
     }
 
