@@ -20,6 +20,8 @@ public class PlyGS3dLoader {
         mPlyLoaderNativeObject = nLoadFromBytes(buffer);
         nFill(mPlyLoaderNativeObject, jPlyAsset);
 
+        jPlyAsset.dimension = jPlyAsset.f_rest.length / jPlyAsset.pointCount;
+
         //用完即销毁
         destroyPlyAsset();
 

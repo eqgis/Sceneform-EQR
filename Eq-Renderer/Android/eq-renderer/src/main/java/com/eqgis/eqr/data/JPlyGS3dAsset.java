@@ -32,4 +32,7 @@ public class JPlyGS3dAsset {
     @Keep public int pointCount;      // 高斯点数量
     @Keep public int shDegree;        // 球谐阶数
 
+    //维度
+    public int dimension;
+
 }

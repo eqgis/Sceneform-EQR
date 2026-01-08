@@ -73,6 +73,9 @@ public abstract class Renderable {
             case PLY:
                 renderableData = new RenderableInternalPlyData();
                 break;
+            case PLY_3DGS:
+                renderableData = new RenderableInternalGS3dData();
+                break;
             case DEFAULT_INTERNAL:
             default:
                 renderableData = new RenderableInternalData();
@@ -265,7 +268,7 @@ public abstract class Renderable {
         return new RenderableInstance(transformProvider, this);
     }
 
-    public void updateFromDefinition(RenderableDefinition definition) {
+    public void updateFromDefinition(IRenderableDefinition definition) {
         Preconditions.checkState(!definition.getSubmeshes().isEmpty());
 
         changeId.update();
@@ -538,6 +541,7 @@ public abstract class Renderable {
                     }
                     break;
                 case PLY:
+                case PLY_3DGS:
                     if (context != null) {
                         result = loadRenderableFromUniversalData(context, renderable);
                     } else {
@@ -648,6 +652,7 @@ public abstract class Renderable {
          * 作为PLY模型格式进行渲染
          */
         PLY,
+        PLY_3DGS,
         /**
          * 使用RenderableDefinition渲染
          */

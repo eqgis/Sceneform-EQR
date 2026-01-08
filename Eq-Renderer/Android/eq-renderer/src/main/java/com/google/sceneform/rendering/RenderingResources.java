@@ -24,7 +24,8 @@ public final class RenderingResources {
         PLANE_MATERIAL,
         PLANE,
         VIEW_RENDERABLE_MATERIAL,
-        PLY_BASE_MATERIAL
+        PLY_BASE_MATERIAL,
+        PLY_GAUSSIAN_SPLAT_MATERIAL
     };
 
     //update绘制默认采用双面材质
@@ -52,6 +53,8 @@ public final class RenderingResources {
                 return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_view_material");
             case PLY_BASE_MATERIAL:
                 return LoadHelper.rawResourceNameToIdentifier(context,"sceneform_ply_base_material");
+            case PLY_GAUSSIAN_SPLAT_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context,"sceneform_gaussian_splat");
         }
         return 0;
     }
