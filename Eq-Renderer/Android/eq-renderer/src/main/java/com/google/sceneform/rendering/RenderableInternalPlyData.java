@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.eqgis.eqr.core.FilamentPrimitiveUtilsNative;
 import com.eqgis.eqr.core.PlyLoader;
@@ -23,24 +22,23 @@ import java.util.function.Function;
  * @author tanyx 2026/1/5
  * @version 1.0
  **/
-public class RenderableInternalPlyData extends RenderableInternalData{
+public class RenderableInternalPlyData extends RenderableInternalData implements LoadRenderableFromUniversalDataTask.IUniversalData {
     public static float DEFAULT_POINT_SIZE = 2;
     private static final String POINT_SIZE_NAME = "pointSize";
     private static final String USE_VERTEX_COLORS = "useVertexColors";
     private PlyLoader plyLoader;
-    Context context;
-    byte[] byteBuffer;
-    @Nullable
-    Function<String, Uri> urlResolver;
-    RenderableDefinition renderableDefinition;
+    private Context context;
+    private byte[] byteBuffer;
+    private Function<String, Uri> urlResolver;
+    private RenderableDefinition renderableDefinition;
     private Material material;
     private JPlyAsset assets;
 
     @Override
     public void create(RenderableInstance instance) {
-        super.create(instance);
         plyLoader = new PlyLoader();
         assets = plyLoader.createAssets(byteBuffer);
+        byteBuffer = null;// 主动置空，使其尽早符合回收条件
 
         Renderable renderable = instance.getRenderable();
         if (renderable.collisionShape == null) {
@@ -95,7 +93,7 @@ public class RenderableInternalPlyData extends RenderableInternalData{
             throw new IllegalArgumentException("assets.vertices must not be null");
         }
 
-        int vertexCount = assets.vertices.length / 3;
+        int vertexCount = assets.vertices.length / 3;//xyz三个分量
 
         if (assets.normals == null && assets.faces != null){
             //补法线，采用平滑法线（Smooth Shading）计算方法
@@ -204,5 +202,20 @@ public class RenderableInternalPlyData extends RenderableInternalData{
             }
         }
         return vertices;
+    }
+
+    @Override
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    @Override
+    public void setData(byte[] bytes) {
+        this.byteBuffer = bytes;
+    }
+
+    @Override
+    public void setUrlResolver(Function<String, Uri> resolver) {
+        this.urlResolver = resolver;
     }
 }

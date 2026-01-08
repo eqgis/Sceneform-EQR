@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import com.google.sceneform.utilities.Preconditions;
 import com.google.sceneform.utilities.SceneformBufferUtils;
 import com.google.android.filament.gltfio.ResourceLoader;
+import com.google.sceneform.utilities.UrlResolverUtils;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -38,7 +39,7 @@ public class LoadRenderableFromFilamentGltfTask<T extends Renderable> {
     this.renderableData.resourceLoader =
         new ResourceLoader(EngineInstance.getEngine().getFilamentEngine()/*,false,true*/);
     this.renderableData.urlResolver =
-        missingPath -> getUriFromMissingResource(sourceUri, missingPath, urlResolver);
+        missingPath -> UrlResolverUtils.getUriFromMissingResource(sourceUri, missingPath, urlResolver);
     this.renderableData.context = context.getApplicationContext();
     this.renderable.getId().update();
   }
@@ -71,35 +72,5 @@ public class LoadRenderableFromFilamentGltfTask<T extends Renderable> {
             ThreadPools.getMainExecutor());
   }
 
-  @NonNull
-  static Uri getUriFromMissingResource(
-      @NonNull Uri parentUri,
-      @NonNull String missingResource,
-      @Nullable Function<String, Uri> urlResolver) {
 
-    if (urlResolver != null) {
-      return urlResolver.apply(missingResource);
-    }
-
-    if (missingResource.startsWith("/")) {
-      missingResource = missingResource.substring(1);
-    }
-
-    // Ensure encoding.
-    Uri decodedMissingResUri = Uri.parse(Uri.decode(missingResource));
-
-    if (decodedMissingResUri.getScheme() != null) {
-      throw new AssertionError(
-          String.format(
-              "Resource path contains a scheme but should be relative, uri: (%s)",
-              decodedMissingResUri));
-    }
-
-    // Build uri to missing resource.
-    String decodedMissingResPath = Preconditions.checkNotNull(decodedMissingResUri.getPath());
-    Uri decodedParentUri = Uri.parse(Uri.decode(parentUri.toString()));
-    Uri uri = decodedParentUri.buildUpon().appendPath("..").appendPath(decodedMissingResPath).build();
-    // Normalize and return Uri.
-    return Uri.parse(Uri.decode(URI.create(uri.toString()).normalize().toString()));
-  }
 }
