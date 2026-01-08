@@ -17,7 +17,7 @@ import java.util.ArrayList;
 /**
  * 通用渲染数据接口
  */
-interface IRenderableInternalData {
+public interface IRenderableInternalData {
 
     void setCenterAabb(Vector3 minAabb);
 
