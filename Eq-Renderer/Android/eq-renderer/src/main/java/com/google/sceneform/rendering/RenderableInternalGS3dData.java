@@ -62,7 +62,7 @@ public class RenderableInternalGS3dData extends RenderableInternalData implement
                 .thenAccept(mat -> {
                     material = mat;
                     material.setInt("shDegree ",asset.shDegree);
-                    material.setFloat("pointSize",10);
+                    material.setFloat("pointSize",5);
                     MaterialFactory.applyDefaultPbrParams(material);
                     material.setFloat4(MaterialFactory.MATERIAL_COLOR, new Color(1, 1, 1,1));
                     createPrimitive(instance);

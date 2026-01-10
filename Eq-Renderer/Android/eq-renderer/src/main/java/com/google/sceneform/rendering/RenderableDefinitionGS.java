@@ -30,6 +30,7 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
 
     private static final int BYTES_PER_FLOAT = Float.SIZE / 8;
     private static final int POSITION_SIZE = 3; // x, y, z
+    private static final int UV_SIZE = 2;
     private static final int F4_SIZE = 4; // Float4
     private JPlyGS3dAsset asset;
     private int shDegree = 0;
@@ -144,7 +145,9 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
 
         //计算顶点数据
         EnumSet<VertexAttribute> descriptionAttributes = EnumSet.of(VertexAttribute.POSITION);
-
+        if (firstVertex.getUvCoordinate() != null) {
+            descriptionAttributes.add(VertexAttribute.UV0);
+        }
         addAttributes(descriptionAttributes);
 
         //计算vertexBuffer
@@ -152,7 +155,9 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
         boolean createVertexBuffer = true;
         if (vertexBuffer != null) {
             EnumSet<VertexAttribute> oldAttributes = EnumSet.of(VertexAttribute.POSITION);
-
+            if (data.getRawUvBuffer() != null) {
+                oldAttributes.add(VertexAttribute.UV0);
+            }
             addAttributes(oldAttributes);
 
             createVertexBuffer =
@@ -178,6 +183,15 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
             positionBuffer.rewind();
         }
 
+        //创建uvBuffer
+        FloatBuffer uvBuffer = data.getRawUvBuffer();
+        if (descriptionAttributes.contains(VertexAttribute.UV0)
+                && (uvBuffer == null || uvBuffer.capacity() < numVertices * UV_SIZE)) {
+            uvBuffer = FloatBuffer.allocate(numVertices * UV_SIZE);
+            data.setRawUvBuffer(uvBuffer);
+        } else if (uvBuffer != null) {
+            uvBuffer.rewind();
+        }
 
         //创建colorBuffer
         FloatBuffer colorBuffer = data.getRawColorBuffer();
@@ -204,12 +218,24 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
             Vector3 position = vertex.getPosition();
             addVector3ToBuffer(position, positionBuffer);
 
+            // Uv
+            if (uvBuffer != null) {
+                Vertex.UvCoordinate uvCoordinate = vertex.getUvCoordinate();
+                if (uvCoordinate == null) {
+                    throw new IllegalArgumentException(
+                            "Missing UV Coordinate: If any Vertex in a "
+                                    + "RenderableDescription has a UV Coordinate, all vertices must have one.");
+                }
+
+                addUvToBuffer(uvCoordinate, uvBuffer);
+            }
+
             // Color，实际材质中为scale
             if(asset.scale != null){
-                addFloat3ToBuffer(asset.scale[3 * i],asset.scale[3 * i], asset.scale[3 * i],colorBuffer);
+                addFloat3ToBuffer(asset.scale[3 * i],asset.scale[3 * i+1], asset.scale[3 * i+2],colorBuffer);
             }
             if (asset.rot != null){
-                addFloat4ToBuffer(asset.rot[4*i],asset.rot[4*i+1],asset.rot[4*i+1],asset.rot[4*i+1],custom7);
+                addFloat4ToBuffer(asset.rot[4*i],asset.rot[4*i+1],asset.rot[4*i+2],asset.rot[4*i+3],custom7);
             }
             float opacityValue = asset.opacity!=null ? asset.opacity[i] : 1.0f;
             addFloat4ToBuffer(asset.f_dc[3 * i],asset.f_dc[3 * i + 1], asset.f_dc[3 * i + 2],opacityValue,custom0);
@@ -241,12 +267,28 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
         vertexBuffer.setBufferAt(
                 engine.getFilamentEngine(), bufferIndex, positionBuffer, 0, numVertices * POSITION_SIZE);
 
+        if (uvBuffer != null) {
+            uvBuffer.rewind();
+            bufferIndex++;
+            vertexBuffer.setBufferAt(
+                    engine.getFilamentEngine(), bufferIndex, uvBuffer, 0, numVertices * UV_SIZE);
+        }
+
         bufferIndex = setBufferDataFloat4(colorBuffer, bufferIndex, vertexBuffer, engine, numVertices);
         bufferIndex = setBufferDataFloat4(custom0, bufferIndex, vertexBuffer, engine, numVertices);
         bufferIndex = setBufferDataFloat4(custom7, bufferIndex, vertexBuffer, engine, numVertices);
-        bufferIndex = setBufferDataFloat4(custom1, bufferIndex, vertexBuffer, engine, numVertices);
-        bufferIndex = setBufferDataFloat4(custom2, bufferIndex, vertexBuffer, engine, numVertices);
-        setBufferDataFloat4(custom3, bufferIndex, vertexBuffer, engine, numVertices);
+        switch (shDegree){
+            case 0:
+                break;
+            case 1:
+            case 2:
+            case 3:
+                bufferIndex = setBufferDataFloat4(custom1, bufferIndex, vertexBuffer, engine, numVertices);
+                bufferIndex = setBufferDataFloat4(custom2, bufferIndex, vertexBuffer, engine, numVertices);
+                setBufferDataFloat4(custom3, bufferIndex, vertexBuffer, engine, numVertices);
+                break;
+            default:
+        }
     }
 
     private int setBufferDataFloat4(FloatBuffer custom0, int bufferIndex, VertexBuffer vertexBuffer, IEngine engine, int numVertices) {
@@ -303,6 +345,17 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
                 VertexBuffer.AttributeType.FLOAT3,
                 0,
                 POSITION_SIZE * BYTES_PER_FLOAT);
+
+        // Uv
+        if (attributes.contains(VertexAttribute.UV0)) {
+            bufferIndex++;
+            builder.attribute(
+                    VertexAttribute.UV0,
+                    bufferIndex,
+                    VertexBuffer.AttributeType.FLOAT2,
+                    0,
+                    UV_SIZE * BYTES_PER_FLOAT);
+        }
 
         // Color
         if (attributes.contains(VertexAttribute.COLOR)) {
@@ -416,7 +469,10 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
         buffer.put(b);
         buffer.put(c);
     }
-
+    private static void addUvToBuffer(Vertex.UvCoordinate uvCoordinate, FloatBuffer buffer) {
+        buffer.put(uvCoordinate.x);
+        buffer.put(uvCoordinate.y);
+    }
     public void setGaussianSplat(JPlyGS3dAsset asset) {
         this.asset = asset;
     }

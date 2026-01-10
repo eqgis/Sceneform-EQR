@@ -75,7 +75,7 @@ struct PlyGS3dAsset
     // 元数据
     bool is3DGS = false;        // 标记是否为3DGS文件
     size_t pointCount = 0;      // 点数量
-    int shDegree = 3;           // 球谐阶数（默认为3阶）
+    int shDegree = 0;           // 球谐阶数（默认为0阶）
 
     // 包围盒
     math::float3 aabbMin;
