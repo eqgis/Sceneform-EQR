@@ -1,9 +1,14 @@
 package com.google.sceneform.rendering;
 
+import android.content.Context;
 import android.opengl.EGLContext;
+import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.eqgis.exception.DeviceNotSupportException;
+import com.eqgis.exception.NotSupportException;
 import com.google.sceneform.utilities.Preconditions;
 import com.google.android.filament.Engine;
 import com.google.android.filament.Filament;
@@ -19,6 +24,7 @@ public class EngineInstance {
   @Nullable private static EGLContext glContext = null;
   private static boolean headlessEngine = false;
   private static boolean filamentInitialized = false;
+  private static Engine.Backend backend = Engine.Backend.OPENGL; // 默认 OpenGL ES
 
   public static void enableHeadlessEngine() {
     headlessEngine = true;
@@ -30,6 +36,22 @@ public class EngineInstance {
 
   public static boolean isHeadlessMode() {
     return headlessEngine;
+  }
+
+    /**
+     * 启用Vulkan
+     * <p>
+     *     默认为OpenGL
+     *     注意：不可用Vulkan的情况
+     *     使用{@link ExternalTexture}、{@link CameraStream}、{@link  com.google.sceneform.ArSceneView}
+     * </p>
+     * @param context Context
+     */
+  public static void enableVulkan(Context context) throws DeviceNotSupportException {
+      if (checkDeviceSupportsVulkan(context)){
+          backend = Engine.Backend.VULKAN;
+      }
+      throw new DeviceNotSupportException("not support Vulkan");
   }
 
   /**
@@ -52,7 +74,7 @@ public class EngineInstance {
     return engine;
   }
 
-  
+
   private static Engine createSharedFilamentEngine() {return null;}
 
 
@@ -64,14 +86,17 @@ public class EngineInstance {
   private static Engine createFilamentEngine() {
     Engine result = createSharedFilamentEngine();
     if (result == null) {
-      glContext = GLHelper.makeContext();
-      result = Engine.create(glContext);
-//      result = Engine.create(Engine.Backend.DEFAULT);
+        if (backend != Engine.Backend.OPENGL){
+            result = Engine.create(backend);
+        }else {
+            glContext = GLHelper.makeContext();
+            result = Engine.create(glContext);
+        }
     }
     return result;
   }
 
-  
+
   private static boolean destroySharedFilamentEngine() {return false;}
 
 
@@ -80,10 +105,10 @@ public class EngineInstance {
   private static void destroyFilamentEngine() {
     if (engine != null) {
       if (headlessEngine || !destroySharedFilamentEngine()) {
-        if (glContext != null) {
-          GLHelper.destroyContext(glContext);
-          glContext = null;
-        }
+//        if (glContext != null) {
+//          GLHelper.destroyContext(glContext);
+//          glContext = null;
+//        }
         Preconditions.checkNotNull(engine).destroy();
       }
       engine = null;
@@ -91,12 +116,12 @@ public class EngineInstance {
     }
   }
 
-  
+
   private static boolean loadUnifiedJni() {return false;}
 
 
 
-  
+
   private static void gltfioInit() {
     Gltfio.init();
     filamentInitialized = true;
@@ -164,7 +189,26 @@ public class EngineInstance {
     return engine == null;
   }
 
-  private static native Object nCreateEngine();
+//  private static native Object nCreateEngine();
+//
+//  private static native void nDestroyEngine();
 
-  private static native void nDestroyEngine();
+    /**
+     * 判断设备是否支持 Vulkan
+     *
+     * @return true 支持 Vulkan，false 不支持
+     */
+    public static boolean checkDeviceSupportsVulkan(Context context) {
+        // Android 7.0+ 才支持 Vulkan
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return false;
+        }
+
+        // 查询系统是否存在 Vulkan feature
+        if (context.getPackageManager().hasSystemFeature("android.hardware.vulkan.level")) {
+            return true;
+        }
+
+        return false;
+    }
 }

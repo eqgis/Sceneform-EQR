@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.eqgis.ar.ARPlugin;
 import com.eqgis.eqr.core.Eqr;
+import com.eqgis.exception.DeviceNotSupportException;
 import com.eqgis.test.samples.ARSceneActivity;
 import com.eqgis.test.samples.ARScenePlaneActivity;
 import com.eqgis.test.samples.BaseSceneActivity;
@@ -27,6 +28,7 @@ import com.eqgis.test.samples.VRScene360Activity;
 import com.eqgis.test.samples.VRSceneActivity;
 import com.eqgis.test.samples.VideoActivity;
 import com.google.sceneform.ARPlatForm;
+import com.google.sceneform.rendering.EngineInstance;
 
 public class MainActivity extends AppCompatActivity {
 
