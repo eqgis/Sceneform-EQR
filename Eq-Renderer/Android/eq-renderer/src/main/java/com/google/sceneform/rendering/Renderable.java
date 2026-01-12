@@ -76,6 +76,9 @@ public abstract class Renderable {
             case PLY_3DGS:
                 renderableData = new RenderableInternalGS3dData();
                 break;
+            case PLY_SPLAT:
+                renderableData = new RenderableInternalSplatData();
+                break;
             case DEFAULT_INTERNAL:
             default:
                 renderableData = new RenderableInternalData();
@@ -283,7 +286,7 @@ public abstract class Renderable {
      */
     public abstract Renderable makeCopy();
 
-    IRenderableInternalData getRenderableData() {
+    public IRenderableInternalData getRenderableData() {
         return renderableData;
     }
 
@@ -542,6 +545,7 @@ public abstract class Renderable {
                     break;
                 case PLY:
                 case PLY_3DGS:
+                case PLY_SPLAT:
                     if (context != null) {
                         result = loadRenderableFromUniversalData(context, renderable);
                     } else {
@@ -653,6 +657,7 @@ public abstract class Renderable {
          */
         PLY,
         PLY_3DGS,
+        PLY_SPLAT,
         /**
          * 使用RenderableDefinition渲染
          */

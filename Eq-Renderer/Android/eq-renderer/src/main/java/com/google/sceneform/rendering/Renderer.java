@@ -646,7 +646,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
         transformManager.openLocalTransformTransaction();
 
         for (RenderableInstance renderableInstance : renderableInstances) {
-            renderableInstance.prepareForDraw();
+            renderableInstance.prepareForDraw(cameraProvider);
 
             float[] transform = renderableInstance.getWorldModelMatrix().data;
             renderableInstance.setModelMatrix(transformManager, transform);

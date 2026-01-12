@@ -28,7 +28,8 @@ import java.util.function.Function;
  **/
 public class PlyDataScene implements ISampleScene{
 //    private String plyPath = "temp/test_color.ply";
-    private String plyPath = "temp/cactus_splat3_30kSteps_142k_splats.ply";
+    private String plyPath = "temp/test_sh_0.ply";
+//    private String plyPath = "temp/cactus_splat3_30kSteps_142k_splats.ply";
 //    private String plyPath = "sofa.ply";
     public float distance = 3.6f;
     /**
@@ -71,7 +72,7 @@ public class PlyDataScene implements ISampleScene{
         ModelRenderable
                 .builder()
                 .setSource(context, Uri.parse(plyPath))
-                .setDataFormat(Renderable.RenderableDataFormat.PLY)
+                .setDataFormat(Renderable.RenderableDataFormat.PLY_SPLAT)
                 .build()
                 .thenApply(new Function<ModelRenderable, Object>() {
                     @Override
@@ -119,4 +120,7 @@ public class PlyDataScene implements ISampleScene{
         NodeGestureController.getInstance().select(modelNode,distance);
     }
 
+    public Node getModelNode() {
+        return modelNode;
+    }
 }

@@ -386,12 +386,12 @@ public class RenderableInstance implements AnimatableModel {
     /**
      * @hide
      */
-    public void prepareForDraw() {
+    public void prepareForDraw(CameraProvider cameraProvider) {
         renderable.prepareForDraw();
+        IRenderableInternalData renderableInternalData = renderable.getRenderableData();
 
         ChangeId changeId = renderable.getId();
         if (changeId.checkChanged(renderableId)) {
-            IRenderableInternalData renderableInternalData = renderable.getRenderableData();
             renderableInternalData.buildInstanceData(this, getRenderedEntity());
             renderableId = changeId.get();
             // 第一次渲染，所以总是更新蒙皮skinning，即使我们没有动画和没有skinModifier
@@ -401,6 +401,12 @@ public class RenderableInstance implements AnimatableModel {
             if (updateAnimations(false)) {
                 updateSkinning();
             }
+        }
+
+        if (renderableInternalData instanceof RenderableInternalSplatData){
+            //CPU顶点排序，在使用Transparent混合的材质中，需对顶点进行排序。否则会渲染错乱
+            ((RenderableInternalSplatData)renderableInternalData)
+                    .sortForViewChange(cameraProvider.getWorldModelMatrix(),getWorldModelMatrix());
         }
     }
 

@@ -15,6 +15,7 @@ add_library(eqr-core SHARED
         core/src/FilamentAssetsUtils.cpp
         core/src/PlyLoader.cpp
         core/src/PlyGS3dLoader.cpp
+        core/src/SorterNative.cpp
 )
 
 target_include_directories(eqr-core PRIVATE

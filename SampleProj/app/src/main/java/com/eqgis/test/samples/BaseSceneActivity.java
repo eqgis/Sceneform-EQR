@@ -80,8 +80,7 @@ public class BaseSceneActivity extends BaseActivity {
                 .setEnabled(true);
 
         //加载GLTF模型
-//        sampleScene = new GltfSampleScene();
-        sampleScene = new PlyDataScene();
+        sampleScene = new GltfSampleScene();
         sampleScene.create(this,sceneLayout.getRootNode());
 
         View touchView = findViewById(R.id.touch_view);

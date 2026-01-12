@@ -24,6 +24,7 @@ import com.eqgis.test.samples.CameraActivity;
 import com.eqgis.test.samples.EarthActivity;
 import com.eqgis.test.samples.InteractiveActivity;
 //import com.eqgis.test.samples.SlamSceneActivity;
+import com.eqgis.test.samples.PlyDataSceneActivity;
 import com.eqgis.test.samples.VRScene360Activity;
 import com.eqgis.test.samples.VRSceneActivity;
 import com.eqgis.test.samples.VideoActivity;
@@ -173,5 +174,12 @@ public class MainActivity extends AppCompatActivity {
      */
     public void toEarthActivity(View view) {
         startActivity(new Intent(this, EarthActivity.class));
+    }
+    /**
+     * 转至地球示例
+     * @param view
+     */
+    public void toPlyDataActivity(View view) {
+        startActivity(new Intent(this, PlyDataSceneActivity.class));
     }
 }
