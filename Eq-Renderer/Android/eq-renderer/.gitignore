@@ -3,3 +3,5 @@
 /build
 /assets-sources/materials/filament_samples/out/
 */libeqr-core.so
+/src/main/cpp/tinyply/source/
+/src/main/cpp/tinyply/third-party/

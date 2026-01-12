@@ -28,7 +28,7 @@ import java.util.List;
  * @see ModelRenderable.Builder
  * @see ViewRenderable.Builder
  */
-public class RenderableDefinition {
+public class RenderableDefinition implements IRenderableDefinition{
   private static final Matrix scratchMatrix = new Matrix();
 
   /**
@@ -114,7 +114,7 @@ public class RenderableDefinition {
     this.vertices = vertices;
   }
 
-  List<Vertex> getVertices() {
+  public List<Vertex> getVertices() {
     return vertices;
   }
 
@@ -126,7 +126,7 @@ public class RenderableDefinition {
     return submeshes;
   }
 
-  void applyDefinitionToData(
+  public void applyDefinitionToData(
       IRenderableInternalData data,
       ArrayList<Material> materialBindings,
       ArrayList<String> materialNames) {

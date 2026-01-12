@@ -1,6 +1,8 @@
 using namespace std;
 #include "../include/Core.h"
 #include <iostream>
+#include "tinyply.h"
+tinyply::PlyFile file;
 
 
 //版本信息

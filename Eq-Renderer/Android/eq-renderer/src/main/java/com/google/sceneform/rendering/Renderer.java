@@ -559,6 +559,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
     /** @hide */
     public void addInstance(RenderableInstance instance) {
         scene.addEntity(instance.getRenderedEntity());
+        Log.d("Renderer IKKYU Test", "Scene ：count："+scene.getEntityCount()+" addInstance: "+ instance.getRenderedEntity());
         addModelInstanceInternal(instance);
         renderableInstances.add(instance);
     }
@@ -645,7 +646,7 @@ public class Renderer implements EqUiHelper.RendererCallback {
         transformManager.openLocalTransformTransaction();
 
         for (RenderableInstance renderableInstance : renderableInstances) {
-            renderableInstance.prepareForDraw();
+            renderableInstance.prepareForDraw(cameraProvider);
 
             float[] transform = renderableInstance.getWorldModelMatrix().data;
             renderableInstance.setModelMatrix(transformManager, transform);

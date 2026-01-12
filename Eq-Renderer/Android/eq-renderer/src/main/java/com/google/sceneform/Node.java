@@ -1377,7 +1377,7 @@ public class Node extends NodeParent implements TransformProvider {
         return viewConfiguration.getScaledTouchSlop();
     }
 
-    private Matrix getWorldModelMatrixInternal() {
+    public Matrix getWorldModelMatrixInternal() {
         if ((dirtyTransformFlags & WORLD_TRANSFORM_DIRTY) == WORLD_TRANSFORM_DIRTY) {
             if (parentAsNode == null) {
                 cachedWorldModelMatrix.set(getLocalModelMatrixInternal().data);

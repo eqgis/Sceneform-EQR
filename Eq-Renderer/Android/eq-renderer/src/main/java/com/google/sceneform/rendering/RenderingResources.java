@@ -12,60 +12,66 @@ import com.google.sceneform.utilities.LoadHelper;
  */
 public final class RenderingResources {
 
-  public static enum Resource {
-    CAMERA_MATERIAL,
-    OCCLUSION_CAMERA_MATERIAL,
-    OCCLUSION_CAMERA_TEST_MATERIAL,
-    OPAQUE_COLORED_MATERIAL,
-    TRANSPARENT_COLORED_MATERIAL,
-    OPAQUE_TEXTURED_MATERIAL,
-    TRANSPARENT_TEXTURED_MATERIAL,
-    PLANE_SHADOW_MATERIAL,
-    PLANE_MATERIAL,
-    PLANE,
-    VIEW_RENDERABLE_MATERIAL,
-  };
+    public enum Resource {
+        CAMERA_MATERIAL,
+        OCCLUSION_CAMERA_MATERIAL,
+        OCCLUSION_CAMERA_TEST_MATERIAL,
+        OPAQUE_COLORED_MATERIAL,
+        TRANSPARENT_COLORED_MATERIAL,
+        OPAQUE_TEXTURED_MATERIAL,
+        TRANSPARENT_TEXTURED_MATERIAL,
+        PLANE_SHADOW_MATERIAL,
+        PLANE_MATERIAL,
+        PLANE,
+        VIEW_RENDERABLE_MATERIAL,
+        PLY_BASE_MATERIAL,
+        PLY_GAUSSIAN_SPLAT_MATERIAL
+    };
 
-  //update绘制默认采用双面材质
-  private static int GetSceneformSourceResource(Context context, Resource resource) {
-    switch (resource) {
-      case CAMERA_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "camera_stream_base");
-      case OCCLUSION_CAMERA_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "camera_stream_depth");
-      case OPAQUE_COLORED_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_opaque_colored_material");
-      case TRANSPARENT_COLORED_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_transparent_colored_material");
-      case OPAQUE_TEXTURED_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_opaque_textured_material");
-      case TRANSPARENT_TEXTURED_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_transparent_textured_material");
-      case PLANE_SHADOW_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_plane_shadow_material");
-      case PLANE_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_plane_material");
-      case PLANE:
-        return LoadHelper.drawableResourceNameToIdentifier(context, "sceneform_plane");
-      case VIEW_RENDERABLE_MATERIAL:
-        return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_view_material");
+    //update绘制默认采用双面材质
+    private static int GetSceneformSourceResource(Context context, Resource resource) {
+        switch (resource) {
+            case CAMERA_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "camera_stream_base");
+            case OCCLUSION_CAMERA_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "camera_stream_depth");
+            case OPAQUE_COLORED_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_opaque_colored_material");
+            case TRANSPARENT_COLORED_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_transparent_colored_material");
+            case OPAQUE_TEXTURED_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_opaque_textured_material");
+            case TRANSPARENT_TEXTURED_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_transparent_textured_material");
+            case PLANE_SHADOW_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_plane_shadow_material");
+            case PLANE_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_plane_material");
+            case PLANE:
+                return LoadHelper.drawableResourceNameToIdentifier(context, "sceneform_plane");
+            case VIEW_RENDERABLE_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_view_material");
+            case PLY_BASE_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context,"sceneform_ply_base_material");
+            case PLY_GAUSSIAN_SPLAT_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context,"sceneform_gaussian_splat");
+        }
+        return 0;
     }
-    return 0;
-  }
 
-  private static int GetMaterialFactoryBlazeResource(Resource resource) {return 0;}
+    private static int GetMaterialFactoryBlazeResource(Resource resource) {return 0;}
 
-  private static int GetViewRenderableBlazeResource(Resource resource) {return 0;}
+    private static int GetViewRenderableBlazeResource(Resource resource) {return 0;}
 
-  private static int GetSceneformBlazeResource(Resource resource) {return 0;}
+    private static int GetSceneformBlazeResource(Resource resource) {return 0;}
 
-  public static int GetSceneformResource(Context context, Resource resource) {
-    int blazeResource = GetSceneformBlazeResource(resource);
-    if (blazeResource != 0) {
-      return blazeResource;
+    public static int GetSceneformResource(Context context, Resource resource) {
+        int blazeResource = GetSceneformBlazeResource(resource);
+        if (blazeResource != 0) {
+            return blazeResource;
+        }
+        return GetSceneformSourceResource(context, resource);
     }
-    return GetSceneformSourceResource(context, resource);
-  }
 
-  private RenderingResources() {}
+    private RenderingResources() {}
 }

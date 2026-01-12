@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.eqgis.ar.ARPlugin;
 import com.eqgis.eqr.core.Eqr;
+import com.eqgis.exception.DeviceNotSupportException;
 import com.eqgis.test.samples.ARSceneActivity;
 import com.eqgis.test.samples.ARScenePlaneActivity;
 import com.eqgis.test.samples.BaseSceneActivity;
@@ -23,10 +24,12 @@ import com.eqgis.test.samples.CameraActivity;
 import com.eqgis.test.samples.EarthActivity;
 import com.eqgis.test.samples.InteractiveActivity;
 //import com.eqgis.test.samples.SlamSceneActivity;
+import com.eqgis.test.samples.PlyDataSceneActivity;
 import com.eqgis.test.samples.VRScene360Activity;
 import com.eqgis.test.samples.VRSceneActivity;
 import com.eqgis.test.samples.VideoActivity;
 import com.google.sceneform.ARPlatForm;
+import com.google.sceneform.rendering.EngineInstance;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -171,5 +174,12 @@ public class MainActivity extends AppCompatActivity {
      */
     public void toEarthActivity(View view) {
         startActivity(new Intent(this, EarthActivity.class));
+    }
+    /**
+     * 转至地球示例
+     * @param view
+     */
+    public void toPlyDataActivity(View view) {
+        startActivity(new Intent(this, PlyDataSceneActivity.class));
     }
 }

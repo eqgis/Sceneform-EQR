@@ -66,11 +66,25 @@ public abstract class Renderable {
     @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
     protected Renderable(Builder<? extends Renderable, ? extends Builder<?, ?>> builder) {
         Preconditions.checkNotNull(builder, "Parameter \"builder\" was null.");
-        if (builder.isFilamentAsset) {
-            renderableData = new RenderableInternalFilamentAssetData();
-        }else {
-            renderableData = new RenderableInternalData();
+        switch (builder.dataFormat){
+            case GLTF2_0:
+                renderableData = new RenderableInternalFilamentAssetData();
+                break;
+            case PLY:
+                renderableData = new RenderableInternalPlyData();
+                break;
+            case PLY_3DGS:
+                renderableData = new RenderableInternalGS3dData();
+                break;
+            case PLY_SPLAT:
+                renderableData = new RenderableInternalSplatData();
+                break;
+            case DEFAULT_INTERNAL:
+            default:
+                renderableData = new RenderableInternalData();
+                break;
         }
+
         if (builder.definition != null) {
             updateFromDefinition(builder.definition);
         }
@@ -257,7 +271,7 @@ public abstract class Renderable {
         return new RenderableInstance(transformProvider, this);
     }
 
-    public void updateFromDefinition(RenderableDefinition definition) {
+    public void updateFromDefinition(IRenderableDefinition definition) {
         Preconditions.checkState(!definition.getSubmeshes().isEmpty());
 
         changeId.update();
@@ -272,7 +286,7 @@ public abstract class Renderable {
      */
     public abstract Renderable makeCopy();
 
-    IRenderableInternalData getRenderableData() {
+    public IRenderableInternalData getRenderableData() {
         return renderableData;
     }
 
@@ -360,8 +374,9 @@ public abstract class Renderable {
         private Callable<InputStream> inputStreamCreator = null;
         @Nullable
         private RenderableDefinition definition = null;
-        private boolean isGltf = false;
-        private boolean isFilamentAsset = false;
+//        private boolean isGltf = false;
+//        private boolean isFilamentAsset = false;
+        private RenderableDataFormat dataFormat = RenderableDataFormat.DEFAULT_INTERNAL;
         private boolean asyncLoadEnabled = false;
         @Nullable
         private LoadGltfListener loadGltfListener;
@@ -426,8 +441,20 @@ public abstract class Renderable {
          * @param isFilamentGltf 若需要渲染gltf，则需要设置为true
          * @return this
          */
+        @Deprecated
         public B setIsFilamentGltf(boolean isFilamentGltf) {
-            this.isFilamentAsset = isFilamentGltf;
+            if (isFilamentGltf){
+                dataFormat = RenderableDataFormat.GLTF2_0;
+            }
+//            this.isFilamentAsset = isFilamentGltf;
+            return getSelf();
+        }
+        /**
+         * 设置当前渲染对象的数据类型
+         * @return this
+         */
+        public B setDataFormat (RenderableDataFormat format) {
+            this.dataFormat = format;
             return getSelf();
         }
 
@@ -508,21 +535,41 @@ public abstract class Renderable {
             }
 
             CompletableFuture<T> result = null;
-            if (isFilamentAsset) {
-                if (context != null) {
-                    result = loadRenderableFromFilamentGltf(context, renderable);
-                } else {
-                    throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
-                }
-            } else if (isGltf) {
-                if (context != null) {
-                    result = loadRenderableFromGltf(context, renderable, this.materialsBytes);
-                } else {
-                    throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
-                }
-            } else {
-                throw new IllegalArgumentException();
+            switch (dataFormat){
+                case GLTF2_0:
+                    if (context != null) {
+                        result = loadRenderableFromFilamentGltf(context, renderable);
+                    } else {
+                        throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
+                    }
+                    break;
+                case PLY:
+                case PLY_3DGS:
+                case PLY_SPLAT:
+                    if (context != null) {
+                        result = loadRenderableFromUniversalData(context, renderable);
+                    } else {
+                        throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException();
             }
+//            if (isFilamentAsset) {
+//                if (context != null) {
+//                    result = loadRenderableFromFilamentGltf(context, renderable);
+//                } else {
+//                    throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
+//                }
+//            } else if (isGltf) {
+//                if (context != null) {
+//                    result = loadRenderableFromGltf(context, renderable, this.materialsBytes);
+//                } else {
+//                    throw new AssertionError("Gltf Renderable.Builder must have a valid context.");
+//                }
+//            } else {
+//                throw new IllegalArgumentException();
+//            }
 
             if (registryId != null) {
                 ResourceRegistry<T> registry = getRenderableRegistry();
@@ -567,15 +614,22 @@ public abstract class Renderable {
             return getSelf();
         }
 
-        private CompletableFuture<T> loadRenderableFromGltf(
-                @NonNull Context context, T renderable, @Nullable byte[] materialsBytes) {
-            return null;
-        }
+//        private CompletableFuture<T> loadRenderableFromGltf(
+//                @NonNull Context context, T renderable, @Nullable byte[] materialsBytes) {
+//            return null;
+//        }
 
         private CompletableFuture<T> loadRenderableFromFilamentGltf(
                 @NonNull Context context, T renderable) {
             LoadRenderableFromFilamentGltfTask<T> loader =
                     new LoadRenderableFromFilamentGltfTask<>(
+                            renderable, context, Preconditions.checkNotNull(sourceUri), uriResolver);
+            return loader.downloadAndProcessRenderable(Preconditions.checkNotNull(inputStreamCreator));
+        }
+        private CompletableFuture<T> loadRenderableFromUniversalData(
+                @NonNull Context context, T renderable) {
+            LoadRenderableFromUniversalDataTask<T> loader =
+                    new LoadRenderableFromUniversalDataTask<>(
                             renderable, context, Preconditions.checkNotNull(sourceUri), uriResolver);
             return loader.downloadAndProcessRenderable(Preconditions.checkNotNull(inputStreamCreator));
         }
@@ -591,5 +645,22 @@ public abstract class Renderable {
         protected abstract ResourceRegistry<T> getRenderableRegistry();
 
         protected abstract B getSelf();
+    }
+
+    public enum RenderableDataFormat{
+        /**
+         * 作为GLTF格式进行渲染
+         */
+        GLTF2_0,
+        /**
+         * 作为PLY模型格式进行渲染
+         */
+        PLY,
+        PLY_3DGS,
+        PLY_SPLAT,
+        /**
+         * 使用RenderableDefinition渲染
+         */
+        DEFAULT_INTERNAL
     }
 }

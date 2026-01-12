@@ -1,6 +1,5 @@
 package com.google.sceneform.rendering;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.sceneform.math.Vector3;
@@ -15,9 +14,6 @@ import com.google.android.filament.VertexBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 
 /**
  * 表示{@link Renderable}用于渲染的数据。
@@ -25,6 +21,7 @@ import java.util.List;
  */
 class RenderableInternalData implements IRenderableInternalData {
     private static final String TAG = RenderableInternalData.class.getSimpleName();
+    protected RenderableManager.PrimitiveType primitiveType = RenderableManager.PrimitiveType.TRIANGLES;;
 
     /** 表示用于渲染可渲染对象的每个网格的数据。 */
     static class MeshData {
@@ -270,7 +267,6 @@ class RenderableInternalData implements IRenderableInternalData {
         }
 
         // 更新几何信息和材质
-        final RenderableManager.PrimitiveType primitiveType = RenderableManager.PrimitiveType.TRIANGLES;
         for (int mesh = 0; mesh < meshCount; ++mesh) {
             // 更新mesh
             MeshData meshData = renderableData.getMeshes().get(mesh);

@@ -1,0 +1,84 @@
+material {
+    "name" : "Ply Vertex Color Material",
+    
+    "parameters" : [
+        {
+           "type" : "float3",
+           "name" : "color"
+        },
+        {
+           "type" : "float",
+           "name" : "metallic"
+        },
+        {
+            "type" : "float",
+            "name" : "roughness"
+        },
+        {
+            "type" : "float",
+            "name" : "reflectance"
+        },
+        {
+            "type" : "float",
+            "name" : "pointSize",
+            "default" : 2.0
+        },
+        {
+            "type" : "float",
+            "name" : "vertexColorIntensity",
+            "default" : 1.0
+        },
+        {
+            "type" : "bool",
+            "name" : "useVertexColors",
+            "default" : false
+        }
+    ],
+    
+    "requires" : [
+        "position",
+        "uv0",
+        "color"  // 启用顶点颜色
+    ],
+    
+    "shadingModel" : "lit",
+    "blending" : "opaque",
+   
+}
+
+vertex {
+    void materialVertex(inout MaterialVertexInputs material) {
+        // 设置点大小（如果是点云，则需要用到）
+        gl_PointSize = materialParams.pointSize;
+    }
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        
+        // 关键：根据顶点颜色和材质参数混合颜色
+        vec4 vertexColor = getColor();
+        
+        if (materialParams.useVertexColors) {
+            // 方案1：完全使用顶点颜色
+            material.baseColor.rgb = vertexColor.rgb;
+            material.baseColor.a = vertexColor.a;
+            
+            // 方案2：顶点颜色与材质基础色混合（可选）
+            // material.baseColor.rgb = mix(materialParams.baseColorFactor, 
+            //                             vertexColor.rgb, 
+            //                             materialParams.vertexColorIntensity);
+            // material.baseColor.a = vertexColor.a;
+        } else {
+            // 回退：仅使用材质参数颜色
+            material.baseColor.rgb = materialParams.color;
+            material.baseColor.a = 1.0;
+        }
+        
+        // 设置PBR参数
+        material.metallic = materialParams.metallic;
+        material.roughness = materialParams.roughness;
+        material.reflectance = materialParams.reflectance;
+    }
+}

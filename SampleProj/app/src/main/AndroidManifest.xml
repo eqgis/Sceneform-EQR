@@ -54,6 +54,9 @@
             android:name=".samples.BaseSceneActivity"
             android:exported="false" />
         <activity
+            android:name=".samples.PlyDataSceneActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

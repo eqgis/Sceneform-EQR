@@ -30,3 +30,5 @@ include ':app'
 include ':eq-renderer'
 //project(':eq-slam').projectDir=new File(settingsDir.path + '..\\Eq-Renderer\\Android\\eq-slam')
 project(':eq-renderer').projectDir=new File('..\\Eq-Renderer\\Android\\eq-renderer')
+include ':Tool'
+project(':Tool').projectDir=new File('..\\Tool')

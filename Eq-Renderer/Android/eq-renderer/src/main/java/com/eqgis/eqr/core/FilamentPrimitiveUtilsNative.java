@@ -16,5 +16,13 @@ public class FilamentPrimitiveUtilsNative {
             int entity,           // 原 Entity (int)
             int primitiveType     // RenderableManager.PrimitiveType value
     );
+
+    /**
+     * 根据顶点位置和索引计算法线
+     * @param positions 顶点位置
+     * @param indices 索引
+     * @return 法线
+     */
+    public static native float[] nComputeVertexNormals( float[] positions,int[] indices);
 }
 
