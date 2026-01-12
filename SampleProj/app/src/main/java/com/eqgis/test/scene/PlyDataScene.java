@@ -28,9 +28,9 @@ import java.util.function.Function;
  **/
 public class PlyDataScene implements ISampleScene{
 //    private String plyPath = "temp/test_color.ply";
-    private String plyPath = "temp/test_sh_0.ply";
+//    private String plyPath = "temp/test_sh_0.ply";
 //    private String plyPath = "temp/cactus_splat3_30kSteps_142k_splats.ply";
-//    private String plyPath = "sofa.ply";
+    private String plyPath = "sofa.ply";
     public float distance = 3.6f;
     /**
      * 模型节点
@@ -72,7 +72,7 @@ public class PlyDataScene implements ISampleScene{
         ModelRenderable
                 .builder()
                 .setSource(context, Uri.parse(plyPath))
-                .setDataFormat(Renderable.RenderableDataFormat.PLY_SPLAT)
+                .setDataFormat(Renderable.RenderableDataFormat.PLY)
                 .build()
                 .thenApply(new Function<ModelRenderable, Object>() {
                     @Override
