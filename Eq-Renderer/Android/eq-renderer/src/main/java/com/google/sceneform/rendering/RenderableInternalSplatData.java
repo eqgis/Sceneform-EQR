@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -24,6 +25,10 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -66,14 +71,52 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
 
     private static final boolean DEBUG_TIME = true;
 
+    private Matrix cameraModelMatCache,  modelModelMatCache;
+
+    private final ExecutorService sortExecutor = Executors.newSingleThreadExecutor();
+    private Future<?> currentSortTask;
+
+    private final Runnable uploadRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (getIndexBuffer() != null) {
+                getIndexBuffer().setBuffer(
+                        EngineInstance.getEngine().getFilamentEngine(),
+                        IntBuffer.wrap(indicesCache)
+                );
+            }
+        }
+    };
+    private boolean idle = true;
+
     public void sortForViewChange(Matrix cameraModelMat, Matrix modelModelMat) {
         if (getIndexBuffer() == null) return;
-        sort(cameraModelMat.data,modelModelMat.data);
+        cameraModelMatCache.set(cameraModelMat.data);
+        modelModelMatCache.set(modelModelMat.data);
+
+        if (idle) {
+            idle = false;
+
+            // 取消之前的任务
+            if (currentSortTask != null && !currentSortTask.isDone()) {
+                currentSortTask.cancel(true);
+            }
+
+            currentSortTask = sortExecutor.submit(() -> {
+                try {
+                    sort();
+                    // 主线程更新
+                    ThreadPools.getMainExecutor().execute(uploadRunnable);
+                } catch (Exception ignored) {
+                }finally {
+                    idle = true;
+                }
+            });
+        }
     }
-    private void sort(float[] cameraModelMat,
-                        float[] modelModelMat) {
-        long t0 = 0;
-        if (DEBUG_TIME) t0 = System.nanoTime();
+
+
+    private void sort() {
 
         if (material != null && sorter != null &&
                 indicesCache != null && indicesCache.length > 0) {
@@ -83,99 +126,31 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
 
             sorter.sort(
                     asset.vertices,
-                    modelModelMat,
-                    cameraModelMat,
+                    modelModelMatCache.data,
+                    cameraModelMatCache.data,
                     indicesCache
             );
 
             long tSort1 = 0;
             if (DEBUG_TIME) tSort1 = System.nanoTime();
 
-            getIndexBuffer().setBuffer(
-                    EngineInstance.getEngine().getFilamentEngine(),
-                    IntBuffer.wrap(indicesCache)
-            );
-
             if (DEBUG_TIME) {
-                long tEnd = System.nanoTime();
-                logTime(t0, tSort0, tSort1, tEnd);
+                logTime(tSort0, tSort1);
             }
         }
     }
 
-    //    public void prepare(Vector3 camP, Quaternion camR, Vector3 modelP, Quaternion modelR) {
-//        if (getIndexBuffer() == null)return;
-//
-//        long t0 = 0;
-//        if (DEBUG_TIME) {
-//            t0 = System.nanoTime();
-//        }
-//
-//        // camera quat
-//        r[0] = camR.x;
-//        r[1] = camR.y;
-//        r[2] = camR.z;
-//        r[3] = camR.w;
-//
-//        // model quat
-//        r1[0] = modelR.x;
-//        r1[1] = modelR.y;
-//        r1[2] = modelR.z;
-//        r1[3] = modelR.w;
-//
-//        if (material != null && sorter != null && indicesCache != null && indicesCache.length > 0) {
-//
-//            long tSort0 = 0;
-//            if (DEBUG_TIME) tSort0 = System.nanoTime();
-//
-//            sorter.sort(
-//                    asset.vertices,
-//                    r1,
-//                    modelP.x, modelP.y, modelP.z,
-//                    camP.x, camP.y, camP.z,
-//                    r
-//            );
-//
-//            long tSort1 = 0;
-//            if (DEBUG_TIME) tSort1 = System.nanoTime();
-//
-//            sorter.fillIndices(indicesCache);
-//
-//            long tFill = 0;
-//            if (DEBUG_TIME) tFill = System.nanoTime();
-//
-//            getIndexBuffer().setBuffer(
-//                    EngineInstance.getEngine().getFilamentEngine(),
-//                    IntBuffer.wrap(indicesCache)
-//            );
-//
-//            if (DEBUG_TIME) {
-//                long tEnd = System.nanoTime();
-//
-//                logTime(
-//                        t0,
-//                        tSort0, tSort1,
-//                        tFill,
-//                        tEnd
-//                );
-//            }
-//        }
-//    }
     private void logTime(
-            long tStart,
             long tSortStart,
-            long tSortEnd,
-            long tEnd
+            long tSortEnd
     ) {
-        double totalMs = (tEnd - tStart) / 1_000_000.0;
         double sortMs  = (tSortEnd - tSortStart) / 1_000_000.0;
-        double uploadMs = (tEnd - tSortEnd) / 1_000_000.0;
 
         android.util.Log.d(
                 "IKkyu  GaussianSort ",
                 String.format(
-                        "Total %.2f ms | Sort %.2f ms | Upload %.2f ms",
-                        totalMs, sortMs, uploadMs
+                        "Sort %.2f ms ",
+                         sortMs
                 )
         );
     }
@@ -228,7 +203,6 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
 
     private void createPrimitive(RenderableInstance instance) {
         //若顶点数据存在，则使用顶点颜色
-
         if (asset.vertices == null) {
             throw new IllegalArgumentException("assets.vertices must not be null");
         }
@@ -236,6 +210,8 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
         int vertexCount = asset.vertices.length / 3;//xyz三个分量
 
         sorter = new GaussianSorter(vertexCount);
+        cameraModelMatCache = new Matrix();
+        modelModelMatCache = new Matrix();
 
         ArrayList<Integer> triangleIndices = getIndices(vertexCount);
         indicesCache = new int[triangleIndices.size()];
@@ -246,11 +222,6 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
                 RenderableDefinition.Submesh.builder()
                         .setTriangleIndices(triangleIndices).setMaterial(material).build();
 
-//        renderableDefinition =
-//                RenderableDefinition.builder()
-//                        .setVertices(vertices)
-//                        .setSubmeshes(Collections.singletonList(submesh))
-//                        .build();
         renderableDefinition = new RenderableDefinitionSplat();
         renderableDefinition.setSubmeshes(Collections.singletonList(submesh));
         renderableDefinition.setVertices(vertices);
@@ -287,10 +258,18 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
 
     @Override
     public void dispose() {
+        if (currentSortTask != null) {
+            currentSortTask.cancel(true);
+        }
+        sortExecutor.shutdown();
+
         super.dispose();
         if (gs3dLoader == null)return;
         gs3dLoader.destroyPlyAsset();
         gs3dLoader = null;
+        cameraModelMatCache = null;
+        modelModelMatCache = null;
+        indicesCache = null;
     }
 
     @Override
@@ -308,64 +287,6 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
         this.urlResolver = resolver;
     }
 
-//    private ArrayList<Vertex> getVertices(int gaussianCount) {
-//        ArrayList<Vertex> vertices = new ArrayList<>(gaussianCount * 4);
-//
-//        final float HALF_SIZE = 0.002f; // 0.001m / 2
-//
-//        // unit quad in local space
-//        Vector3[] quadLocal = new Vector3[]{
-//                new Vector3(-HALF_SIZE, -HALF_SIZE, 0),
-//                new Vector3( HALF_SIZE, -HALF_SIZE, 0),
-//                new Vector3( HALF_SIZE,  HALF_SIZE, 0),
-//                new Vector3(-HALF_SIZE,  HALF_SIZE, 0),
-//        };
-//
-//        for (int i = 0; i < gaussianCount; i++) {
-//
-//            // center
-//            Vector3 center = new Vector3(
-//                    asset.vertices[3 * i],
-//                    asset.vertices[3 * i + 1],
-//                    asset.vertices[3 * i + 2]
-//            );
-//
-//            // scale
-//            float sx = asset.scale != null ? asset.scale[3 * i]     : 1.0f;
-//            float sy = asset.scale != null ? asset.scale[3 * i + 1] : 1.0f;
-//            float sz = asset.scale != null ? asset.scale[3 * i + 2] : 1.0f;
-//
-//            // quaternion (w, x, y, z)
-//            float qw = asset.rot != null ? asset.rot[4 * i]     : 1.0f;
-//            float qx = asset.rot != null ? asset.rot[4 * i + 1] : 0.0f;
-//            float qy = asset.rot != null ? asset.rot[4 * i + 2] : 0.0f;
-//            float qz = asset.rot != null ? asset.rot[4 * i + 3] : 0.0f;
-//
-//            for (int v = 0; v < 4; v++) {
-//
-//                // scale quad
-//                Vector3 p = new Vector3(
-//                        quadLocal[v].x * sx,
-//                        quadLocal[v].y * sy,
-//                        quadLocal[v].z * sz
-//                );
-//
-//                // rotate by quaternion
-//                p = rotateByQuaternion(p, qw, qx, qy, qz);
-//
-//                // translate to center
-//                p = Vector3.add(center, p);
-//
-//                vertices.add(
-//                        Vertex.builder()
-//                                .setPosition(p)
-//                                .build()
-//                );
-//            }
-//        }
-//
-//        return vertices;
-//    }
 private ArrayList<Vertex> getVertices(int gaussianCount) {
     ArrayList<Vertex> vertices = new ArrayList<>(gaussianCount * 4);
 
