@@ -17,6 +17,7 @@ import com.eqgis.eqr.utils.ScaleTool;
 import com.eqgis.test.BaseActivity;
 import com.eqgis.test.R;
 import com.eqgis.test.scene.PlyDataScene;
+import com.eqgis.test.scene.PlyGSDataScene;
 import com.google.android.filament.RenderableManager;
 import com.google.sceneform.Camera;
 import com.google.sceneform.FrameTime;
@@ -65,7 +66,8 @@ public class PlyDataSceneActivity extends BaseActivity {
                 .setEnabled(true);
 
         //加载数据
-        sampleScene = new PlyDataScene();
+//        sampleScene = new PlyDataScene();//ply格式存储的Mesh数据
+        sampleScene = new PlyGSDataScene();//以点云形式渲染3DGS数据
         sampleScene.create(this,sceneLayout.getRootNode());
 
         View touchView = findViewById(R.id.touch_view);

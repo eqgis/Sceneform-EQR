@@ -37,7 +37,7 @@ import java.util.function.Function;
  * @author tanyx 2026/1/8
  * @version 1.0
  **/
-public class RenderableInternalSplatData extends RenderableInternalData implements LoadRenderableFromUniversalDataTask.IUniversalData {
+public class RenderableInternalSplatData extends RenderableInternalData implements LoadRenderableFromUniversalDataTask.IUniversalData, IVertexSort {
     private PlyGS3dLoader gs3dLoader;
     private Context context;
     private byte[] byteBuffer;
@@ -56,16 +56,6 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
             {0f, 1f},
     };
 
-    // 单位边长 0.001m → half = 0.0005
-    private static final float HALF_SIZE = 0.003f;
-
-    // 本地空间 quad（逆时针）
-    private static final Vector3[] QUAD_LOCAL = new Vector3[]{
-            new Vector3(-HALF_SIZE, -HALF_SIZE, 0),
-            new Vector3( HALF_SIZE, -HALF_SIZE, 0),
-            new Vector3( HALF_SIZE,  HALF_SIZE, 0),
-            new Vector3(-HALF_SIZE,  HALF_SIZE, 0),
-    };
     private GaussianSorter sorter;
     private int[] indicesCache;
 
@@ -89,6 +79,7 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
     };
     private boolean idle = true;
 
+    @Override
     public void sortForViewChange(Matrix cameraModelMat, Matrix modelModelMat) {
         if (getIndexBuffer() == null) return;
         cameraModelMatCache.set(cameraModelMat.data);
@@ -187,12 +178,14 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
                 public void accept(Texture texture) {
                     Material.builder()
                             .setSource(context,
-                                    LoadHelper.rawResourceNameToIdentifier(context,"sceneform_gaussian_splat_alpha"))
+                                    LoadHelper.rawResourceNameToIdentifier(context,"test123"))
+//                                    LoadHelper.rawResourceNameToIdentifier(context,"tmp2"))
+//                                    LoadHelper.rawResourceNameToIdentifier(context,"sceneform_gaussian_splat_alpha"))
                             .build()
                             .thenAccept(mat -> {
                                 material = mat;
-                                material.setInt("shDegree ",asset.shDegree);
-                                material.setTexture("texture", texture);
+//                                material.setFloat("quadSize ",0.01f);
+//                                material.setTexture("texture", texture);
                                 createPrimitive(instance);
                             });
                 }
@@ -291,7 +284,6 @@ private ArrayList<Vertex> getVertices(int gaussianCount) {
     ArrayList<Vertex> vertices = new ArrayList<>(gaussianCount * 4);
 
     for (int i = 0; i < gaussianCount; i++) {
-
         // center
         Vector3 center = new Vector3(
                 asset.vertices[3 * i],
@@ -299,38 +291,11 @@ private ArrayList<Vertex> getVertices(int gaussianCount) {
                 asset.vertices[3 * i + 2]
         );
 
-        // scale
-        float sx = asset.scale != null ? asset.scale[3 * i]     : 1.0f;
-        float sy = asset.scale != null ? asset.scale[3 * i + 1] : 1.0f;
-        float sz = asset.scale != null ? asset.scale[3 * i + 2] : 1.0f;
-
-        // quaternion (w, x, y, z)
-        float qw = asset.rot != null ? asset.rot[4 * i]     : 1.0f;
-        float qx = asset.rot != null ? asset.rot[4 * i + 1] : 0.0f;
-        float qy = asset.rot != null ? asset.rot[4 * i + 2] : 0.0f;
-        float qz = asset.rot != null ? asset.rot[4 * i + 3] : 0.0f;
-
+        //构造4个点，
         for (int v = 0; v < 4; v++) {
-
-            // 1. local quad
-            Vector3 p = QUAD_LOCAL[v];
-
-            // 2. scale
-            Vector3 ps = new Vector3(
-                    p.x * sx,
-                    p.y * sy,
-                    p.z * sz
-            );
-
-            // 3. rotate
-            Vector3 pr = rotateByQuaternion(ps, qw, qx, qy, qz);
-
-            // 4. translate
-            Vector3 world = Vector3.add(center, pr);
-
             vertices.add(
                     Vertex.builder()
-                            .setPosition(world)
+                            .setPosition(/*world*/center)
                             .setUvCoordinate(new Vertex.UvCoordinate(
                                     QUAD_UV[v][0],
                                     QUAD_UV[v][1]

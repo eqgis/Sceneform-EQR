@@ -127,7 +127,7 @@
                 android:layout_height="60dp"/>
             <Button
                 android:onClick="toPlyDataActivity"
-                android:text="*.Ply数据加载示例"
+                android:text="3DGS（点云渲染）"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"/>
         </LinearLayout>

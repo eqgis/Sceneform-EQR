@@ -75,6 +75,42 @@ public final class GaussianSorter {
         }
     }
 
+    public void sortSingle(
+            float[] localCenters,   // x,y,z * N
+            float[] modelMat,       // 4x4 column-major
+            float[] cameraModelMat,  // 4x4 column-major
+            int[] outIndices
+
+    ) {
+        //view = inverse(cameraModel)
+        invertRigidTransform(cameraModelMat, viewMat);
+
+        // modelView = view * model
+        mulMat4(viewMat, modelMat, modelViewMat);
+
+        //depth = -Z_camera
+        for (int i = 0, b = 0; i < gaussianCount; i++, b += 3) {
+            float x = localCenters[b];
+            float y = localCenters[b + 1];
+            float z = localCenters[b + 2];
+
+            float cz =
+                    modelViewMat[2]  * x +
+                            modelViewMat[6]  * y +
+                            modelViewMat[10] * z +
+                            modelViewMat[14];
+
+            depth[i] = -cz;
+        }
+
+        quickSort(order, depth, 0, gaussianCount - 1);
+
+        // fill indices immediately
+        for (int k = 0; k < order.length; k++) {
+            outIndices[k] = order[k];
+        }
+    }
+
     /* ---------------- math helpers ---------------- */
 
     /**

@@ -403,9 +403,9 @@ public class RenderableInstance implements AnimatableModel {
             }
         }
 
-        if (renderableInternalData instanceof RenderableInternalSplatData){
+        if (renderableInternalData instanceof IVertexSort){
             //CPU顶点排序，在使用Transparent混合的材质中，需对顶点进行排序。否则会渲染错乱
-            ((RenderableInternalSplatData)renderableInternalData)
+            ((IVertexSort)renderableInternalData)
                     .sortForViewChange(cameraProvider.getWorldModelMatrix(),getWorldModelMatrix());
         }
     }

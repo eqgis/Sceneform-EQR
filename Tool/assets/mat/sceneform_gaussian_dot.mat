@@ -1,0 +1,67 @@
+material {
+    name : "sceneform_gaussian_dot",
+    shadingModel : unlit,
+    blending : transparent,
+    parameters : [
+        { type : float,     name : pointSize },
+        { type : int,       name : shDegree }
+    ],
+    variables : [
+        colorFromSh,
+        test1,
+        test2,
+        test3
+    ],
+    requires : [
+        custom0  // f_dc and opacity
+    ]
+}
+
+vertex {
+    #include "glsl/ShCoeffsToColorFast.glsl"
+
+    void materialVertex(inout MaterialVertexInputs material) {
+        gl_PointSize = materialParams.pointSize;
+
+        vec3 dir = material.worldPosition.xyz;
+        float inorm = inversesqrt(dot(dir, dir));
+        dir = dir * inorm;
+
+        vec3 colors;
+
+        float4 f_dc_and_opacity = getCustom0();
+        colors = sh0_coeffs_to_color_fast(f_dc_and_opacity.xyz);
+
+
+        material.colorFromSh.r = colors[0];
+        material.colorFromSh.g = colors[1];
+        material.colorFromSh.b = colors[2];
+    }
+}
+
+fragment {
+
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+
+        // gl_PointCoord: [0,1]
+        vec2 uv = gl_PointCoord * 2.0 - 1.0; // [-1,1]
+
+        // isotropic Gaussian
+        float r2 = dot(uv, uv);
+
+        // σ 控制扩散半径（经验值）
+        float sigma = 0.5;
+        float weight = exp(-0.5 * r2 / (sigma * sigma));
+
+        // discard 以避免硬边
+        if (weight < 0.01) {
+            discard;
+        }
+
+        vec3 color = variable_colorFromSh.rgb;
+
+        material.baseColor.rgb = color * weight;
+        material.baseColor.a = weight;
+    }
+}
