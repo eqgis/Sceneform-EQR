@@ -231,14 +231,17 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
             }
 
             // Color，实际材质中为scale
-            if(asset.scale != null){
-                addFloat3ToBuffer(asset.scale[3 * i],asset.scale[3 * i+1], asset.scale[3 * i+2],colorBuffer);
-            }
+//            if(asset.scale != null){
+//                addFloat3ToBuffer(asset.scale[3 * i],asset.scale[3 * i+1], asset.scale[3 * i+2],colorBuffer);
+//            }
+            addFloat4ToBuffer(asset.scale[3 * i],asset.scale[3 * i+1], asset.scale[3 * i+2],1,
+                    custom1);
             if (asset.rot != null){
                 addFloat4ToBuffer(asset.rot[4*i],asset.rot[4*i+1],asset.rot[4*i+2],asset.rot[4*i+3],custom7);
             }
             float opacityValue = asset.opacity!=null ? asset.opacity[i] : 1.0f;
-            addFloat4ToBuffer(asset.f_dc[3 * i],asset.f_dc[3 * i + 1], asset.f_dc[3 * i + 2],opacityValue,custom0);
+            addFloat4ToBuffer(check01(asset.f_dc[3 * i]),check01(asset.f_dc[3 * i + 1])
+                    ,check01( asset.f_dc[3 * i + 2]),check01(opacityValue), custom0);
 
             if (shDegree > 0){
                 addFloat4ToBuffer(asset.f_rest[asset.dimension * i],
@@ -318,8 +321,8 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
         if (asset.rot != null){
             descriptionAttributes.add(VertexAttribute.CUSTOM7);
         }
+        descriptionAttributes.add(VertexAttribute.CUSTOM1);
         if (shDegree >= 1) {
-            descriptionAttributes.add(VertexAttribute.CUSTOM1);
             descriptionAttributes.add(VertexAttribute.CUSTOM2);
             descriptionAttributes.add(VertexAttribute.CUSTOM3);
         }
@@ -475,5 +478,9 @@ public class RenderableDefinitionGS implements IRenderableDefinition{
     }
     public void setGaussianSplat(JPlyGS3dAsset asset) {
         this.asset = asset;
+    }
+    public float check01(float src){
+        float v = src > 1 ? 1 : src;
+        return v < 0 ? 0:v;
     }
 }

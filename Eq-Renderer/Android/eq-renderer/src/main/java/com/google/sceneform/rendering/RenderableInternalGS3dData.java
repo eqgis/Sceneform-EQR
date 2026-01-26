@@ -6,24 +6,34 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.eqgis.eqr.core.GaussianSorter;
 import com.eqgis.eqr.core.PlyGS3dLoader;
 import com.eqgis.eqr.data.JPlyGS3dAsset;
 import com.google.android.filament.IndexBuffer;
 import com.google.android.filament.RenderableManager;
 import com.google.android.filament.VertexBuffer;
 import com.google.sceneform.collision.Box;
+import com.google.sceneform.math.Matrix;
 import com.google.sceneform.math.Vector3;
+import com.google.sceneform.utilities.LoadHelper;
 
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 
 /**
  * 3DGS
+ * <p>
+ *     当前仅支持读取颜色值，并以点云形式渲染
+ * </p>
  * @author tanyx 2026/1/8
  * @version 1.0
  **/
-public class RenderableInternalGS3dData extends RenderableInternalData implements LoadRenderableFromUniversalDataTask.IUniversalData {
+public class RenderableInternalGS3dData extends RenderableInternalData implements LoadRenderableFromUniversalDataTask.IUniversalData, IVertexSort {
     private PlyGS3dLoader gs3dLoader;
     private Context context;
     private byte[] byteBuffer;
@@ -56,12 +66,11 @@ public class RenderableInternalGS3dData extends RenderableInternalData implement
 
         Material.builder()
                 .setSource(context,
-                        RenderingResources.GetSceneformResource(
-                                context, RenderingResources.Resource.PLY_GAUSSIAN_SPLAT_MATERIAL))
+                        LoadHelper.rawResourceNameToIdentifier(context,"sceneform_gaussian_dot"))
                 .build()
                 .thenAccept(mat -> {
                     material = mat;
-                    material.setInt("shDegree ",asset.shDegree);
+                    //material.setInt("shDegree ",asset.shDegree);
                     material.setFloat("pointSize",5);
                     MaterialFactory.applyDefaultPbrParams(material);
                     material.setFloat4(MaterialFactory.MATERIAL_COLOR, new Color(1, 1, 1,1));
@@ -78,6 +87,10 @@ public class RenderableInternalGS3dData extends RenderableInternalData implement
         }
 
         int vertexCount = asset.vertices.length / 3;//xyz三个分量
+        sorter = new GaussianSorter(vertexCount);
+        cameraModelMatCache = new Matrix();
+        modelModelMatCache = new Matrix();
+        indicesCache = new int[vertexCount];
 
         ArrayList<Integer> triangleIndices = getIndices(vertexCount);
         ArrayList<Vertex> vertices = getVertices(vertexCount);
@@ -168,5 +181,95 @@ public class RenderableInternalGS3dData extends RenderableInternalData implement
     @Override
     public void setUrlResolver(Function<String, Uri> resolver) {
         this.urlResolver = resolver;
+    }
+
+
+    private GaussianSorter sorter;
+    private int[] indicesCache;
+
+    private static final boolean DEBUG_TIME = true;
+
+    private Matrix cameraModelMatCache,  modelModelMatCache;
+
+    private final ExecutorService sortExecutor = Executors.newSingleThreadExecutor();
+    private Future<?> currentSortTask;
+
+    private final Runnable uploadRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (getIndexBuffer() != null) {
+                getIndexBuffer().setBuffer(
+                        EngineInstance.getEngine().getFilamentEngine(),
+                        IntBuffer.wrap(indicesCache)
+                );
+            }
+        }
+    };
+    private boolean idle = true;
+
+    @Override
+    public void sortForViewChange(Matrix cameraModelMat, Matrix modelModelMat) {
+        if (getIndexBuffer() == null) return;
+        cameraModelMatCache.set(cameraModelMat.data);
+        modelModelMatCache.set(modelModelMat.data);
+
+        if (idle) {
+            idle = false;
+
+            // 取消之前的任务
+            if (currentSortTask != null && !currentSortTask.isDone()) {
+                currentSortTask.cancel(true);
+            }
+
+            currentSortTask = sortExecutor.submit(() -> {
+                try {
+                    sort();
+                    // 主线程更新
+                    ThreadPools.getMainExecutor().execute(uploadRunnable);
+                } catch (Exception ignored) {
+                }finally {
+                    idle = true;
+                }
+            });
+        }
+    }
+
+    private void sort() {
+
+        if (material != null && sorter != null &&
+                indicesCache != null && indicesCache.length > 0) {
+
+            long tSort0 = 0;
+            if (DEBUG_TIME) tSort0 = System.nanoTime();
+
+            sorter.sortSingle(
+                    asset.vertices,
+                    modelModelMatCache.data,
+                    cameraModelMatCache.data,
+                    indicesCache
+            );
+
+            long tSort1 = 0;
+            if (DEBUG_TIME) tSort1 = System.nanoTime();
+
+            if (DEBUG_TIME) {
+                logTime(tSort0, tSort1);
+            }
+        }
+    }
+
+    private void logTime(
+            long tSortStart,
+            long tSortEnd
+    ) {
+        double sortMs  = (tSortEnd - tSortStart) / 1_000_000.0;
+
+        android.util.Log.d(
+                "IKkyu  GaussianSort ",
+                String.format(
+                        "Sort %.2f ms ",
+                        sortMs
+                )
+        );
     }
 }

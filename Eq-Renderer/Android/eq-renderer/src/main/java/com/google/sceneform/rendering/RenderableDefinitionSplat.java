@@ -33,7 +33,6 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
     private static final int UV_SIZE = 2;
     private static final int F4_SIZE = 4; // Float4
     private JPlyGS3dAsset asset;
-    private int shDegree = 0;
 
     public void setVertices(List<Vertex> vertices) {
         this.vertices = vertices;
@@ -148,7 +147,7 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
         if (firstVertex.getUvCoordinate() != null) {
             descriptionAttributes.add(VertexAttribute.UV0);
         }
-        addAttributes(descriptionAttributes);
+        addAttributes(descriptionAttributes);//custom012
 
         //计算vertexBuffer
         VertexBuffer vertexBuffer = data.getVertexBuffer();
@@ -196,7 +195,7 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
         FloatBuffer custom0 = FloatBuffer.allocate(numVertices * F4_SIZE);
         FloatBuffer custom1 = FloatBuffer.allocate(numVertices * F4_SIZE);
         FloatBuffer custom2 = FloatBuffer.allocate(numVertices * F4_SIZE);
-        FloatBuffer custom3 = FloatBuffer.allocate(numVertices * F4_SIZE);
+//        FloatBuffer custom3 = FloatBuffer.allocate(numVertices * F4_SIZE);
 
         // 更新原始缓冲区并在一次遍历顶点时计算Aabb。
         for (int i = 0; i < vertices.size(); i++) {
@@ -219,7 +218,7 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
                 addUvToBuffer(uvCoordinate, uvBuffer);
             }
 
-            addVertexBufferFromGaussian(i, custom0, custom1, custom2, custom3);
+            addVertexBufferFromGaussian(i, custom0, custom1, custom2);
         }
 
 
@@ -236,44 +235,33 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
                     engine.getFilamentEngine(), bufferIndex, uvBuffer, 0, numVertices * UV_SIZE);
         }
 
+        //custom012
         bufferIndex = setBufferDataFloat4(custom0, bufferIndex, vertexBuffer, engine, numVertices);
-        switch (shDegree){
-            case 0:
-                break;
-            case 1:
-            case 2:
-            case 3:
-                bufferIndex = setBufferDataFloat4(custom1, bufferIndex, vertexBuffer, engine, numVertices);
-                bufferIndex = setBufferDataFloat4(custom2, bufferIndex, vertexBuffer, engine, numVertices);
-                setBufferDataFloat4(custom3, bufferIndex, vertexBuffer, engine, numVertices);
-                break;
-            default:
-        }
+        bufferIndex = setBufferDataFloat4(custom1, bufferIndex, vertexBuffer, engine, numVertices);
+        bufferIndex = setBufferDataFloat4(custom2, bufferIndex, vertexBuffer, engine, numVertices);
     }
 
-    private void addVertexBufferFromGaussian(int vertexIndex, FloatBuffer custom0, FloatBuffer custom1, FloatBuffer custom2, FloatBuffer custom3) {
+    private void addVertexBufferFromGaussian(int vertexIndex, FloatBuffer custom0, FloatBuffer custom1, FloatBuffer custom2) {
         int i = vertexIndex / 4;//一个高斯点对应1个quad，一个quad有4个顶点。
         float opacityValue = asset.opacity!=null ? asset.opacity[i] : 1.0f;
-        addFloat4ToBuffer(asset.f_dc[3 * i],asset.f_dc[3 * i + 1], asset.f_dc[3 * i + 2],opacityValue, custom0);
+        addFloat4ToBuffer(check01(asset.f_dc[3 * i]),check01(asset.f_dc[3 * i + 1])
+                ,check01( asset.f_dc[3 * i + 2]),check01(opacityValue), custom0);
 
-        if (shDegree > 0){
-            addFloat4ToBuffer(asset.f_rest[asset.dimension * i],
-                    asset.f_rest[asset.dimension * i + 1],
-                    asset.f_rest[asset.dimension * i + 2],
-                    asset.f_rest[asset.dimension * i + 3],
-                    custom1);
-            addFloat4ToBuffer(asset.f_rest[asset.dimension * i + 4],
-                    asset.f_rest[asset.dimension * i + 5],
-                    asset.f_rest[asset.dimension * i + 6],
-                    asset.f_rest[asset.dimension * i + 7],
-                    custom2);
-            addFloat4ToBuffer(
-                    asset.f_rest[asset.dimension * i + 8],
-                    asset.f_rest[asset.dimension * i + 9],
-                    asset.f_rest[asset.dimension * i + 10],
-                    asset.f_rest[asset.dimension * i + 11],
-                    custom3);
-        }
+//        float index = (float) (vertexIndex % 4);
+//        Log.i("Ikkyu ", "addVertexBufferFromGaussian: scale + "+asset.scale[3*i]+","+asset.scale[3*i+1]+","+
+//                asset.scale[3*i+2]);
+//        Log.i("Ikkyu ", "addVertexBufferFromGaussian: rot + "+asset.rot[4*i]+","+asset.rot[4*i+1]+","+
+//                asset.rot[4*i+2]+", "+ asset.rot[4*i+3]);
+
+        addFloat4ToBuffer(asset.scale[3*i],asset.scale[3*i+1],
+                asset.scale[3*i+2],0.05f,custom1);
+
+//        addFloat4ToBuffer(asset.vertices[3*i],asset.vertices[3*i+1],
+//                asset.vertices[3*i+2],2.0f,custom2);
+        //w x y z - > x y z w
+        addFloat4ToBuffer(asset.rot[4*i+1],
+                asset.rot[4*i+2], asset.rot[4*i+3],asset.rot[4*i],custom2);
+
     }
 
     private int setBufferDataFloat4(FloatBuffer custom0, int bufferIndex, VertexBuffer vertexBuffer, IEngine engine, int numVertices) {
@@ -287,21 +275,12 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
     }
 
     private void addAttributes(EnumSet<VertexAttribute> descriptionAttributes) {
-        shDegree = Math.min(asset.shDegree, 1); // 支持0~1阶
 
         if (asset.f_dc != null){
             descriptionAttributes.add(VertexAttribute.CUSTOM0);
         }
-        if (shDegree >= 1) {
-            descriptionAttributes.add(VertexAttribute.CUSTOM1);
-            descriptionAttributes.add(VertexAttribute.CUSTOM2);
-            descriptionAttributes.add(VertexAttribute.CUSTOM3);
-        }
-//        if (shDegree == 2) {
-//            descriptionAttributes.add(VertexAttribute.CUSTOM4);
-//            descriptionAttributes.add(VertexAttribute.CUSTOM5);
-//            descriptionAttributes.add(VertexAttribute.CUSTOM6);
-//        }
+        descriptionAttributes.add(VertexAttribute.CUSTOM1);
+        descriptionAttributes.add(VertexAttribute.CUSTOM2);
     }
 
 
@@ -428,5 +407,9 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
     }
     public void setGaussianSplat(JPlyGS3dAsset asset) {
         this.asset = asset;
+    }
+    public float check01(float src){
+        float v = src > 1 ? 1 : src;
+        return v < 0 ? 0:v;
     }
 }
