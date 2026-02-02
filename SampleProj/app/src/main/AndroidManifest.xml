@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature android:name="android.hardware.camera" />
+
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -22,11 +23,14 @@
         android:theme="@style/Theme.MyApplication"
         tools:targetApi="31">
         <activity
+            android:name=".samples.CoordinateConvertActivity"
+            android:exported="false" />
+        <activity
             android:name=".samples.EarthActivity"
             android:exported="false" />
         <activity
             android:name=".samples.CameraActivity"
-            android:exported="false"/>
+            android:exported="false" />
         <activity
             android:name=".samples.VideoActivity"
             android:exported="false"

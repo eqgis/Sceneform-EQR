@@ -21,6 +21,7 @@ import com.eqgis.test.samples.ARSceneActivity;
 import com.eqgis.test.samples.ARScenePlaneActivity;
 import com.eqgis.test.samples.BaseSceneActivity;
 import com.eqgis.test.samples.CameraActivity;
+import com.eqgis.test.samples.CoordinateConvertActivity;
 import com.eqgis.test.samples.EarthActivity;
 import com.eqgis.test.samples.InteractiveActivity;
 //import com.eqgis.test.samples.SlamSceneActivity;
@@ -181,5 +182,12 @@ public class MainActivity extends AppCompatActivity {
      */
     public void toPlyDataActivity(View view) {
         startActivity(new Intent(this, PlyDataSceneActivity.class));
+    }
+    /**
+     * 转至坐标转换实例
+     * @param view
+     */
+    public void toCoordinateConvertActivity(View view) {
+        startActivity(new Intent(this, CoordinateConvertActivity.class));
     }
 }

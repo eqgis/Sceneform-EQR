@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="坐标转换"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:layout_marginTop="24dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="10sp"
+        android:textStyle="italic"
+        android:text="地理坐标系采用：China Geodetic Coordinate System 2000\n长半轴：6378137米    扁率：1/298.257222101"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <!-- ===== 参考原点 ===== -->
+    <TextView
+        android:id="@+id/tv_ref"
+        android:layout_marginTop="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="参考原点（经纬度 + 高度 + 初始方位）"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <EditText
+        android:id="@+id/et_lon1"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:hint="Lon"
+        android:inputType="numberDecimal|numberSigned"
+        app:layout_constraintTop_toBottomOf="@id/tv_ref"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/et_lat1"/>
+
+    <EditText
+        android:id="@+id/et_lat1"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:hint="Lat"
+        android:inputType="numberDecimal|numberSigned"
+        app:layout_constraintTop_toTopOf="@id/et_lon1"
+        app:layout_constraintStart_toEndOf="@id/et_lon1"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <EditText
+        android:id="@+id/et_h1"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:hint="H（m）"
+        android:inputType="numberDecimal|numberSigned"
+        app:layout_constraintTop_toBottomOf="@id/et_lon1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
+
+    <EditText
+        android:id="@+id/et_azimuth"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:hint="Azimuth（°，0~360）"
+        android:inputType="numberDecimal"
+        app:layout_constraintTop_toBottomOf="@id/et_h1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
+
+    <!-- ===== 模式选择 ===== -->
+    <RadioGroup
+        android:id="@+id/rg_mode"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/et_azimuth"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+
+        <RadioButton
+            android:id="@+id/rb_geo_to_rel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="地理 → 相对"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/rb_rel_to_geo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="相对 → 地理"
+            android:layout_marginStart="24dp"/>
+    </RadioGroup>
+
+    <!-- ===== 目标点经纬度 ===== -->
+    <LinearLayout
+        android:id="@+id/layout_geo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/rg_mode"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="目标点经纬度"
+            android:textStyle="bold"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/et_lon2"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:hint="Lon"
+                android:inputType="numberDecimal|numberSigned"/>
+
+            <EditText
+                android:id="@+id/et_lat2"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:hint="Lat"
+                android:inputType="numberDecimal|numberSigned"/>
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/et_h2"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="H（m）"
+            android:inputType="numberDecimal|numberSigned"/>
+    </LinearLayout>
+
+    <!-- ===== 相对坐标 ===== -->
+    <LinearLayout
+        android:id="@+id/layout_rel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/layout_geo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="相对坐标 XYZ（m）"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/et_x"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="X"/>
+
+        <EditText
+            android:id="@+id/et_y"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Y"/>
+
+        <EditText
+            android:id="@+id/et_z"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Z"/>
+    </LinearLayout>
+
+    <!-- ===== 执行 ===== -->
+    <Button
+        android:id="@+id/btn_convert"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="执行转换"
+        app:layout_constraintTop_toBottomOf="@id/layout_rel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
