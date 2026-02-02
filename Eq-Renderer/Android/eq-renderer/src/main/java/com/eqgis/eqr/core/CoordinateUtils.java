@@ -31,10 +31,11 @@ public class CoordinateUtils {
      */
     public static Location toGeoLocation(Location refPoint, Vector3 targetPoint, double azimuth){
         //注意：东北天坐标系 和 OpenGL右手系（X轴正方向指向右侧，y轴正方向指向上方）
-        double[] xy = CoordinateUtilsNative.jni_ToGeoLocation(refPoint.getX(), refPoint.getY(),
+        double[] xy = new double[2];
+        CoordinateUtilsNative.jni_ToGeoLocation(refPoint.getX(), refPoint.getY(),
                 /*东西方向*/targetPoint.x, /*前后方向*/-targetPoint.z,
-                /*方位角的弧度值*/Math.toRadians(azimuth));
-        double z = /*上下方向*/targetPoint.y - refPoint.getZ();
+                /*方位角的弧度值*/Math.toRadians(azimuth),/*out*/xy);
+        double z = /*上下方向*/targetPoint.y + refPoint.getZ();
         return new Location(xy[0], xy[1], z);
     }
 
@@ -48,9 +49,10 @@ public class CoordinateUtils {
      */
     public static Vector3 toScenePosition(Location refPoint, Location targetLocation, double azimuth){
         //计算在东北天方向的xy值
-        double[] xyInENU = CoordinateUtilsNative.jni_ToScenePosition(refPoint.getX(), refPoint.getY(),
+        double[] xyInENU = new double[2];
+         CoordinateUtilsNative.jni_ToScenePosition(refPoint.getX(), refPoint.getY(),
                 targetLocation.getX(), targetLocation.getY(),
-                Math.toRadians(azimuth));
+                Math.toRadians(azimuth),xyInENU);
         Vector3 position = new Vector3((float) xyInENU[0],/*高度差*/(float) (targetLocation.getZ() - refPoint.getZ()), (float) -xyInENU[1]);
         return position;
     }

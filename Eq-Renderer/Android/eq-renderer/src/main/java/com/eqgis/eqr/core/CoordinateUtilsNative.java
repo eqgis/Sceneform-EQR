@@ -24,9 +24,9 @@ class CoordinateUtilsNative {
      * @param azimuthRad 方位角，弧度值
      * @return {lon,lat}
      */
-    public static native double[] jni_ToGeoLocation(double refX, double refY,
+    public static native void jni_ToGeoLocation(double refX, double refY,
                                                     double targetX, double targetY,
-                                                    double azimuthRad);
+                                                    double azimuthRad,double[] xy);
 
 
     /**
@@ -38,9 +38,9 @@ class CoordinateUtilsNative {
      * @param azimuthRad 方位角
      * @return {relativeX,relativeY}
      */
-    public static native double[] jni_ToScenePosition(double refX, double refY,
+    public static native void jni_ToScenePosition(double refX, double refY,
                                                       double targetLocationX, double targetLocationY,
-                                                      double azimuthRad);
+                                                      double azimuthRad, double[] xy);
 
     /**
      * 计算三个点依次序构成的两条线段间的顺时针角度
