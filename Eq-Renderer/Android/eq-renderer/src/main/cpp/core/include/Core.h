@@ -31,7 +31,7 @@
 
 namespace EQR{
     //核心模块状态值
-    static bool CORE_STATUS = false;
+    static bool CORE_STATUS = true;
 }
 
 extern "C"

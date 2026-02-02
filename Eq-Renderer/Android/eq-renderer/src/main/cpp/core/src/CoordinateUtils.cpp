@@ -23,10 +23,11 @@
 #define RTOD    57.295779513082320876798154814
 
 
-double * ComputeTranslation(double x1, double y1,
+
+Vec2 ComputeTranslation(double x1, double y1,
                             double x2, double y2) {
-    double res[2] = {0,0};
-    if (x1 == x2 && y1 == y2){
+    Vec2 res{0.0, 0.0};
+    if (x1 == x2 && y1 == y2) {
         return res;
     }
 
@@ -50,8 +51,8 @@ double * ComputeTranslation(double x1, double y1,
     double x = GetSpheroidDistance(myLocationX,myLocationY,x2,y2,6378137, 0.00335281068);
     double y = GetSpheroidDistance(myLocationX,myLocationY,x1,y1,6378137, 0.00335281068);
 
-    res[0] = flagX * x;
-    res[1] = flagY * y;
+    res.x = flagX * x;
+    res.y = flagY * y;
     return res;
 }
 
@@ -172,12 +173,12 @@ double GetSpheroidDistance(double pntFromX,double pntFromY,
 
 
 extern "C"
-JNIEXPORT jdoubleArray JNICALL
+JNIEXPORT void JNICALL
 Java_com_eqgis_eqr_core_CoordinateUtilsNative_jni_1ToGeoLocation(JNIEnv *env, jclass clazz,
                                                             jdouble ref_x, jdouble ref_y,
                                                             jdouble target_x,jdouble target_y,
-                                                            jdouble azimuthRad) {
-    if (!EQR::CORE_STATUS) return NULL;
+                                                            jdouble azimuthRad, jdoubleArray xy) {
+    if (!EQR::CORE_STATUS) return;
 
     //1 计算正北方向为Y轴，建立的平面坐标系的对应的目标点的x、y坐标（arPosition逆时针旋转azimuth）
     double x = target_x * cos(-azimuthRad) - target_y * sin(-azimuthRad);
@@ -187,43 +188,39 @@ Java_com_eqgis_eqr_core_CoordinateUtilsNative_jni_1ToGeoLocation(JNIEnv *env, jc
     double virtueLocationLat = ref_y + 0.0001;
 
     //计算偏移量
-    double *offset = ComputeTranslation(ref_x,ref_y,virtueLocationLon,virtueLocationLat);
-    double deltaX = abs(0.0001 / *offset);
-    double deltaY = abs(0.0001 / *(offset+1));
+    Vec2 offset = ComputeTranslation(ref_x,ref_y,virtueLocationLon,virtueLocationLat);
+    double deltaX = abs(0.0001 / offset.x);
+    double deltaY = abs(0.0001 / offset.y);
     double vv1 = x * deltaX + ref_x;
     double vv2 = y * deltaY + ref_y;
 
     //Location(vv1, vv2, arPosition.z + deviceLocation.getHeight());
     //构造返回数据
     double outArray[] = {vv1,vv2};
-    jdoubleArray  outJNIArray = env->NewDoubleArray(2);
-    if (NULL == outJNIArray)return NULL;
+    if (NULL == xy)return;
     //向jdoubleArray写入数据
-    env->SetDoubleArrayRegion(outJNIArray,0,2,outArray);
-    return outJNIArray;
+    env->SetDoubleArrayRegion(xy,0,2,outArray);
 }
 
 extern "C"
-JNIEXPORT jdoubleArray JNICALL
+JNIEXPORT void JNICALL
 Java_com_eqgis_eqr_core_CoordinateUtilsNative_jni_1ToScenePosition(JNIEnv *env, jclass clazz,
                                                                    jdouble ref_x, jdouble ref_y,
                                                                    jdouble target_location_x,
                                                                    jdouble target_location_y,
-                                                                   jdouble azimuth_rad) {
-    if (!EQR::CORE_STATUS) return NULL;
+                                                                   jdouble azimuth_rad,jdoubleArray outJNIArray) {
+    if (!EQR::CORE_STATUS) return;
 
-    double *offset = ComputeTranslation(ref_x, ref_y, target_location_x, target_location_y);
-    double deX = *offset;
-    double deY = *(offset + 1);
+    Vec2 offset = ComputeTranslation(ref_x, ref_y, target_location_x, target_location_y);
+    double deX = offset.x;
+    double deY = offset.y;
     // 2 Coordinate conversion according to azimuth to calculate ar coordinates
     double x = deX * cos(azimuth_rad) - deY * sin(azimuth_rad);
     double y = deX * sin(azimuth_rad) + deY * cos(azimuth_rad);
 
     //构造返回数据
     double outArray[] = {x,y};
-    jdoubleArray  outJNIArray = env->NewDoubleArray(2);
-    if (NULL == outJNIArray)return NULL;
+    if (NULL == outJNIArray)return;
     //向jdoubleArray写入数据
     env->SetDoubleArrayRegion(outJNIArray,0,2,outArray);
-    return outJNIArray;
 }

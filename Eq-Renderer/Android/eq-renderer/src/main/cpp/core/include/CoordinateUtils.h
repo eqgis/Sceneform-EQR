@@ -6,25 +6,30 @@
 
 #endif //SAMPLE_COORDINATEUTILS_H
 
+struct Vec2 {
+    double x;
+    double y;
+};
+
 /**
  * 场景坐标转地理坐标
  */
 extern "C"
-JNIEXPORT jdoubleArray JNICALL
+JNIEXPORT void JNICALL
 Java_com_eqgis_eqr_core_CoordinateUtilsNative_jni_1ToGeoLocation(JNIEnv *env, jclass clazz,
                                                             jdouble ref_x, jdouble ref_y,
                                                             jdouble target_x,jdouble target_y,
-                                                            jdouble azimuth);
+                                                            jdouble azimuth, jdoubleArray xy);
 /**
  * 地理坐标转场景坐标
  */
 extern "C"
-JNIEXPORT jdoubleArray JNICALL
+JNIEXPORT void JNICALL
 Java_com_eqgis_eqr_core_CoordinateUtilsNative_jni_1ToScenePosition(JNIEnv *env, jclass clazz,
                                                                    jdouble ref_x, jdouble ref_y,
                                                                    jdouble target_location_x,
                                                                    jdouble target_location_y,
-                                                                   jdouble azimuth_rad);
+                                                                   jdouble azimuth_rad ,jdoubleArray xy);
 
 /**
  * 计算两点间的偏移量
@@ -34,7 +39,7 @@ Java_com_eqgis_eqr_core_CoordinateUtilsNative_jni_1ToScenePosition(JNIEnv *env, 
  * @param y2
  * @return
  */
-double * ComputeTranslation(double x1, double y1,
+Vec2 ComputeTranslation(double x1, double y1,
                             double x2, double y2);
 
 /**

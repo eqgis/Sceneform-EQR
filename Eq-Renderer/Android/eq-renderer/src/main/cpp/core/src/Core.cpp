@@ -9,8 +9,6 @@ tinyply::PlyFile file;
 string EQR_CORE_VERSION = "EQ-Renderer_v1.2.0";
 string FILAMENT_VERSION = "v1.67.1";
 
-//更新核心模块状态值
-void UpdateStatus();
 
 #ifdef __cplusplus
 extern "C"{
@@ -24,7 +22,6 @@ extern "C"{
  */
 JNIEXPORT jstring JNICALL
 Java_com_eqgis_eqr_core_CoreNative_jni_1GetVersion(JNIEnv *env, jclass clazz) {
-    UpdateStatus();
     if (!EQR::CORE_STATUS)return NULL;
 
     return env->NewStringUTF(EQR_CORE_VERSION.c_str());
@@ -38,7 +35,6 @@ Java_com_eqgis_eqr_core_CoreNative_jni_1GetVersion(JNIEnv *env, jclass clazz) {
  */
 JNIEXPORT jboolean JNICALL
 Java_com_eqgis_eqr_core_CoreNative_jni_1CheckCoreStatus(JNIEnv *env, jclass clazz) {
-    UpdateStatus();
     return EQR::CORE_STATUS;
 }
 
@@ -46,12 +42,6 @@ Java_com_eqgis_eqr_core_CoreNative_jni_1CheckCoreStatus(JNIEnv *env, jclass claz
 }
 
 #endif
-
-//更新核心模块状态值
-void UpdateStatus() {
-    //开源后不设置权限校验，默认为true
-    EQR::CORE_STATUS = true;
-}
 
 extern "C"
 JNIEXPORT jstring JNICALL

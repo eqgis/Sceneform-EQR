@@ -130,6 +130,11 @@
                 android:text="3DGS（点云渲染）"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"/>
+            <Button
+                android:onClick="toCoordinateConvertActivity"
+                android:text="坐标转换"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"/>
         </LinearLayout>
     </ScrollView>
 
