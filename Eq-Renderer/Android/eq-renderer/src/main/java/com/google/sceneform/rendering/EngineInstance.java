@@ -3,6 +3,8 @@ package com.google.sceneform.rendering;
 import android.content.Context;
 import android.opengl.EGLContext;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -25,6 +27,36 @@ public class EngineInstance {
   private static boolean headlessEngine = false;
   private static boolean filamentInitialized = false;
   private static Engine.Backend backend = Engine.Backend.OPENGL; // 默认 OpenGL ES
+  private static int activeSceneViewCount = 0;
+  private static final Handler mainHandler = new Handler(Looper.getMainLooper());
+  @Nullable private static Runnable pendingDestroyRunnable = null;
+
+  public static synchronized void retainSceneView() {
+    if (pendingDestroyRunnable != null) {
+      mainHandler.removeCallbacks(pendingDestroyRunnable);
+      pendingDestroyRunnable = null;
+    }
+    activeSceneViewCount++;
+  }
+
+  public static synchronized void releaseSceneView(Runnable destroyGlobalResources) {
+    if (activeSceneViewCount > 0) {
+      activeSceneViewCount--;
+    }
+    if (activeSceneViewCount != 0) {
+      return;
+    }
+    pendingDestroyRunnable = () -> {
+      synchronized (EngineInstance.class) {
+        if (activeSceneViewCount != 0) {
+          return;
+        }
+        pendingDestroyRunnable = null;
+      }
+      destroyGlobalResources.run();
+    };
+    mainHandler.postDelayed(pendingDestroyRunnable, 500);
+  }
 
   public static void enableHeadlessEngine() {
     headlessEngine = true;
