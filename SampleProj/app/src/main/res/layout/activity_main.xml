@@ -1,141 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="@color/sample_background">
 
-    <TextView
-        android:textSize="24dp"
-        android:layout_marginTop="20dp"
-        android:layout_width="wrap_content"
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="EQ-Renderer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-    <ScrollView
-        android:layout_marginTop="60dp"
-        android:layout_marginBottom="60dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_width="240dp"
-        android:layout_height="match_parent">
-        <LinearLayout
-            android:orientation="vertical"
+        android:background="@color/sample_background"
+        android:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TextView
-                android:textSize="12dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="普通3D示例:"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <Button
-                android:onClick="toBaseSceneActivity"
-                android:text="普通三维场景"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
-                android:onClick="toInteractiveActivity"
-                android:text="手势交互示例"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/sample_background"
+            app:title="Sceneform-EQR 示例与教程"
+            app:titleTextColor="@color/sample_text_primary" />
 
-            <!--AR示例入口按钮组-->
-            <TextView
-                android:textSize="12dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="AR示例:"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <Button
-                android:onClick="toArSceneActivity"
-                android:text="AR三维场景\n(需AR服务支持)"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
-                android:onClick="toArScenePlaneActivity"
-                android:text="AR平面识别\n(需AR服务支持)"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-<!--            <Button
-                android:onClick="toSlamSceneActivity"
-                android:text="AR三维场景\n(基于EQ-SLAM)"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>-->
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <Button
-                android:onClick="toCameraActivity"
-                android:text="通用3Dof的AR场景\n(基于三轴传感器)"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <!--VR示例-->
-            <TextView
-                android:textSize="12dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="VR示例:"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <Button
-                android:onClick="toVrActivity"
-                android:text="VR示例"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
-                android:onClick="toVr360Activity"
-                android:text="全景视频播放器示例"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingLeft="16dp"
+            android:paddingTop="12dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="20dp"
+            android:scrollbars="vertical" />
 
-            <TextView
-                android:textSize="12dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="其它示例:"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-            <Button
-                android:onClick="toVideoActivity"
-                android:text="视频播放器示例"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
-                android:onClick="toEarthActivity"
-                android:text="地球（球体绘制）示例"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
-                android:onClick="toPlyDataActivity"
-                android:text="3DGS（点云渲染）"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-            <Button
-                android:onClick="toCoordinateConvertActivity"
-                android:text="坐标转换"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"/>
-        </LinearLayout>
-    </ScrollView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

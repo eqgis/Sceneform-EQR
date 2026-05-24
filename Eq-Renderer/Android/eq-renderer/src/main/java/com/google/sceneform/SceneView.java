@@ -45,6 +45,7 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
     private volatile boolean debugEnabled = false;
 
     private boolean isInitialized = false;
+    private boolean isDestroyed = false;
 
     @Nullable
     private Color backgroundColor;
@@ -184,6 +185,10 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
      * </p>
      */
     public void destroy() {
+        if (isDestroyed) {
+            return;
+        }
+        isDestroyed = true;
         Choreographer.getInstance().removeFrameCallback(this);
 
         if (renderer != null) {
@@ -197,13 +202,11 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
             }
         }
 
-        ResourceManager.getInstance().destroyAllResources();
-        if (renderer != null && renderer.scene != null){
-            EngineInstance.getEngine().destroyScene(renderer.scene);
-        }
-
-        FilamentMaterialProviderManager.destroy();
-        EngineInstance.destroyEngine();
+        EngineInstance.releaseSceneView(() -> {
+            ResourceManager.getInstance().destroyAllResources();
+            FilamentMaterialProviderManager.destroy();
+            EngineInstance.destroyEngine();
+        });
     }
 
     /**
@@ -288,6 +291,7 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
             Log.w(TAG, "SceneView already initialized.");
             return;
         }
+        EngineInstance.retainSceneView();
 
         if (!AndroidPreconditions.isMinAndroidApiLevel()) {
             Log.e(TAG, "Sceneform requires Android N or later");
