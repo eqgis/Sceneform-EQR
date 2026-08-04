@@ -1,4 +1,3 @@
-using namespace std;
 #include "../include/Core.h"
 #include <iostream>
 #include "tinyply.h"
@@ -6,8 +5,8 @@ tinyply::PlyFile file;
 
 
 //版本信息
-string EQR_CORE_VERSION = "EQ-Renderer_v1.2.0";
-string FILAMENT_VERSION = "v1.67.1";
+std::string EQR_CORE_VERSION = "EQ-Renderer_v1.2.0";
+std::string FILAMENT_VERSION = "v1.67.1";
 
 
 #ifdef __cplusplus
