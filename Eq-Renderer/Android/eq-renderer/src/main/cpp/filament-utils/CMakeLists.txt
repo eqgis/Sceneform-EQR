@@ -23,6 +23,10 @@ add_library(image STATIC IMPORTED)
 set_target_properties(image PROPERTIES IMPORTED_LOCATION
         ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libimage.a)
 
+add_library(imageio-lite STATIC IMPORTED)
+set_target_properties(imageio-lite PROPERTIES IMPORTED_LOCATION
+        ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libimageio-lite.a)
+
 add_library(ktxreader STATIC IMPORTED)
 set_target_properties(ktxreader PROPERTIES IMPORTED_LOCATION
         ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libktxreader.a)
@@ -30,6 +34,10 @@ set_target_properties(ktxreader PROPERTIES IMPORTED_LOCATION
 add_library(viewer STATIC IMPORTED)
 set_target_properties(viewer PROPERTIES IMPORTED_LOCATION
         ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libviewer.a)
+
+add_library(imagediff STATIC IMPORTED)
+set_target_properties(imagediff PROPERTIES IMPORTED_LOCATION
+        ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libimagediff.a)
 
 add_library(civetweb STATIC IMPORTED)
 set_target_properties(civetweb PROPERTIES IMPORTED_LOCATION
@@ -46,6 +54,18 @@ set_target_properties(utils PROPERTIES IMPORTED_LOCATION
 add_library(perfetto STATIC IMPORTED)
 set_target_properties(perfetto PROPERTIES IMPORTED_LOCATION
         ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libperfetto.a)
+
+add_library(filamentapp STATIC IMPORTED)
+set_target_properties(filamentapp PROPERTIES IMPORTED_LOCATION
+        ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libfilamentapp.a)
+
+add_library(filamentapp-resources STATIC IMPORTED)
+set_target_properties(filamentapp-resources PROPERTIES IMPORTED_LOCATION
+        ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libfilamentapp-resources.a)
+
+add_library(stb STATIC IMPORTED)
+set_target_properties(stb PROPERTIES IMPORTED_LOCATION
+        ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libstb.a)
 
 set(VERSION_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/libfilament-utils-jni.map")
 set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,--version-script=${VERSION_SCRIPT}")
@@ -89,6 +109,7 @@ target_link_libraries(filament-utils-jni
         PRIVATE filament-jni
         PRIVATE ktxreader
         PRIVATE viewer
+        PRIVATE imageio-lite
         PRIVATE log
         PRIVATE utils
         PRIVATE perfetto        # needed only when FILAMENT_ENABLE_PERFETTO is defined

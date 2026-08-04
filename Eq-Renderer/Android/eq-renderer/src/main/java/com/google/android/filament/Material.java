@@ -54,6 +54,7 @@ public class Material {
         static final CullingMode[] sCullingModeValues = CullingMode.values();
         static final VertexBuffer.VertexAttribute[] sVertexAttributeValues =
                 VertexBuffer.VertexAttribute.values();
+        static final TransparencyMode[] sTransparencyModeValues = TransparencyMode.values();
     }
 
     private long mNativeObject;
@@ -161,6 +162,31 @@ public class Material {
     }
 
     /**
+     * How transparent objects are handled
+     *
+     * @see
+     * <a href="https://google.github.io/filament/Materials.html#materialdefinitions/materialblock/blendingandtransparency:transparencymode">
+     * Blending and transparency: transparencyMode</a>
+     */
+    public enum TransparencyMode {
+        /** The transparent object is drawn honoring the raster state. */
+        DEFAULT,
+
+        /**
+         * The transparent object is first drawn in the depth buffer,
+         * then in the color buffer, honoring the culling mode, but ignoring the depth test function.
+         */
+        TWO_PASSES_ONE_SIDE,
+
+        /**
+         * The transparent object is drawn twice in the color buffer,
+         * first with back faces only, then with front faces; the culling
+         * mode is ignored. Can be combined with two-sided lighting.
+         */
+        TWO_PASSES_TWO_SIDES
+    }
+
+    /**
      * Supported refraction modes
      *
      * @see
@@ -259,6 +285,20 @@ public class Material {
         HIGH,
         /** We will need this program eventually. */
         LOW
+    }
+
+    /**
+     * Defines whether a material instance should use UBO batching or not.
+     */
+    public enum UboBatchingMode {
+        /**
+         * For default, it follows the engine settings.
+         * If UBO batching is enabled on the engine and the material domain is SURFACE, it
+         * turns on the UBO batching. Otherwise, it turns off the UBO batching.
+        */
+        DEFAULT,
+        /** Disable the Ubo Batching for this material */
+        DISABLED
     }
 
     public static class UserVariantFilterBit {
@@ -372,6 +412,7 @@ public class Material {
         private int mSize;
         private int mShBandCount = 0;
         private ShadowSamplingQuality mShadowSamplingQuality = ShadowSamplingQuality.LOW;
+        private UboBatchingMode mUboBatchingMode = UboBatchingMode.DEFAULT;
 
 
         /**
@@ -417,6 +458,17 @@ public class Material {
         }
 
         /**
+         * Set the batching mode of the instances created from this material.
+         * @param uboBatchingMode
+         * @return Reference to this Builder for chaining calls.
+         */
+        @NonNull
+        public Builder uboBatching(UboBatchingMode mode) {
+            mUboBatchingMode = mode;
+            return this;
+        }
+
+        /**
          * Creates and returns the Material object.
          *
          * @param engine reference to the Engine instance to associate this Material with
@@ -424,11 +476,12 @@ public class Material {
          * @return the newly created object
          *
          * @exception IllegalStateException if the material could not be created
+         * @throws RuntimeException if a parameter to a builder function was invalid.
          */
         @NonNull
         public Material build(@NonNull Engine engine) {
             long nativeMaterial = nBuilderBuild(engine.getNativeObject(),
-                mBuffer, mSize, mShBandCount, mShadowSamplingQuality.ordinal());
+                mBuffer, mSize, mShBandCount, mShadowSamplingQuality.ordinal(), mUboBatchingMode.ordinal());
             if (nativeMaterial == 0) throw new IllegalStateException("Couldn't create Material");
             return new Material(nativeMaterial);
         }
@@ -470,11 +523,19 @@ public class Material {
      * for stereoscopic rendering. If an application is not planning to render in stereo, this bit
      * should be turned off to avoid unnecessary material compilations.
      *</p>
+     *<p>
+     * Note that it is possible to override specialization constants on a per-MaterialInstance basis
+     * (see {@link MaterialInstance#setConstant}). In that case, the programs compiled by a call to
+     * Material::compile() may not be reusable by that MaterialInstance. It's better to call
+     * MaterialInstance::compile() in cases where you intend to override specialization constants.
+     *</p>
      * @param priority      Which priority queue to use, LOW or HIGH.
      * @param variants      Variants to include to the compile command.
      * @param handler       An {@link java.util.concurrent.Executor Executor}. On Android this can also be a {@link android.os.Handler Handler}.
      * @param callback      callback called on the main thread when the compilation is done on
      *                      by backend.
+     *
+     * @see MaterialInstance#compile
      */
     public void compile(@NonNull CompilerPriorityQueue priority,
                         int variants,
@@ -559,6 +620,18 @@ public class Material {
      */
     public BlendingMode getBlendingMode() {
         return EnumCache.sBlendingModeValues[nGetBlendingMode(getNativeObject())];
+    }
+
+    /**
+     * Returns the transparency mode of this material.
+     * This value only makes sense when the blending mode is transparent or fade.
+     *
+     * @see
+     * <a href="https://google.github.io/filament/Materials.html#materialdefinitions/materialblock/blendingandtransparency:transparencymode">
+     * Blending and transparency: transparencyMode</a>
+     */
+    public TransparencyMode getTransparencyMode() {
+        return EnumCache.sTransparencyModeValues[nGetTransparencyMode(getNativeObject())];
     }
 
     /**
@@ -1094,7 +1167,7 @@ public class Material {
         mNativeObject = 0;
     }
 
-    private static native long nBuilderBuild(long nativeEngine, @NonNull Buffer buffer, int size, int shBandCount, int shadowQuality);
+    private static native long nBuilderBuild(long nativeEngine, @NonNull Buffer buffer, int size, int shBandCount, int shadowQuality, int uboBatchingMode);
     private static native long nCreateInstance(long nativeMaterial);
     private static native long nCreateInstanceWithName(long nativeMaterial, @NonNull String name);
     private static native long nGetDefaultInstance(long nativeMaterial);
@@ -1104,6 +1177,7 @@ public class Material {
     private static native int nGetShading(long nativeMaterial);
     private static native int nGetInterpolation(long nativeMaterial);
     private static native int nGetBlendingMode(long nativeMaterial);
+    private static native int nGetTransparencyMode(long nativeMaterial);
     private static native int nGetVertexDomain(long nativeMaterial);
     private static native int nGetCullingMode(long nativeMaterial);
     private static native boolean nIsColorWriteEnabled(long nativeMaterial);

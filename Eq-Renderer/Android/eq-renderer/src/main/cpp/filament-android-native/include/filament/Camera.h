@@ -23,15 +23,14 @@
 
 #include <utils/compiler.h>
 
+#include <math/mat4.h>
 #include <math/mathfwd.h>
 #include <math/vec2.h>
 #include <math/vec4.h>
-#include <math/mat4.h>
 
 #include <math.h>
-
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 namespace utils {
 class Entity;
@@ -243,10 +242,10 @@ public:
     /** Utility to set the projection matrix from the field-of-view.
      *
      * @param fovInDegrees full field-of-view in degrees. 0 < \p fov < 180.
-     * @param aspect       aspect ratio \f$ \frac{width}{height} \f$. \p aspect > 0.
-     * @param near         distance in world units from the camera to the near plane. \p near > 0.
-     * @param far          distance in world units from the camera to the far plane. \p far > \p near.
-     * @param direction    direction of the \p fovInDegrees parameter.
+     * @param aspect    aspect ratio \f$ \frac{width}{height} \f$. \p aspect > 0.
+     * @param near      distance in world units from the camera to the near plane. \p near > 0.
+     * @param far       distance in world units from the camera to the far plane. \p far > \p near.
+     * @param direction direction of the \p fovInDegrees parameter.
      *
      * @see Fov.
      */
@@ -256,9 +255,9 @@ public:
     /** Utility to set the projection matrix from the focal length.
      *
      * @param focalLengthInMillimeters lens's focal length in millimeters. \p focalLength > 0.
-     * @param aspect      aspect ratio \f$ \frac{width}{height} \f$. \p aspect > 0.
-     * @param near        distance in world units from the camera to the near plane. \p near > 0.
-     * @param far         distance in world units from the camera to the far plane. \p far > \p near.
+     * @param aspect    aspect ratio \f$ \frac{width}{height} \f$. \p aspect > 0.
+     * @param near      distance in world units from the camera to the near plane. \p near > 0.
+     * @param far       distance in world units from the camera to the far plane. \p far > \p near.
      */
     void setLensProjection(double focalLengthInMillimeters,
             double aspect, double near, double far);
@@ -270,10 +269,10 @@ public:
      * that is all 3 axis are mapped to [-1, 1].
      *
      * @param projection  custom projection matrix used for rendering and culling
-     * @param near        distance in world units from the camera to the near plane. \p near > 0.
-     * @param far         distance in world units from the camera to the far plane. \p far > \p near.
+     * @param near      distance in world units from the camera to the near plane.
+     * @param far       distance in world units from the camera to the far plane. \p far != \p near.
      */
-    void setCustomProjection(math::mat4 const& projection, double near, double far) noexcept;
+    void setCustomProjection(math::mat4 const& projection, double near, double far);
 
     /** Sets the projection matrix.
      *
@@ -282,11 +281,11 @@ public:
      *
      * @param projection  custom projection matrix used for rendering
      * @param projectionForCulling  custom projection matrix used for culling
-     * @param near        distance in world units from the camera to the near plane. \p near > 0.
-     * @param far         distance in world units from the camera to the far plane. \p far > \p near.
+     * @param near      distance in world units from the camera to the near plane.
+     * @param far       distance in world units from the camera to the far plane. \p far != \p near.
      */
     void setCustomProjection(math::mat4 const& projection, math::mat4 const& projectionForCulling,
-            double near, double far) noexcept;
+            double near, double far);
 
     /** Sets a custom projection matrix for each eye.
      *
@@ -311,7 +310,7 @@ public:
 
     /** Sets an additional matrix that scales the projection matrix.
      *
-     * This is useful to adjust the aspect ratio of the camera independent from its projection.
+     * This is useful to adjust the aspect ratio of the camera independent of its projection.
      * First, pass an aspect of 1.0 to setProjection. Then set the scaling with the desired aspect
      * ratio:
      *
@@ -456,6 +455,14 @@ public:
 
     //! Returns the camera's view matrix (inverse of the model matrix)
     math::mat4 getViewMatrix() const noexcept;
+
+    /** Returns the eye from view matrix for the specified eye.
+     *
+     * @param eyeId the index of the eye to return the eye from view matrix for, must be
+     *              < config.stereoscopicEyeCount
+     * @return The eye from view matrix
+     */
+    math::mat4 getEyeFromViewMatrix(uint8_t eyeId = 0) const noexcept;
 
     //! Returns the camera's position in world space
     math::double3 getPosition() const noexcept;

@@ -119,12 +119,14 @@ add_library(filament-jni STATIC
         TransformManager.cpp
         VertexBuffer.cpp
         View.cpp
+        FramePacerAndroidJni.cpp
         # Android specific
         nativewindow/Android.cpp
         # Private utils
         Filament.cpp
         # Common utils
         ../common/CallbackUtils.cpp
+        ../common/JniUtils.cpp
         ../common/NioUtils.cpp
 )
 

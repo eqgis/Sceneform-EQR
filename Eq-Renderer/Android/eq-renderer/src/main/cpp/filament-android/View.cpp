@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-#include <jni.h>
+#include "common/CallbackUtils.h"
 
 #include <filament/Color.h>
 #include <filament/View.h>
 #include <filament/Viewport.h>
 
-#include "common/CallbackUtils.h"
+#include <private/backend/VirtualMachineEnv.h>
 
-#include "private/backend/VirtualMachineEnv.h"
+#include <common/JniUtils.h>
+#include <jni.h>
 
 using namespace filament;
+using namespace filament::android;
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_google_android_filament_View_nSetName(JNIEnv* env, jclass, jlong nativeView, jstring name_) {
@@ -35,10 +37,12 @@ Java_com_google_android_filament_View_nSetName(JNIEnv* env, jclass, jlong native
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_View_nSetScene(JNIEnv*, jclass, jlong nativeView, jlong nativeScene) {
+Java_com_google_android_filament_View_nSetScene(JNIEnv* env, jclass, jlong nativeView, jlong nativeScene) {
     View* view = (View*) nativeView;
     Scene* scene = (Scene*) nativeScene;
-    view->setScene(scene);
+    wrapJni(env, [=]() {
+        view->setScene(scene);
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -74,6 +78,12 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_google_android_filament_View_nSetVisibleLayers(JNIEnv*, jclass, jlong nativeView, jint select, jint value) {
     View* view = (View*) nativeView;
     view->setVisibleLayers((uint8_t) select, (uint8_t) value);
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_google_android_filament_View_nGetVisibleLayers(JNIEnv*, jclass, jlong nativeView) {
+    View* view = (View*) nativeView;
+    return view->getVisibleLayers();
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -148,6 +158,33 @@ Java_com_google_android_filament_View_nSetDynamicResolutionOptions(JNIEnv*, jcla
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_View_nSetGridSize(JNIEnv*, jclass, jlong nativeView, jdouble size) {
+    View* view = (View*) nativeView;
+    view->setGridSize(size);
+}
+
+extern "C" JNIEXPORT jdouble JNICALL
+Java_com_google_android_filament_View_nGetGridSize(JNIEnv*, jclass, jlong nativeView) {
+    View* view = (View*) nativeView;
+    return view->getGridSize();
+}
+
+extern "C" JNIEXPORT jdouble JNICALL
+Java_com_google_android_filament_View_nGetEffectiveGridSize(JNIEnv*, jclass, jlong nativeView) {
+    View* view = (View*) nativeView;
+    return view->getEffectiveGridSize();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_View_nGetLastDynamicResolutionScale(JNIEnv *env, jclass, jlong nativeView, jfloatArray out_) {
+    jfloat* out = env->GetFloatArrayElements(out_, nullptr);
+    View *view = (View *) nativeView;
+    math::float2 result = view->getLastDynamicResolutionScale();
+    std::copy_n(result.v, 2, out);
+    env->ReleaseFloatArrayElements(out_, out, 0);
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_google_android_filament_View_nSetShadowType(JNIEnv*, jclass, jlong nativeView, jint type) {
     View* view = (View*) nativeView;
     view->setShadowType((View::ShadowType) type);
@@ -169,11 +206,14 @@ Java_com_google_android_filament_View_nSetVsmShadowOptions(JNIEnv*, jclass, jlon
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_google_android_filament_View_nSetSoftShadowOptions(JNIEnv*, jclass, jlong nativeView,
-        jfloat penumbraScale, jfloat penumbraRatioScale) {
+        jfloat penumbraScale, jfloat penumbraRatioScale,
+        jfloat maxPenumbraRatio, jfloat maxSearchRadius) {
     View* view = (View*) nativeView;
     View::SoftShadowOptions options;
     options.penumbraScale = penumbraScale;
     options.penumbraRatioScale = penumbraRatioScale;
+    options.maxPenumbraRatio = maxPenumbraRatio;
+    options.maxSearchRadius = maxSearchRadius;
     view->setSoftShadowOptions(options);
 }
 
@@ -431,6 +471,18 @@ Java_com_google_android_filament_View_nIsShadowingEnabled(JNIEnv *, jclass, jlon
     return (jboolean)view->isShadowingEnabled();
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_View_nSetFrustumCullingEnabled(JNIEnv*, jclass, jlong nativeView, jboolean enabled) {
+    View* view = (View*) nativeView;
+    view->setFrustumCullingEnabled(enabled);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_google_android_filament_View_nIsFrustumCullingEnabled(JNIEnv*, jclass, jlong nativeView) {
+    View* view = (View*) nativeView;
+    return (jboolean)view->isFrustumCullingEnabled();
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_google_android_filament_View_nSetScreenSpaceRefractionEnabled(JNIEnv *, jclass,
@@ -522,21 +574,27 @@ Java_com_google_android_filament_View_nSetGuardBandOptions(JNIEnv *, jclass,
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_google_android_filament_View_nSetMaterialGlobal(JNIEnv * , jclass, jlong nativeView,
+Java_com_google_android_filament_View_nSetMaterialGlobal(JNIEnv *env, jclass, jlong nativeView,
         jint index, jfloat x, jfloat y, jfloat z, jfloat w) {
     View *view = (View *) nativeView;
-    view->setMaterialGlobal((uint32_t)index, { x, y, z, w });
+    wrapJni(env, [=]() {
+        view->setMaterialGlobal((uint32_t)index, { x, y, z, w });
+    });
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_google_android_filament_View_nGetMaterialGlobal(JNIEnv *env, jclass clazz,
         jlong nativeView, jint index, jfloatArray out_) {
-    jfloat* out = env->GetFloatArrayElements(out_, nullptr);
     View *view = (View *) nativeView;
-    auto result = view->getMaterialGlobal(index);
-    std::copy_n(result.v, 4, out);
-    env->ReleaseFloatArrayElements(out_, out, 0);
+    wrapJni(env, [=]() {
+        auto result = view->getMaterialGlobal(index);
+        jfloat* out = env->GetFloatArrayElements(out_, nullptr);
+        if (out) {
+            std::copy_n(result.v, 4, out);
+            env->ReleaseFloatArrayElements(out_, out, 0);
+        }
+    });
 }
 
 extern "C"
@@ -545,6 +603,14 @@ Java_com_google_android_filament_View_nGetFogEntity(JNIEnv *env, jclass clazz,
         jlong nativeView) {
     View *view = (View *) nativeView;
     return (jint)view->getFogEntity().getId();
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_google_android_filament_View_nGetVisibleRenderableCount(JNIEnv *env, jclass clazz,
+        jlong nativeView) {
+    View *view = (View *) nativeView;
+    return (jint)view->getVisibleRenderableCount();
 }
 
 extern "C"

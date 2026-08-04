@@ -18,6 +18,16 @@ add_library(eqr-core SHARED
         core/src/SorterNative.cpp
 )
 
+set_target_properties(eqr-core PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+)
+
+target_link_options(eqr-core PRIVATE
+        "-Wl,-z,max-page-size=16384"
+        "-Wl,-z,common-page-size=16384"
+)
+
 target_include_directories(eqr-core PRIVATE
         tinyply
         core/include

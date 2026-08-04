@@ -17,11 +17,10 @@
 #ifndef TNT_FILAMENT_BACKEND_OPENGL_OPENGL_PLATFORM_WEBGL_H
 #define TNT_FILAMENT_BACKEND_OPENGL_OPENGL_PLATFORM_WEBGL_H
 
-#include <stdint.h>
-
+#include <backend/DriverEnums.h>
 #include <backend/platforms/OpenGLPlatform.h>
 
-#include <backend/DriverEnums.h>
+#include <stdint.h>
 
 namespace filament::backend {
 
@@ -33,8 +32,7 @@ protected:
     // --------------------------------------------------------------------------------------------
     // Platform Interface
 
-    Driver* createDriver(void* sharedGLContext,
-            const Platform::DriverConfig& driverConfig) override;
+    Driver* createDriver(void* sharedGLContext, const DriverConfig& driverConfig) override;
 
     int getOSVersion() const noexcept override;
 
@@ -43,7 +41,7 @@ protected:
 
     void terminate() noexcept override;
 
-    SwapChain* createSwapChain(void* nativewindow, uint64_t flags) noexcept override;
+    SwapChain* createSwapChain(void* nativeWindow, uint64_t flags) noexcept override;
     SwapChain* createSwapChain(uint32_t width, uint32_t height, uint64_t flags) noexcept override;
     void destroySwapChain(SwapChain* swapChain) noexcept override;
     bool makeCurrent(ContextType type, SwapChain* drawSwapChain, SwapChain* readSwapChain) override;

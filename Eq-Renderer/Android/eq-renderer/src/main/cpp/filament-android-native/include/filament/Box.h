@@ -27,7 +27,6 @@
 #include <math/vec4.h>
 
 #include <float.h>
-
 #include <stddef.h>
 
 namespace filament {
@@ -44,8 +43,8 @@ public:
     math::float3 halfExtent = {};
 
     /**
-     * Whether the box is empty, i.e.: it's volume is null.
-     * @return true if the volume of the box is null
+     * Whether the box is empty, i.e.: its extents are zero.
+     * @return true if the extents of the box are zero
      */
     constexpr bool isEmpty() const noexcept {
         return length2(halfExtent) == 0;

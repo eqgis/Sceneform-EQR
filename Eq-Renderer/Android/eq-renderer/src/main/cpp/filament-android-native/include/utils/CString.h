@@ -22,6 +22,9 @@
 #include <utils/compiler.h>
 #include <utils/StaticString.h>
 
+#if defined(FILAMENT_USE_ABSEIL_LOGGING)
+#include <iosfwd>
+#endif
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -36,19 +39,6 @@ namespace utils {
 namespace io {
 class ostream;
 }
-
-//! \privatesection
-struct hashCStrings {
-    typedef const char* argument_type;
-    typedef size_t result_type;
-    result_type operator()(argument_type cstr) const noexcept {
-        size_t hash = 5381;
-        while (int const c = static_cast<unsigned char>(*cstr++)) {
-            hash = (hash * 33u) ^ size_t(c);
-        }
-        return hash;
-    }
-};
 
 template <size_t N>
 using StringLiteral = const char[N];
@@ -79,12 +69,21 @@ public:
 
     // Allocates memory and appends a null. This constructor can be used to hold arbitrary data
     // inside the string (i.e. it can contain nulls or non-ASCII encodings).
+    // Note: If length exceeds the 32-bit maximum capacity of CString, it will be safely
+    // truncated to std::numeric_limits<size_type>::max().
     CString(const char* cstr, size_t length);
 
     // Allocates memory for a string of size length plus space for the null terminating character.
     // Also initializes the memory to 0. This constructor can be used to hold arbitrary data
     // inside the string.
+    // Note: If length exceeds the 32-bit maximum capacity of CString, it will be safely
+    // truncated to std::numeric_limits<size_type>::max().
     explicit CString(size_t length);
+
+    // Conversion from std::string_view
+    explicit CString(const std::string_view& str)
+        : CString(str.data(), str.size()) {
+    }
 
     // Allocates memory and copies traditional C string content. Unlike the above constructor, this
     // does not allow embedded nulls. This is explicit because this operation is costly.
@@ -338,13 +337,10 @@ public:
         return ptr;
     }
 
-    struct Hasher : private hashCStrings {
-        typedef CString argument_type;
-        typedef size_t result_type;
-        result_type operator()(const argument_type& s) const noexcept {
-            return hashCStrings::operator()(s.c_str());
-        }
-    };
+    // conversion to std::string_view
+    operator std::string_view() const noexcept {
+        return std::string_view{data(), size()};
+    }
 
 private:
     static void do_tracking(bool ctor);
@@ -360,6 +356,10 @@ private:
     friend io::ostream& operator<<(io::ostream& out, const CString& rhs);
 #endif
 
+#if defined(FILAMENT_USE_ABSEIL_LOGGING)
+    friend std::ostream& operator<<(std::ostream& out, const CString& rhs);
+#endif
+
     struct Data {
         size_type length;
     };
@@ -370,10 +370,12 @@ private:
         Data* mData; // Data is stored at mData[-1]
     };
 
+    int compare(const std::string_view& rhs) const noexcept {
+        return std::string_view{data(), size()}.compare(rhs);
+    }
+
     int compare(const CString& rhs) const noexcept {
-        auto const l = std::string_view{data(), size()};
-        auto const r = std::string_view{rhs.data(), rhs.size()};
-        return l.compare(r);
+        return compare(std::string_view{rhs.data(), rhs.size()});
     }
 
     friend bool operator==(CString const& lhs, CString const& rhs) noexcept {
@@ -392,6 +394,43 @@ private:
         return !(lhs < rhs);
     }
     friend bool operator<=(CString const& lhs, CString const& rhs) noexcept {
+        return !(lhs > rhs);
+    }
+
+    friend bool operator==(CString const& lhs, std::string_view const& rhs) noexcept {
+        return lhs.compare(rhs) == 0;
+    }
+    friend bool operator==(std::string_view const& lhs, CString const& rhs) noexcept {
+        return lhs.compare(rhs) == 0;
+    }
+    friend bool operator!=(CString const& lhs, std::string_view const& rhs) noexcept {
+        return !(lhs == rhs);
+    }
+    friend bool operator!=(std::string_view const& lhs, CString const& rhs) noexcept {
+        return !(lhs == rhs);
+    }
+    friend bool operator<(CString const& lhs, std::string_view const& rhs) noexcept {
+        return lhs.compare(rhs) < 0;
+    }
+    friend bool operator<(std::string_view const& lhs, CString const& rhs) noexcept {
+        return lhs.compare(rhs) < 0;
+    }
+    friend bool operator>(CString const& lhs, std::string_view const& rhs) noexcept {
+        return lhs.compare(rhs) > 0;
+    }
+    friend bool operator>(std::string_view const& lhs, CString const& rhs) noexcept {
+        return lhs.compare(rhs) > 0;
+    }
+    friend bool operator>=(CString const& lhs, std::string_view const& rhs) noexcept {
+        return !(lhs < rhs);
+    }
+    friend bool operator>=(std::string_view const& lhs, CString const& rhs) noexcept {
+        return !(lhs < rhs);
+    }
+    friend bool operator<=(CString const& lhs, std::string_view const& rhs) noexcept {
+        return !(lhs > rhs);
+    }
+    friend bool operator<=(std::string_view const& lhs, CString const& rhs) noexcept {
         return !(lhs > rhs);
     }
 };
@@ -503,5 +542,43 @@ private:
 };
 
 } // namespace utils
+
+// heterogeneous lookup support for associative containers
+namespace std {
+    template <>
+    struct hash<utils::CString> {
+        using is_transparent = void; // Enable heterogeneous lookup
+
+        size_t operator()(const utils::CString& k) const noexcept {
+            return compute_hash(std::string_view(k));
+        }
+
+        template <typename T, typename = std::enable_if_t<
+            std::is_convertible_v<T, std::string_view> &&
+            !std::is_same_v<std::decay_t<T>, utils::CString>>>
+        size_t operator()(const T& k) const noexcept {
+            return compute_hash(std::string_view(k));
+        }
+
+    private:
+        size_t compute_hash(std::string_view k) const noexcept {
+            size_t hash = 5381;
+            for (char const c : k) {
+                hash = (hash * 33u) ^ size_t(c);
+            }
+            return hash;
+        }
+    };
+
+    template<>
+    struct equal_to<utils::CString> {
+        using is_transparent = void; // Enable heterogeneous lookup
+
+        template <typename T, typename U>
+        bool operator()(const T& lhs, const U& rhs) const {
+            return lhs == rhs;
+        }
+    };
+}
 
 #endif // TNT_UTILS_CSTRING_H

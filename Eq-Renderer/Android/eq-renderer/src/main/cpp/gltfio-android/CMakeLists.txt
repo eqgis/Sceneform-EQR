@@ -6,6 +6,7 @@ option(FILAMENT_ENABLE_FGVIEWER "Enables Frame Graph Viewer" OFF)
 option(FILAMENT_ENABLE_MATDBG "Enables Material debugger" OFF)
 option(FILAMENT_DISABLE_MATOPT "Disables material optimizations" OFF)
 option(FILAMENT_SUPPORTS_WEBGPU "Enables WebGPU on Android" OFF)
+option(FILAMENT_SUPPORTS_WEBP_TEXTURES "Enable webp texture support on Android" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -30,6 +31,12 @@ set_target_properties(ktxreader PROPERTIES IMPORTED_LOCATION
 add_library(stb STATIC IMPORTED)
 set_target_properties(stb PROPERTIES IMPORTED_LOCATION
         ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libstb.a)
+
+if (FILAMENT_SUPPORTS_WEBP_TEXTURES)
+    add_library(webpdecoder STATIC IMPORTED)
+    set_target_properties(webpdecoder PROPERTIES IMPORTED_LOCATION
+            ${FILAMENT_DIR}/lib/${ANDROID_ABI}/libwebpdecoder.a)
+endif()
 
 add_library(basis_transcoder STATIC IMPORTED)
 set_target_properties(basis_transcoder PROPERTIES IMPORTED_LOCATION
@@ -81,6 +88,10 @@ set(GLTFIO_INCLUDE_DIRS
         ../libs/utils/include
         ../libs/ktxreader/include
 )
+
+if (FILAMENT_SUPPORTS_WEBP_TEXTURES)
+    list(APPEND GLTFIO_INCLUDE_DIRS ../../third_party/libwebp/src)
+endif()
 
 add_library(gltfio-jni STATIC ${GLTFIO_SRCS})
 

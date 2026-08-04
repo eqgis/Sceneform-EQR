@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#include <jni.h>
+#include "common/CallbackUtils.h"
 
 #include <filament/Engine.h>
 #include <filament/SwapChain.h>
 
-#include "common/CallbackUtils.h"
+#include <common/JniUtils.h>
+#include <jni.h>
 
 using namespace filament;
 
@@ -58,11 +59,13 @@ Java_com_google_android_filament_SwapChain_nSetFrameScheduledCallback(JNIEnv* en
         jlong nativeSwapChain, jobject handler, jobject runnable) {
     SwapChain* swapChain = (SwapChain*) nativeSwapChain;
     auto* callback = JniCallback::make(env, handler, runnable);
-    swapChain->setFrameScheduledCallback(callback->getHandler(),
-            [callback](backend::PresentCallable) {
-                // Ignore PresentCallable, which is only meaningful with the Metal backend.
-                JniCallback::postToJavaAndDestroy(callback);
-            });
+    filament::android::wrapJni<void>(env, [=]() {
+        swapChain->setFrameScheduledCallback(callback->getHandler(),
+                [callback](backend::PresentCallable) {
+                    // Ignore PresentCallable, which is only meaningful with the Metal backend.
+                    JniCallback::postToJavaAndDestroy(callback);
+                });
+    });
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -71,3 +74,22 @@ Java_com_google_android_filament_SwapChain_nIsFrameScheduledCallbackSet(
     SwapChain* swapChain = (SwapChain*) nativeSwapChain;
     return (jboolean)swapChain->isFrameScheduledCallbackSet();
 }
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_google_android_filament_SwapChain_nIsFrameRateChangeSupported(
+        JNIEnv *, jclass, jlong nativeSwapChain) {
+    SwapChain* swapChain = (SwapChain*) nativeSwapChain;
+    return (jboolean)swapChain->isFrameRateChangeSupported().is_true();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_SwapChain_nSetFrameRate(
+        JNIEnv *env, jclass, jlong nativeSwapChain, jfloat frameRate, jint compatibility, jint strategy) {
+    SwapChain* swapChain = (SwapChain*) nativeSwapChain;
+    filament::android::wrapJni(env, [=]() {
+        swapChain->setFrameRate(frameRate,
+                static_cast<SwapChain::FrameRateCompatibility>(compatibility),
+                static_cast<SwapChain::ChangeFrameRateStrategy>(strategy));
+    });
+}
+

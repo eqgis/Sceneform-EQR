@@ -71,6 +71,16 @@ import static com.google.android.filament.Texture.Type.COMPRESSED;
  * @see MaterialInstance#setParameter(String, Texture, TextureSampler)
  */
 public class Texture {
+
+    private static Class<?> HardwareBufferClass = null;
+
+    static {
+        try {
+            HardwareBufferClass = Class.forName("android.hardware.HardwareBuffer");
+        } catch (ClassNotFoundException ignored) {
+        }
+    }
+
     private static final Sampler[] sSamplerValues = Sampler.values();
     private static final InternalFormat[] sInternalFormatValues = InternalFormat.values();
 
@@ -786,6 +796,17 @@ public class Texture {
         }
 
         /**
+         * Specifies the number of samples for multisample anti-aliasing.
+         * @param samples number of samples, must be at least 1. Default is 1.
+         * @return This Builder, for chaining calls.
+         */
+        @NonNull
+        public Builder samples(@IntRange(from = 1) int samples) {
+            nBuilderSamples(mNativeBuilder, samples);
+            return this;
+        }
+
+        /**
          * Specifies the texture's internal format.
          * <p>The internal format specifies how texels are stored (which may be different from how
          * they're specified in {@link #setImage}). {@link InternalFormat InternalFormat} specifies
@@ -864,6 +885,8 @@ public class Texture {
          * @return A newly created <code>Texture</code>
          * @exception IllegalStateException if a parameter to a builder function was invalid.
          *            A mode detailed message about the error is output in the system log.
+         * @throws RuntimeException if a runtime error occurred, such as running out of
+         *            memory or other resources.
          */
         @NonNull
         public Texture build(@NonNull Engine engine) {
@@ -1093,57 +1116,6 @@ public class Texture {
     }
 
     /**
-     * <code>setImage</code> is used to specify all six images of a cubemap level and
-     * follows exactly the OpenGL conventions
-     *
-     *  <p>This <code>Texture</code> instance must use
-     *  {@link Sampler#SAMPLER_CUBEMAP SAMPLER_CUBEMAP}.</p>
-     *
-     * @param engine                {@link Engine} this texture is associated to. Must be the
-     *                              instance passed to {@link Builder#build Builder.build()}.
-     * @param level                 Level to set the image for. Must be less than {@link #getLevels()}.
-     * @param buffer                Client-side buffer containing the image to set.
-     *                              <code>buffer</code>'s {@link Format format} must match that
-     *                              of {@link #getFormat()}
-     * @param faceOffsetsInBytes    Offsets in bytes into <code>buffer</code> for all six images.
-     *                              The offsets are specified in the following order:
-     *                              +x, -x, +y, -y, +z, -z.
-     *
-     * <p><code>faceOffsetsInBytes</code> are offsets in byte in the <code>buffer</code> relative
-     * to the current {@link Buffer#position()}. Use {@link CubemapFace} to index the
-     * <code>faceOffsetsInBytes</code> array. All six faces must be tightly packed.</p>
-     *
-     * @exception BufferOverflowException if the specified parameters would result in reading
-     * outside of <code>buffer</code>.
-     *
-     * @see Builder#sampler
-     * @see PixelBufferDescriptor
-     * @deprecated use {@link #setImage(Engine, int, int, int, int, int, int, int, PixelBufferDescriptor)}
-     */
-     @Deprecated
-    public void setImage(@NonNull Engine engine, @IntRange(from = 0) int level,
-            @NonNull PixelBufferDescriptor buffer,
-            @NonNull @Size(min = 6) int[] faceOffsetsInBytes) {
-        int result;
-        if (buffer.type == COMPRESSED) {
-            result = nSetImageCubemapCompressed(getNativeObject(), engine.getNativeObject(), level,
-                    buffer.storage, buffer.storage.remaining(),
-                    buffer.left, buffer.top, buffer.type.ordinal(), buffer.alignment,
-                    buffer.compressedSizeInBytes, buffer.compressedFormat.ordinal(),
-                    faceOffsetsInBytes, buffer.handler, buffer.callback);
-        } else {
-            result = nSetImageCubemap(getNativeObject(), engine.getNativeObject(), level,
-                    buffer.storage, buffer.storage.remaining(),
-                    buffer.left, buffer.top, buffer.type.ordinal(), buffer.alignment,
-                    buffer.stride, buffer.format.ordinal(),
-                    faceOffsetsInBytes, buffer.handler, buffer.callback);
-        }
-        if (result < 0) {
-            throw new BufferOverflowException();
-        }
-    }
-
-    /**
      * Specifies the external image to associate with this <code>Texture</code>.
      *
      *  <p>This <code>Texture</code> instance must use
@@ -1171,6 +1143,38 @@ public class Texture {
     public void setExternalImage(@NonNull Engine engine, long eglImage) {
         nSetExternalImage(getNativeObject(), engine.getNativeObject(), eglImage);
     }
+
+    /**
+     * Specifies the external image to associate with this <code>Texture</code>.
+     *
+     * <p>Typically, the external image is OS specific, and can be a video or camera frame.
+     * There are many restrictions when using an external image as a texture, such as:</p>
+     * <ul>
+     *   <li> only the level of detail (lod) 0 can be specified</li>
+     *   <li> only nearest or linear filtering is supported</li>
+     *   <li> the size and format of the texture is defined by the external image</li>
+     *   <li> only the CLAMP_TO_EDGE wrap mode is supported</li>
+     * </ul>
+     *
+     * @param engine    {@link Engine} this texture is associated to. Must be the
+     *                  instance passed to {@link Builder#build Builder.build()}.
+     * @param externalImageRef An OS specific Object. On Android it must be a
+     *                         <code>android.hardware.HardwareBuffer</code>
+     */
+    public void setExternalImage(@NonNull Engine engine, Object externalImageRef) {
+        if (HardwareBufferClass != null) {
+            if (!HardwareBufferClass.isInstance(externalImageRef)) {
+                throw new IllegalArgumentException("externalImageRef must be a AHardwareBuffer");
+            }
+            if (!nSetExternalImageByAHB(getNativeObject(), engine.getNativeObject(), externalImageRef)) {
+                throw new IllegalStateException("Error setting AHardwareBuffer as external image");
+            }
+        } else {
+            throw new UnsupportedOperationException(
+                "setExternalImage(Engine, Object) not supported on this platform");
+        }
+    }
+
 
     /**
      * Specifies the external stream to associate with this <code>Texture</code>.
@@ -1328,6 +1332,7 @@ public class Texture {
     private static native void nBuilderFormat(long nativeBuilder, int format);
     private static native void nBuilderUsage(long nativeBuilder, int flags);
     private static native void nBuilderSwizzle(long nativeBuilder, int r, int g, int b, int a);
+    private static native void nBuilderSamples(long nativeBuilder, int samples);
     private static native void nBuilderImportTexture(long nativeBuilder, long id);
     private static native void nBuilderExternal(long nativeBuilder);
     private static native long nBuilderBuild(long nativeBuilder, long nativeEngine);
@@ -1351,18 +1356,10 @@ public class Texture {
             int compressedSizeInBytes, int compressedFormat,
             Object handler, Runnable callback);
 
-    private static native int nSetImageCubemap(long nativeTexture, long nativeEngine,
-            int level, Buffer storage, int remaining, int left, int top, int type,
-            int alignment, int stride, int format,
-            int[] faceOffsetsInBytes, Object handler, Runnable callback);
-
-    private static native int nSetImageCubemapCompressed(long nativeTexture, long nativeEngine,
-            int level, Buffer storage, int remaining, int left, int top, int type,
-            int alignment, int compressedSizeInBytes, int compressedFormat,
-            int[] faceOffsetsInBytes, Object handler, Runnable callback);
-
     private static native void nSetExternalImage(
             long nativeObject, long nativeEngine, long eglImage);
+
+    private static native boolean nSetExternalImageByAHB(long nativeTexture, long nativeObject, Object ahb);
 
     private static native void nSetExternalStream(long nativeTexture,
             long nativeEngine, long nativeStream);

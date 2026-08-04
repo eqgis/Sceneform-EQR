@@ -15,25 +15,32 @@
  */
 
 
-#include <jni.h>
+#include "common/CallbackUtils.h"
+#include "common/JniUtils.h"
+#include "common/NioUtils.h"
 
 #include <filament/Engine.h>
 #include <filament/Renderer.h>
 #include <filament/Viewport.h>
+
 #include <backend/PixelBufferDescriptor.h>
 
-#include "common/CallbackUtils.h"
-#include "common/NioUtils.h"
+#include <jni.h>
+
+#include <exception>
 
 using namespace filament;
 using namespace backend;
+using namespace filament::android;
 
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nSkipFrame(JNIEnv *, jclass, jlong nativeRenderer,
+Java_com_google_android_filament_Renderer_nSkipFrame(JNIEnv *env, jclass, jlong nativeRenderer,
         jlong vsyncSteadyClockTimeNano) {
     Renderer *renderer = (Renderer *) nativeRenderer;
-    renderer->skipFrame(uint64_t(vsyncSteadyClockTimeNano));
+    wrapJni(env, [=]() {
+        renderer->skipFrame(uint64_t(vsyncSteadyClockTimeNano));
+    });
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -43,37 +50,45 @@ Java_com_google_android_filament_Renderer_nShouldRenderFrame(JNIEnv *, jclass, j
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_google_android_filament_Renderer_nBeginFrame(JNIEnv *, jclass, jlong nativeRenderer,
+Java_com_google_android_filament_Renderer_nBeginFrame(JNIEnv *env, jclass, jlong nativeRenderer,
         jlong nativeSwapChain, jlong frameTimeNanos) {
     Renderer *renderer = (Renderer *) nativeRenderer;
     SwapChain *swapChain = (SwapChain *) nativeSwapChain;
-    return (jboolean) renderer->beginFrame(swapChain, uint64_t(frameTimeNanos));
+    return wrapJniBackend<jboolean>(env, [=]() {
+        return (jboolean) renderer->beginFrame(swapChain, uint64_t(frameTimeNanos));
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nEndFrame(JNIEnv *, jclass, jlong nativeRenderer) {
+Java_com_google_android_filament_Renderer_nEndFrame(JNIEnv *env, jclass, jlong nativeRenderer) {
     Renderer *renderer = (Renderer *) nativeRenderer;
-    renderer->endFrame();
+    wrapJniBackend(env, [=]() {
+        renderer->endFrame();
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nRender(JNIEnv *, jclass, jlong nativeRenderer,
+Java_com_google_android_filament_Renderer_nRender(JNIEnv *env, jclass, jlong nativeRenderer,
         jlong nativeView) {
     Renderer *renderer = (Renderer *) nativeRenderer;
     View *view = (View *) nativeView;
-    renderer->render(view);
+    wrapJniBackend(env, [=]() {
+        renderer->render(view);
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nRenderStandaloneView(JNIEnv *, jclass, jlong nativeRenderer,
+Java_com_google_android_filament_Renderer_nRenderStandaloneView(JNIEnv *env, jclass, jlong nativeRenderer,
         jlong nativeView) {
     Renderer *renderer = (Renderer *) nativeRenderer;
     View *view = (View *) nativeView;
-    renderer->renderStandaloneView(view);
+    wrapJni(env, [=]() {
+        renderer->renderStandaloneView(view);
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nCopyFrame(JNIEnv *, jclass, jlong nativeRenderer,
+Java_com_google_android_filament_Renderer_nCopyFrame(JNIEnv *env, jclass, jlong nativeRenderer,
         jlong nativeDstSwapChain,
         jint dstLeft, jint dstBottom, jint dstWidth, jint dstHeight,
         jint srcLeft, jint srcBottom, jint srcWidth, jint srcHeight,
@@ -82,7 +97,9 @@ Java_com_google_android_filament_Renderer_nCopyFrame(JNIEnv *, jclass, jlong nat
     SwapChain *dstSwapChain = (SwapChain *) nativeDstSwapChain;
     const filament::Viewport dstViewport {dstLeft, dstBottom, (uint32_t) dstWidth, (uint32_t) dstHeight};
     const filament::Viewport srcViewport {srcLeft, srcBottom, (uint32_t) srcWidth, (uint32_t) srcHeight};
-    renderer->copyFrame(dstSwapChain, dstViewport, srcViewport, (uint32_t) flags);
+    wrapJni(env, [=]() {
+        renderer->copyFrame(dstSwapChain, dstViewport, srcViewport, (uint32_t) flags);
+    });
 }
 
 extern "C" JNIEXPORT jint JNICALL
@@ -114,10 +131,11 @@ Java_com_google_android_filament_Renderer_nReadPixels(JNIEnv *env, jclass,
             (uint32_t) stride,
             callback->getHandler(), &JniBufferCallback::postToJavaAndDestroy, callback);
 
-    renderer->readPixels(uint32_t(xoffset), uint32_t(yoffset), uint32_t(width), uint32_t(height),
-            std::move(desc));
-
-    return 0;
+    return wrapJni<jint>(env, [&]() {
+        renderer->readPixels(uint32_t(xoffset), uint32_t(yoffset), uint32_t(width), uint32_t(height),
+                std::move(desc));
+        return 0;
+    });
 }
 
 extern "C" JNIEXPORT jint JNICALL
@@ -150,23 +168,36 @@ Java_com_google_android_filament_Renderer_nReadPixelsEx(JNIEnv *env, jclass,
             (uint32_t) stride,
             callback->getHandler(), &JniBufferCallback::postToJavaAndDestroy, callback);
 
-    renderer->readPixels(renderTarget,
-            uint32_t(xoffset), uint32_t(yoffset), uint32_t(width), uint32_t(height),
-            std::move(desc));
-
-    return 0;
+    return wrapJni<jint>(env, [&]() {
+        renderer->readPixels(renderTarget,
+                uint32_t(xoffset), uint32_t(yoffset), uint32_t(width), uint32_t(height),
+                std::move(desc));
+        return 0;
+    });
 }
 
 extern "C" JNIEXPORT jdouble JNICALL
-Java_com_google_android_filament_Renderer_nGetUserTime(JNIEnv*, jclass, jlong nativeRenderer) {
+Java_com_google_android_filament_Renderer_nGetMaterialTime(JNIEnv *env, jclass, jlong nativeRenderer) {
     Renderer *renderer = (Renderer *) nativeRenderer;
-    return renderer->getUserTime();
+    return wrapJni<jdouble>(env, [=]() {
+        return renderer->getMaterialTime();
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nResetUserTime(JNIEnv*, jclass, jlong nativeRenderer) {
+Java_com_google_android_filament_Renderer_nResetUserTime(JNIEnv *env, jclass, jlong nativeRenderer) {
     Renderer *renderer = (Renderer *) nativeRenderer;
-    renderer->resetUserTime();
+    wrapJni(env, [=]() {
+        renderer->resetUserTime();
+    });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_Renderer_nSetMaterialTimeEpoch(JNIEnv *env, jclass, jlong nativeRenderer, jlong monotonicClockNanos) {
+    Renderer *renderer = (Renderer *) nativeRenderer;
+    wrapJni(env, [=]() {
+        renderer->setMaterialTimeEpoch(monotonicClockNanos);
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -186,20 +217,51 @@ Java_com_google_android_filament_Renderer_nSetFrameRateOptions(JNIEnv*, jclass,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nSetClearOptions(JNIEnv *, jclass ,
-        jlong nativeRenderer, jfloat r, jfloat g, jfloat b, jfloat a,
-        jboolean clear, jboolean discard) {
+Java_com_google_android_filament_Renderer_nSetClearOptions(
+    JNIEnv* env, jclass, jlong nativeRenderer, jdouble r, jdouble g, jdouble b, jdouble a,
+    jboolean clear, jboolean discard) {
     Renderer *renderer = (Renderer *) nativeRenderer;
-    renderer->setClearOptions({ .clearColor = {r, g, b, a},
-                                .clear = (bool) clear,
-                                .discard = (bool) discard});
+    wrapJni(env, [=]() {
+        renderer->setClearOptions({ .clearColor = { r, g, b, a },
+                                    .clear = (bool) clear,
+                                    .discard = (bool) discard });
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_google_android_filament_Renderer_nSetPresentationTime(JNIEnv *, jclass ,
+Java_com_google_android_filament_Renderer_nSetPresentationTime(JNIEnv *env, jclass ,
     jlong nativeRenderer, jlong monotonicClockNanos) {
     Renderer *renderer = (Renderer *) nativeRenderer;
-    renderer->setPresentationTime(monotonicClockNanos);
+    wrapJni(env, [=]() {
+        renderer->setPresentationTime(monotonicClockNanos);
+    });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_Renderer_nSetDesiredPresentationTime(JNIEnv *env, jclass ,
+    jlong nativeRenderer, jlong monotonicClockNanos) {
+    Renderer *renderer = (Renderer *) nativeRenderer;
+    wrapJni(env, [=]() {
+        renderer->setDesiredPresentationTime(monotonicClockNanos);
+    });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_Renderer_nSetRenderingDeadline(JNIEnv *env, jclass ,
+    jlong nativeRenderer, jlong monotonicClockNanos) {
+    Renderer *renderer = (Renderer *) nativeRenderer;
+    wrapJni(env, [=]() {
+        renderer->setRenderingDeadline(std::chrono::steady_clock::time_point(std::chrono::nanoseconds(monotonicClockNanos)));
+    });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_Renderer_nSetFrameScheduleTime(JNIEnv *env, jclass ,
+    jlong nativeRenderer, jlong timeSteadyClockNano) {
+    Renderer *renderer = (Renderer *) nativeRenderer;
+    wrapJni(env, [=]() {
+        renderer->setFrameScheduleTime(timeSteadyClockNano);
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -223,4 +285,107 @@ Java_com_google_android_filament_Renderer_nGetFrameToSkipCount(JNIEnv *, jclass 
     jlong nativeRenderer) {
     Renderer *renderer = (Renderer *) nativeRenderer;
     return renderer->getFrameToSkipCount();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_google_android_filament_Renderer_nHasGpuFallenBehind(JNIEnv *env, jclass, jlong nativeRenderer) {
+    Renderer *renderer = (Renderer *) nativeRenderer;
+    return wrapJni<jboolean>(env, [=]() {
+        return (jboolean) renderer->hasGpuFallenBehind();
+    });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_google_android_filament_Renderer_nPauseRenderThread(JNIEnv *env, jclass, jlong nativeRenderer, jlong durationNanos) {
+    Renderer *renderer = (Renderer *) nativeRenderer;
+    wrapJni(env, [=]() {
+        renderer->pauseRenderThread(durationNanos);
+    });
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_google_android_filament_Renderer_nGetMaxFrameHistorySize(JNIEnv *env, jclass ,
+    jlong nativeRenderer) {
+    Renderer const* renderer = (Renderer const*) nativeRenderer;
+    return static_cast<jint>(renderer->getMaxFrameHistorySize());
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_google_android_filament_Renderer_nGetFrameInfoHistory(JNIEnv *env, jclass ,
+    jlong nativeRenderer, jobjectArray outHistory) {
+    Renderer const* renderer = (Renderer const*) nativeRenderer;
+
+    static const struct JniFrameInfoState {
+        jfieldID frameId;
+        jfieldID gpuFrameDuration;
+        jfieldID denoisedGpuFrameDuration;
+        jfieldID beginFrame;
+        jfieldID endFrame;
+        jfieldID backendBeginFrame;
+        jfieldID backendEndFrame;
+        jfieldID gpuFrameComplete;
+        jfieldID vsync;
+        jfieldID displayPresent;
+        jfieldID presentDeadline;
+        jfieldID displayPresentInterval;
+        jfieldID compositionToPresentLatency;
+        jfieldID expectedPresentLatency;
+        jfieldID frameScheduleTime;
+        explicit JniFrameInfoState(JNIEnv* env) noexcept {
+            jclass frameInfoClass = env->FindClass("com/google/android/filament/Renderer$FrameInfo");
+            frameId = env->GetFieldID(frameInfoClass, "frameId", "I");
+            gpuFrameDuration = env->GetFieldID(frameInfoClass, "gpuFrameDuration", "J");
+            denoisedGpuFrameDuration = env->GetFieldID(frameInfoClass, "denoisedGpuFrameDuration", "J");
+            beginFrame = env->GetFieldID(frameInfoClass, "beginFrame", "J");
+            endFrame = env->GetFieldID(frameInfoClass, "endFrame", "J");
+            backendBeginFrame = env->GetFieldID(frameInfoClass, "backendBeginFrame", "J");
+            backendEndFrame = env->GetFieldID(frameInfoClass, "backendEndFrame", "J");
+            gpuFrameComplete = env->GetFieldID(frameInfoClass, "gpuFrameComplete", "J");
+            vsync = env->GetFieldID(frameInfoClass, "vsync", "J");
+            displayPresent = env->GetFieldID(frameInfoClass, "displayPresent", "J");
+            presentDeadline = env->GetFieldID(frameInfoClass, "presentDeadline", "J");
+            displayPresentInterval = env->GetFieldID(frameInfoClass, "displayPresentInterval", "J");
+            compositionToPresentLatency = env->GetFieldID(frameInfoClass, "compositionToPresentLatency", "J");
+            expectedPresentLatency = env->GetFieldID(frameInfoClass, "expectedPresentLatency", "J");
+            frameScheduleTime = env->GetFieldID(frameInfoClass, "frameScheduleTime", "J");
+        }
+    } jniState(env);
+
+    jsize const arrayLength = env->GetArrayLength(outHistory);
+    if (arrayLength <= 0) {
+        return 0;
+    }
+
+    auto const history = renderer->getFrameInfoHistory(static_cast<size_t>(arrayLength));
+    jsize const count = static_cast<jsize>(history.size());
+
+    for (jsize i = 0; i < count; ++i) {
+        jobject obj = env->GetObjectArrayElement(outHistory, i);
+        if (!obj) {
+            continue;
+        }
+
+        auto const& info = history[i];
+        env->SetIntField(obj,  jniState.frameId, static_cast<jint>(info.frameId));
+        env->SetLongField(obj, jniState.gpuFrameDuration, info.gpuFrameDuration);
+        env->SetLongField(obj, jniState.denoisedGpuFrameDuration, info.denoisedGpuFrameDuration);
+        env->SetLongField(obj, jniState.beginFrame, info.beginFrame);
+        env->SetLongField(obj, jniState.endFrame, info.endFrame);
+        env->SetLongField(obj, jniState.backendBeginFrame, info.backendBeginFrame);
+        env->SetLongField(obj, jniState.backendEndFrame, info.backendEndFrame);
+        env->SetLongField(obj, jniState.gpuFrameComplete, info.gpuFrameComplete);
+        env->SetLongField(obj, jniState.vsync, info.vsync);
+        env->SetLongField(obj, jniState.displayPresent, info.displayPresent);
+        env->SetLongField(obj, jniState.presentDeadline, info.presentDeadline);
+        env->SetLongField(obj, jniState.displayPresentInterval, info.displayPresentInterval);
+        env->SetLongField(obj, jniState.compositionToPresentLatency, info.compositionToPresentLatency);
+        env->SetLongField(obj, jniState.expectedPresentLatency, info.expectedPresentLatency);
+        env->SetLongField(obj, jniState.frameScheduleTime, info.frameScheduleTime);
+
+        env->DeleteLocalRef(obj);
+    }
+
+    return count;
 }

@@ -28,6 +28,8 @@
 #include <utils/compiler.h>
 #include <utils/StaticString.h>
 
+#include <functional>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -61,6 +63,10 @@ class UTILS_PUBLIC VertexBuffer : public FilamentAPI {
 public:
     using AttributeType = backend::ElementType;
     using BufferDescriptor = backend::BufferDescriptor;
+    using AsyncCompletionCallback =
+            std::function<void(VertexBuffer* UTILS_NONNULL, void* UTILS_NULLABLE)>;
+    using AsyncCallId = backend::AsyncCallId;
+
 
     class Builder : public BuilderBase<BuilderDetails>, public BuilderNameMixin<Builder> {
         friend struct BuilderDetails;
@@ -139,12 +145,12 @@ public:
          * only to integer types.
          *
          * @param attribute Enum of the attribute to set the normalization flag to.
-         * @param normalize true to automatically normalize the given attribute.
+         * @param normalized true to automatically normalize the given attribute.
          * @return A reference to this Builder for chaining calls.
          *
          * This is a no-op if the \p attribute is an invalid enum.
          */
-        Builder& normalized(VertexAttribute attribute, bool normalize = true) noexcept;
+        Builder& normalized(VertexAttribute attribute, bool normalized = true) noexcept;
 
         /**
          * Sets advanced skinning mode. Bone data, indices and weights will be
@@ -187,6 +193,29 @@ public:
         Builder& name(utils::StaticString const& name) noexcept;
 
         /**
+         * Specifies a callback that will execute once the resource's data has been fully allocated
+         * within the GPU memory. This enables the resource creation process to be handled
+         * asynchronously.
+         *
+         * Any asynchronous calls made during a resource's asynchronous creation (using this method)
+         * are safe because they are queued and executed in sequence. However, invoking regular
+         * methods on the same resource before it's fully ready is unsafe and may cause undefined
+         * behavior. Users can call the `isCreationComplete()` method for the resource to confirm
+         * when the resource is ready for regular API calls.
+         *
+         * To use this method, the engine must be configured for asynchronous operation. Otherwise,
+         * calling async method will cause the program to terminate.
+         *
+         * @param handler Handler to dispatch the callback or nullptr for the default handler
+         * @param callback A function to be called upon the completion of an asynchronous creation.
+         * @param user The custom data that will be passed as the second argument to the `callback`.
+         * @return This Builder, for chaining calls.
+         */
+        Builder& async(backend::CallbackHandler* UTILS_NULLABLE handler,
+                AsyncCompletionCallback callback = nullptr,
+                void* UTILS_NULLABLE user = nullptr) noexcept;
+
+        /**
          * Creates the VertexBuffer object and returns a pointer to it.
          *
          * @param engine Reference to the filament::Engine to associate this VertexBuffer with.
@@ -197,7 +226,7 @@ public:
          *            memory or other resources.
          * @exception utils::PreConditionPanic if a parameter to a builder function was invalid.
          */
-        VertexBuffer* UTILS_NONNULL build(Engine& engine);
+        VertexBuffer* UTILS_NONNULL build(Engine& engine) const;
 
     private:
         friend class FVertexBuffer;
@@ -210,7 +239,7 @@ public:
     size_t getVertexCount() const noexcept;
 
     /**
-     * Asynchronously copy-initializes the specified buffer from the given buffer data.
+     * copy-initializes the specified buffer from the given buffer data.
      *
      * Do not use this if you called enableBufferObjects() on the Builder.
      *
@@ -227,6 +256,36 @@ public:
             uint32_t byteOffset = 0);
 
     /**
+     * An asynchronous version of `setBufferAt()`.
+     * Asynchronously copy-initializes the specified buffer from the given buffer data.
+     *
+     * Users can call the `Engine::cancelAsyncCall()` method with the returned ID to cancel the
+     * asynchronous call.
+     *
+     * To use this method, the engine must be configured for asynchronous operation. Otherwise,
+     * calling async method will cause the program to terminate.
+     *
+     * Do not use this if you called enableBufferObjects() on the Builder.
+     *
+     * @param engine Reference to the filament::Engine to associate this VertexBuffer with.
+     * @param bufferIndex Index of the buffer to initialize. Must be between 0
+     *                    and Builder::bufferCount() - 1.
+     * @param buffer A BufferDescriptor representing the data used to initialize the buffer at
+     *               index \p bufferIndex. BufferDescriptor points to raw, untyped data that will
+     *               be copied as-is into the buffer.
+     * @param byteOffset Offset in *bytes* into the buffer at index \p bufferIndex of this vertex
+     *                   buffer set.  Must be multiple of 4.
+     * @param handler Handler to dispatch the callback or nullptr for the default handler
+     * @param callback A function to be called upon the completion of an asynchronous creation.
+     * @param user The custom data that will be passed as the second argument to the `callback`.
+     *
+     * @return An ID that the caller can use to cancel the operation.
+     */
+    AsyncCallId setBufferAtAsync(Engine& engine, uint8_t bufferIndex, BufferDescriptor&& buffer,
+            uint32_t byteOffset, backend::CallbackHandler* UTILS_NULLABLE handler,
+            AsyncCompletionCallback callback, void* UTILS_NULLABLE user = nullptr);
+
+    /**
      * Swaps in the given buffer object.
      *
      * To use this, you must first call enableBufferObjects() on the Builder.
@@ -238,6 +297,45 @@ public:
      */
     void setBufferObjectAt(Engine& engine, uint8_t bufferIndex,
             BufferObject const*  UTILS_NONNULL bufferObject);
+
+    /**
+     * An asynchronous version of `setBufferObjectAt()`.
+     * Swaps in the given buffer object.
+     *
+     * Users can call the `Engine::cancelAsyncCall()` method with the returned ID to cancel the
+     * asynchronous call.
+     *
+     * To use this method, the engine must be configured for asynchronous operation. Otherwise,
+     * calling async method will cause the program to terminate.
+     *
+     * To use this, you must first call enableBufferObjects() on the Builder.
+     *
+     * @param engine Reference to the filament::Engine to associate this VertexBuffer with.
+     * @param bufferIndex Index of the buffer to initialize. Must be between 0
+     *                    and Builder::bufferCount() - 1.
+     * @param bufferObject The handle to the GPU data that will be used in this buffer slot.
+     * @param handler   Handler to dispatch the callback or nullptr for the default handler
+     * @param callback  A function to be called upon the completion of an asynchronous creation.
+     * @param user      The custom data that will be passed as the second argument to the `callback`.
+     *
+     * @return An ID that the caller can use to cancel the operation.
+     */
+    AsyncCallId setBufferObjectAtAsync(Engine& engine, uint8_t bufferIndex,
+            BufferObject const*  UTILS_NONNULL bufferObject,
+            backend::CallbackHandler* UTILS_NULLABLE handler,
+            AsyncCompletionCallback callback, void* UTILS_NULLABLE user = nullptr);
+
+    /**
+     * This non-blocking method checks if the resource has finished creation. If the resource
+     * creation was initiated asynchronously, it will return true only after all related
+     * asynchronous tasks are complete. If the resource was created normally without using async
+     * method, it will always return true.
+     *
+     * @return Whether the resource is created.
+     *
+     * @see Builder::async()
+     */
+    bool isCreationComplete() const noexcept;
 
 protected:
     // prevent heap allocation

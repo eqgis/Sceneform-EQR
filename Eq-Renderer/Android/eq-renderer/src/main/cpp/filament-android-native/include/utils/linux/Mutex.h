@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 namespace utils {
+namespace linuxutil {
 
 /*
  * A very simple mutex class that can be used as an (almost) drop-in replacement
@@ -31,13 +32,13 @@ namespace utils {
  * It is very low overhead as most of it is inlined.
  */
 
-class Mutex {
+class UTILS_CAPABILITY("mutex") Mutex {
 public:
     constexpr Mutex() noexcept = default;
     Mutex(const Mutex&) = delete;
     Mutex& operator=(const Mutex&) = delete;
 
-    void lock() noexcept {
+    void lock() noexcept UTILS_ACQUIRE() {
         uint32_t old_state = UNLOCKED;
         if (UTILS_UNLIKELY(!mState.compare_exchange_strong(old_state,
                 LOCKED, std::memory_order_acquire, std::memory_order_relaxed))) {
@@ -45,13 +46,21 @@ public:
         }
     }
 
-    void unlock() noexcept {
+    bool try_lock() noexcept UTILS_TRY_ACQUIRE(true) {
+        uint32_t old_state = UNLOCKED;
+        return mState.compare_exchange_strong(old_state,
+                LOCKED, std::memory_order_acquire, std::memory_order_relaxed);
+    }
+
+    void unlock() noexcept UTILS_RELEASE() {
         if (UTILS_UNLIKELY(mState.exchange(UNLOCKED, std::memory_order_release) == LOCKED_CONTENDED)) {
             wake();
         }
     }
 
 private:
+    friend class Condition;
+
     enum {
         UNLOCKED = 0, LOCKED = 1, LOCKED_CONTENDED = 2
     };
@@ -60,6 +69,12 @@ private:
     void wait() noexcept;
     void wake() noexcept;
 };
+
+} // namespace linuxutil
+
+#if !defined(UTILS_DEBUG_MUTEX) && !defined(FILAMENT_DEBUG_MUTEX)
+using Mutex = linuxutil::Mutex;
+#endif
 
 } // namespace utils
 

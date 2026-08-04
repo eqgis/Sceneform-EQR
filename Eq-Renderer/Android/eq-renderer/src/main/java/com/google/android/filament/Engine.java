@@ -206,6 +206,15 @@ public class Engine {
     };
 
     /**
+     * Three-state feature state.
+     */
+    public enum FeatureState {
+        FALSE,
+        TRUE,
+        INDETERMINATE
+    }
+
+    /**
      * Constructs <code>Engine</code> objects using a builder pattern.
      */
     public static class Builder {
@@ -306,14 +315,24 @@ public class Engine {
         }
 
         /**
+         * Sets the builder used to create the default ColorGrading object.
+         * @param colorGrading Builder used to create the default color grading.
+         * @return A reference to this Builder for chaining calls.
+         */
+        @NonNull
+        public Builder colorGrading(@NonNull ColorGrading.Builder colorGrading) {
+            nSetBuilderColorGrading(mNativeBuilder, colorGrading.getNativeBuilder());
+            return this;
+        }
+
+        /**
          * Creates an instance of Engine
          *
          * @return A newly created <code>Engine</code>, or <code>null</code> if the GPU driver couldn't
          *         be initialized, for instance if it doesn't support the right version of OpenGL or
          *         OpenGL ES.
          *
-         * @exception IllegalStateException can be thrown if there isn't enough memory to
-         * allocate the command buffer.
+         * @throws Error if there isn't enough memory to allocate the command buffer.
          */
         public Engine build() {
             long nativeEngine = nBuilderBuild(mNativeBuilder);
@@ -351,6 +370,11 @@ public class Engine {
         private static final long FILAMENT_MIN_COMMAND_BUFFERS_SIZE_IN_MB = 1;
         private static final long FILAMENT_COMMAND_BUFFER_SIZE_IN_MB =
                 FILAMENT_MIN_COMMAND_BUFFERS_SIZE_IN_MB * 3;
+
+        /**
+         * Special value for jobSystemThreadCount, forcing the JobSystem to be single-threaded.
+         */
+        public static final long SINGLE_THREADED = 0xFFFFFFFFL;
 
         /**
          * Size in MiB of the low-level command buffer arena.
@@ -619,6 +643,35 @@ public class Engine {
     }
 
     /**
+     * Asynchronously ensures that the variants of the specified Material required to render it
+     * in the provided View are compiled. This determines the necessary permutations of 
+     * feature flags based on the supplied View, and compiles the corresponding shader variants.
+     *
+     * See {@link Material#compile(Material.CompilerPriorityQueue, int, Object, Runnable)} for 
+     * important details about the compilation process, callback scheduling, priorities, and flushing the engine.
+     *
+     * @param priority       Which priority queue to use, LOW or HIGH.
+     * @param material       The Material whose variants will be compiled.
+     * @param view           The View in which the material will be rendered.
+     * @param shadowReceiver Indicates whether to compile variants where the material receives shadows.
+     *                       Use FeatureState.INDETERMINATE to compile both permutations.
+     * @param skinning       Indicates whether to compile variants with skinning.
+     *                       Use FeatureState.INDETERMINATE to compile both permutations.
+     * @param handler        An {@link java.util.concurrent.Executor Executor}. On Android this can also be a {@link android.os.Handler Handler}.
+     * @param callback       callback called on the main thread when the compilation is done
+     *                       by backend.
+     */
+    public void compile(@NonNull Material.CompilerPriorityQueue priority,
+                        @NonNull Material material,
+                        @NonNull View view,
+                        @NonNull FeatureState shadowReceiver,
+                        @NonNull FeatureState skinning,
+                        @Nullable Object handler,
+                        @Nullable Runnable callback) {
+        nCompile(getNativeObject(), priority.ordinal(), material.getNativeObject(), view.getNativeObject(), shadowReceiver.ordinal(), skinning.ordinal(), handler, callback);
+    }
+
+    /**
      * Destroy the <code>Engine</code> instance and all associated resources.
      * <p>
      * This method is one of the few thread-safe methods.
@@ -691,6 +744,8 @@ public class Engine {
      *
      * @return the active feature level.
      *
+     * @throws RuntimeException if the feature level cannot be set.
+     *
      * @see Builder#featureLevel
      * @see #getSupportedFeatureLevel
      * @see #getActiveFeatureLevel
@@ -735,6 +790,15 @@ public class Engine {
      */
     public boolean isAutomaticInstancingEnabled() {
         return nIsAutomaticInstancingEnabled(getNativeObject());
+    }
+
+    /**
+     * Returns whether the engine has encountered an unrecoverable failure.
+     *
+     * @return true if an unrecoverable failure has occurred, false otherwise.
+     */
+    public boolean hasUnrecoverableFailure() {
+        return nHasUnrecoverableFailure(getNativeObject());
     }
 
     /**
@@ -937,6 +1001,15 @@ public class Engine {
      */
     public boolean isValidSkinningBuffer(@NonNull SkinningBuffer object) {
         return nIsValidSkinningBuffer(getNativeObject(), object.getNativeObject());
+    }
+
+    /**
+     * Returns whether the object is valid.
+     * @param object Object to check for validity
+     * @return returns true if the specified object is valid.
+     */
+    public boolean isValidMorphTargetBuffer(@NonNull MorphTargetBuffer object) {
+        return nIsValidMorphTargetBuffer(getNativeObject(), object.getNativeObject());
     }
 
     /**
@@ -1193,6 +1266,15 @@ public class Engine {
     }
 
     /**
+     * Destroys a {@link MorphTargetBuffer} and frees all its associated resources.
+     * @param morphTargetBuffer the {@link MorphTargetBuffer} to destroy
+     */
+    public void destroyMorphTargetBuffer(@NonNull MorphTargetBuffer morphTargetBuffer) {
+        assertDestroy(nDestroyMorphTargetBuffer(getNativeObject(), morphTargetBuffer.getNativeObject()));
+        morphTargetBuffer.clearNativeObject();
+    }
+
+    /**
      * Destroys a {@link IndirectLight} and frees all its associated resources.
      * @param ibl the {@link IndirectLight} to destroy
      */
@@ -1205,9 +1287,10 @@ public class Engine {
      * Destroys a {@link Material} and frees all its associated resources.
      * <p>
      * All {@link MaterialInstance} of the specified {@link Material} must be destroyed before
-     * destroying it; if some {@link MaterialInstance} remain, this method fails silently.
+     * destroying it.
      *
      * @param material the {@link Material} to destroy
+     * @throws RuntimeException if some MaterialInstances remain.
      */
     public void destroyMaterial(@NonNull Material material) {
         assertDestroy(nDestroyMaterial(getNativeObject(), material.getNativeObject()));
@@ -1483,6 +1566,7 @@ public class Engine {
     private static native boolean nDestroyIndexBuffer(long nativeEngine, long nativeIndexBuffer);
     private static native boolean nDestroyVertexBuffer(long nativeEngine, long nativeVertexBuffer);
     private static native boolean nDestroySkinningBuffer(long nativeEngine, long nativeSkinningBuffer);
+    private static native boolean nDestroyMorphTargetBuffer(long nativeEngine, long nativeMorphTargetBuffer);
     private static native boolean nDestroyIndirectLight(long nativeEngine, long nativeIndirectLight);
     private static native boolean nDestroyMaterial(long nativeEngine, long nativeMaterial);
     private static native boolean nDestroyMaterialInstance(long nativeEngine, long nativeMaterialInstance);
@@ -1499,6 +1583,7 @@ public class Engine {
     private static native boolean nIsValidIndexBuffer(long nativeEngine, long nativeIndexBuffer);
     private static native boolean nIsValidVertexBuffer(long nativeEngine, long nativeVertexBuffer);
     private static native boolean nIsValidSkinningBuffer(long nativeEngine, long nativeSkinningBuffer);
+    private static native boolean nIsValidMorphTargetBuffer(long nativeEngine, long nativeMorphTargetBuffer);
     private static native boolean nIsValidIndirectLight(long nativeEngine, long nativeIndirectLight);
     private static native boolean nIsValidMaterial(long nativeEngine, long nativeMaterial);
     private static native boolean nIsValidMaterialInstance(long nativeEngine, long nativeMaterial, long nativeMaterialInstance);
@@ -1511,6 +1596,7 @@ public class Engine {
     private static native void nDestroyEntity(long nativeEngine, int entity);
     private static native boolean nFlushAndWait(long nativeEngine, long timeout);
     private static native void nFlush(long nativeEngine);
+    private static native void nCompile(long nativeEngine, int priority, long nativeMaterial, long nativeView, int shadowReceiver, int skinning, Object handler, Runnable callback);
     private static native boolean nIsPaused(long nativeEngine);
     private static native void nSetPaused(long nativeEngine, boolean paused);
     private static native void nUnprotected(long nativeEngine);
@@ -1521,6 +1607,7 @@ public class Engine {
     private static native long nGetEntityManager(long nativeEngine);
     private static native void nSetAutomaticInstancingEnabled(long nativeEngine, boolean enable);
     private static native boolean nIsAutomaticInstancingEnabled(long nativeEngine);
+    private static native boolean nHasUnrecoverableFailure(long nativeEngine);
     private static native long nGetMaxStereoscopicEyes(long nativeEngine);
     private static native int nGetSupportedFeatureLevel(long nativeEngine);
     private static native int nSetActiveFeatureLevel(long nativeEngine, int ordinal);
@@ -1546,5 +1633,6 @@ public class Engine {
     private static native void nSetBuilderSharedContext(long nativeBuilder, long sharedContext);
     private static native void nSetBuilderPaused(long nativeBuilder, boolean paused);
     private static native void nSetBuilderFeature(long nativeBuilder, String name, boolean value);
+    private static native void nSetBuilderColorGrading(long nativeBuilder, long nativeColorGradingBuilder);
     private static native long nBuilderBuild(long nativeBuilder);
 }

@@ -12,3 +12,7 @@
         filament版本：v1.67.1
         matc：v67
 
+2026年8月4日更新：
+    当前使用：
+        filament版本：v1.75.0
+        matc：v75

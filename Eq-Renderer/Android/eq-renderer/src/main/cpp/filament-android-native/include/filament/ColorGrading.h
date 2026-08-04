@@ -22,12 +22,15 @@
 #include <filament/FilamentAPI.h>
 #include <filament/ToneMapper.h>
 
+#include <backend/DriverEnums.h>
+
 #include <utils/compiler.h>
+#include <utils/FixedCapacityVector.h>
 
 #include <math/mathfwd.h>
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 namespace filament {
 
@@ -110,6 +113,21 @@ class ColorSpace;
 class UTILS_PUBLIC ColorGrading : public FilamentAPI {
     struct BuilderDetails;
 public:
+    /**
+     * Callback invoked during build() to export the generated LUT data.
+     *
+     * @param data Pointer to the generated LUT pixel data.
+     * @param size Total size in bytes of the data buffer.
+     * @param format Pixel data format.
+     * @param type Pixel data type.
+     * @param width LUT width.
+     * @param height LUT height.
+     * @param depth LUT depth.
+     * @param user Opaque user pointer provided when registering the callback.
+     */
+    using ExportCallback = void(*)(void const* UTILS_NONNULL data, size_t size,
+            backend::PixelDataFormat format, backend::PixelDataType type,
+            uint32_t width, uint32_t height, uint32_t depth, void* UTILS_NULLABLE user);
 
     enum class QualityLevel : uint8_t {
         LOW,
@@ -462,6 +480,22 @@ public:
         Builder& curves(math::float3 shadowGamma, math::float3 midPoint, math::float3 highlightScale) noexcept;
 
         /**
+         * Specifies a custom 3D color grading LUT to map the final sRGB color.
+         * The LUT is applied after post-processing and in LDR (sRGB space).
+         * The data must be a 3D array of float3 (RGB) values.
+         * The dimension does not need to be a power of two, but must be non-zero.
+         * The values are always interpolated (trilinear) because the input color from previous steps is continuous.
+         * The dimension doesn't need to match dimensions().
+         * If the dimension is 0 or the data is empty, the custom LUT is skipped (ignored).
+         *
+         * @param data FixedCapacityVector containing the custom LUT data (3D array of float3).
+         * @param dimension Dimension of the custom LUT.
+         *
+         * @return This Builder, for chaining calls
+         */
+        Builder& customLut(utils::FixedCapacityVector<math::float3> data, uint8_t dimension) noexcept;
+
+        /**
          * Sets the output color space for this ColorGrading object. After all color grading steps
          * have been applied, the final color will be converted in the desired color space.
          *
@@ -473,6 +507,27 @@ public:
          * @return This Builder, for chaining calls
          */
         Builder& outputColorSpace(const color::ColorSpace& colorSpace) noexcept;
+
+        /**
+         * Registers a callback to inspect or copy the generated LUT data during build().
+         *
+         * @param callback Function pointer invoked with the generated data and layout metadata.
+         * @param user Optional user data pointer passed to the callback.
+         * @return This Builder, for chaining calls.
+         */
+        Builder& exportLut(ExportCallback UTILS_NULLABLE callback, void* UTILS_NULLABLE user = nullptr) noexcept;
+
+        /**
+         * Hints whether the engine is permitted to use fast mathematical approximations (such as SIMD 
+         * polynomial transcendentals) during LUT generation when eligible.
+         *
+         * Setting fastMath to false forces exact C++ scalar libm calculations.
+         * The default is true.
+         *
+         * @param fastMath true to allow fast mathematical approximations, false otherwise.
+         * @return This Builder, for chaining calls.
+         */
+        Builder& fastMath(bool fastMath) noexcept;
 
         /**
          * Creates the ColorGrading object and returns a pointer to it.

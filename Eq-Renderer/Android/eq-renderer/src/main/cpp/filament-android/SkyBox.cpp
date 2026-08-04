@@ -19,6 +19,7 @@
 #include <filament/Skybox.h>
 
 #include <math/vec4.h>
+#include <common/JniUtils.h>
 
 using namespace filament;
 
@@ -63,12 +64,22 @@ Java_com_google_android_filament_Skybox_nBuilderColor(JNIEnv *,  jclass,
     builder->color({r, g, b, a});
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_google_android_filament_Skybox_nBuilderPriority(JNIEnv *,  jclass,
+        jlong nativeSkyBoxBuilder, jint priority) {
+    Skybox::Builder *builder = (Skybox::Builder *) nativeSkyBoxBuilder;
+    builder->priority(uint8_t(priority));
+}
+
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_google_android_filament_Skybox_nBuilderBuild(JNIEnv *env, jclass type,
         jlong nativeSkyBoxBuilder, jlong nativeEngine) {
     Skybox::Builder *builder = (Skybox::Builder *) nativeSkyBoxBuilder;
     Engine *engine = (Engine *) nativeEngine;
-    return (jlong) builder->build(*engine);
+    return filament::android::wrapJni<jlong>(env, [=]() {
+        return (jlong) builder->build(*engine);
+    });
 }
 
 extern "C" JNIEXPORT void JNICALL

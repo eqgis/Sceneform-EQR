@@ -26,17 +26,17 @@
 
 #include <utils/BitmaskEnum.h>
 #include <utils/CString.h>
+#include <utils/debug.h>
 #include <utils/FixedCapacityVector.h>
 #include <utils/Invocable.h>
 #include <utils/StaticString.h>
-#include <utils/debug.h>
 
 #include <math/vec4.h>
 
 #include <array>
+#include <string_view>
 #include <type_traits>
 #include <variant>
-#include <string_view>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -48,7 +48,7 @@ class ostream;
 /**
  * Types and enums used by filament's driver.
  *
- * Effectively these types are public but should not be used directly. Instead use public classes
+ * Effectively these types are public but should not be used directly. Instead, use public classes
  * internal redeclaration of these types.
  * For e.g. Use Texture::Sampler instead of filament::SamplerType.
  */
@@ -499,7 +499,7 @@ using descriptor_set_t = uint8_t;
 
 using descriptor_binding_t = uint8_t;
 
-struct DescriptorSetLayoutBinding {
+struct DescriptorSetLayoutDescriptor {
     static bool isSampler(DescriptorType type) noexcept {
         return int(type) <= int(DescriptorType::SAMPLER_EXTERNAL);
     }
@@ -513,8 +513,8 @@ struct DescriptorSetLayoutBinding {
     DescriptorFlags flags = DescriptorFlags::NONE;
     uint16_t count = 0;
 
-    friend bool operator==(DescriptorSetLayoutBinding const& lhs,
-            DescriptorSetLayoutBinding const& rhs) noexcept {
+    friend bool operator==(DescriptorSetLayoutDescriptor const& lhs,
+            DescriptorSetLayoutDescriptor const& rhs) noexcept {
         return lhs.type == rhs.type &&
                lhs.flags == rhs.flags &&
                lhs.count == rhs.count &&
@@ -826,6 +826,38 @@ enum class ElementType : uint8_t {
     HALF4,
 };
 
+constexpr std::string_view to_string(ElementType type) noexcept {
+    switch (type) {
+        case ElementType::BYTE:    return "BYTE";
+        case ElementType::BYTE2:   return "BYTE2";
+        case ElementType::BYTE3:   return "BYTE3";
+        case ElementType::BYTE4:   return "BYTE4";
+        case ElementType::UBYTE:   return "UBYTE";
+        case ElementType::UBYTE2:  return "UBYTE2";
+        case ElementType::UBYTE3:  return "UBYTE3";
+        case ElementType::UBYTE4:  return "UBYTE4";
+        case ElementType::SHORT:   return "SHORT";
+        case ElementType::SHORT2:  return "SHORT2";
+        case ElementType::SHORT3:  return "SHORT3";
+        case ElementType::SHORT4:  return "SHORT4";
+        case ElementType::USHORT:  return "USHORT";
+        case ElementType::USHORT2: return "USHORT2";
+        case ElementType::USHORT3: return "USHORT3";
+        case ElementType::USHORT4: return "USHORT4";
+        case ElementType::INT:     return "INT";
+        case ElementType::UINT:    return "UINT";
+        case ElementType::FLOAT:   return "FLOAT";
+        case ElementType::FLOAT2:  return "FLOAT2";
+        case ElementType::FLOAT3:  return "FLOAT3";
+        case ElementType::FLOAT4:  return "FLOAT4";
+        case ElementType::HALF:    return "HALF";
+        case ElementType::HALF2:   return "HALF2";
+        case ElementType::HALF3:   return "HALF3";
+        case ElementType::HALF4:   return "HALF4";
+    }
+    return "UNKNOWN";
+}
+
 //! Buffer object binding type
 enum class BufferObjectBinding : uint8_t {
     VERTEX,
@@ -1009,98 +1041,99 @@ enum class CompressedPixelDataType : uint16_t {
  *
  * @see Texture
  */
+// The [index] comments indicate the corresponding uint16_t values.
 enum class TextureFormat : uint16_t {
     // 8-bits per element
-    R8, R8_SNORM, R8UI, R8I, STENCIL8,
+    R8, R8_SNORM, R8UI, R8I, STENCIL8, // [0 - 4]
 
     // 16-bits per element
-    R16F, R16UI, R16I,
-    RG8, RG8_SNORM, RG8UI, RG8I,
-    RGB565,
-    RGB9_E5, // 9995 is actually 32 bpp but it's here for historical reasons.
-    RGB5_A1,
-    RGBA4,
-    DEPTH16,
+    R16F, R16UI, R16I, // [5 - 7]
+    RG8, RG8_SNORM, RG8UI, RG8I, // [8 - 11]
+    RGB565, // [12]
+    RGB9_E5, // 9995 is actually 32 bpp but it's here for historical reasons. [13]
+    RGB5_A1, // [14]
+    RGBA4, // [15]
+    DEPTH16, // [16]
 
     // 24-bits per element
-    RGB8, SRGB8, RGB8_SNORM, RGB8UI, RGB8I,
-    DEPTH24,
+    RGB8, SRGB8, RGB8_SNORM, RGB8UI, RGB8I, // [17 - 21]
+    DEPTH24, // [22]
 
     // 32-bits per element
-    R32F, R32UI, R32I,
-    RG16F, RG16UI, RG16I,
-    R11F_G11F_B10F,
-    RGBA8, SRGB8_A8,RGBA8_SNORM,
-    UNUSED, // used to be rgbm
-    RGB10_A2, RGBA8UI, RGBA8I,
-    DEPTH32F, DEPTH24_STENCIL8, DEPTH32F_STENCIL8,
+    R32F, R32UI, R32I, // [23 - 25]
+    RG16F, RG16UI, RG16I, // [26 - 28]
+    R11F_G11F_B10F, // [29]
+    RGBA8, SRGB8_A8,RGBA8_SNORM, // [30 - 32]
+    UNUSED, // used to be rgbm [33]
+    RGB10_A2, RGBA8UI, RGBA8I, // [34 - 36]
+    DEPTH32F, DEPTH24_STENCIL8, DEPTH32F_STENCIL8, // [37 - 39]
 
     // 48-bits per element
-    RGB16F, RGB16UI, RGB16I,
+    RGB16F, RGB16UI, RGB16I, // [40 - 42]
 
     // 64-bits per element
-    RG32F, RG32UI, RG32I,
-    RGBA16F, RGBA16UI, RGBA16I,
+    RG32F, RG32UI, RG32I, // [43 - 45]
+    RGBA16F, RGBA16UI, RGBA16I, // [46 - 48]
 
     // 96-bits per element
-    RGB32F, RGB32UI, RGB32I,
+    RGB32F, RGB32UI, RGB32I, // [49 - 51]
 
     // 128-bits per element
-    RGBA32F, RGBA32UI, RGBA32I,
+    RGBA32F, RGBA32UI, RGBA32I, // [52 - 54]
 
     // compressed formats
 
     // Mandatory in GLES 3.0 and GL 4.3
-    EAC_R11, EAC_R11_SIGNED, EAC_RG11, EAC_RG11_SIGNED,
-    ETC2_RGB8, ETC2_SRGB8,
-    ETC2_RGB8_A1, ETC2_SRGB8_A1,
-    ETC2_EAC_RGBA8, ETC2_EAC_SRGBA8,
+    EAC_R11, EAC_R11_SIGNED, EAC_RG11, EAC_RG11_SIGNED, // [55 - 58]
+    ETC2_RGB8, ETC2_SRGB8, // [59 - 60]
+    ETC2_RGB8_A1, ETC2_SRGB8_A1, // [61 - 62]
+    ETC2_EAC_RGBA8, ETC2_EAC_SRGBA8, // [63 - 64]
 
     // Available everywhere except Android/iOS
-    DXT1_RGB, DXT1_RGBA, DXT3_RGBA, DXT5_RGBA,
-    DXT1_SRGB, DXT1_SRGBA, DXT3_SRGBA, DXT5_SRGBA,
+    DXT1_RGB, DXT1_RGBA, DXT3_RGBA, DXT5_RGBA, // [65 - 68]
+    DXT1_SRGB, DXT1_SRGBA, DXT3_SRGBA, DXT5_SRGBA, // [69 - 72]
 
     // ASTC formats are available with a GLES extension
-    RGBA_ASTC_4x4,
-    RGBA_ASTC_5x4,
-    RGBA_ASTC_5x5,
-    RGBA_ASTC_6x5,
-    RGBA_ASTC_6x6,
-    RGBA_ASTC_8x5,
-    RGBA_ASTC_8x6,
-    RGBA_ASTC_8x8,
-    RGBA_ASTC_10x5,
-    RGBA_ASTC_10x6,
-    RGBA_ASTC_10x8,
-    RGBA_ASTC_10x10,
-    RGBA_ASTC_12x10,
-    RGBA_ASTC_12x12,
-    SRGB8_ALPHA8_ASTC_4x4,
-    SRGB8_ALPHA8_ASTC_5x4,
-    SRGB8_ALPHA8_ASTC_5x5,
-    SRGB8_ALPHA8_ASTC_6x5,
-    SRGB8_ALPHA8_ASTC_6x6,
-    SRGB8_ALPHA8_ASTC_8x5,
-    SRGB8_ALPHA8_ASTC_8x6,
-    SRGB8_ALPHA8_ASTC_8x8,
-    SRGB8_ALPHA8_ASTC_10x5,
-    SRGB8_ALPHA8_ASTC_10x6,
-    SRGB8_ALPHA8_ASTC_10x8,
-    SRGB8_ALPHA8_ASTC_10x10,
-    SRGB8_ALPHA8_ASTC_12x10,
-    SRGB8_ALPHA8_ASTC_12x12,
+    RGBA_ASTC_4x4, // [73]
+    RGBA_ASTC_5x4, // [74]
+    RGBA_ASTC_5x5, // [75]
+    RGBA_ASTC_6x5, // [76]
+    RGBA_ASTC_6x6, // [77]
+    RGBA_ASTC_8x5, // [78]
+    RGBA_ASTC_8x6, // [79]
+    RGBA_ASTC_8x8, // [80]
+    RGBA_ASTC_10x5, // [81]
+    RGBA_ASTC_10x6, // [82]
+    RGBA_ASTC_10x8, // [83]
+    RGBA_ASTC_10x10, // [84]
+    RGBA_ASTC_12x10, // [85]
+    RGBA_ASTC_12x12, // [86]
+    SRGB8_ALPHA8_ASTC_4x4, // [87]
+    SRGB8_ALPHA8_ASTC_5x4, // [88]
+    SRGB8_ALPHA8_ASTC_5x5, // [89]
+    SRGB8_ALPHA8_ASTC_6x5, // [90]
+    SRGB8_ALPHA8_ASTC_6x6, // [91]
+    SRGB8_ALPHA8_ASTC_8x5, // [92]
+    SRGB8_ALPHA8_ASTC_8x6, // [93]
+    SRGB8_ALPHA8_ASTC_8x8, // [94]
+    SRGB8_ALPHA8_ASTC_10x5, // [95]
+    SRGB8_ALPHA8_ASTC_10x6, // [96]
+    SRGB8_ALPHA8_ASTC_10x8, // [97]
+    SRGB8_ALPHA8_ASTC_10x10, // [98]
+    SRGB8_ALPHA8_ASTC_12x10, // [99]
+    SRGB8_ALPHA8_ASTC_12x12, // [100]
 
     // RGTC formats available with a GLES extension
-    RED_RGTC1,              // BC4 unsigned
-    SIGNED_RED_RGTC1,       // BC4 signed
-    RED_GREEN_RGTC2,        // BC5 unsigned
-    SIGNED_RED_GREEN_RGTC2, // BC5 signed
+    RED_RGTC1,              // BC4 unsigned [101]
+    SIGNED_RED_RGTC1,       // BC4 signed [102]
+    RED_GREEN_RGTC2,        // BC5 unsigned [103]
+    SIGNED_RED_GREEN_RGTC2, // BC5 signed [104]
 
     // BPTC formats available with a GLES extension
-    RGB_BPTC_SIGNED_FLOAT,  // BC6H signed
-    RGB_BPTC_UNSIGNED_FLOAT,// BC6H unsigned
-    RGBA_BPTC_UNORM,        // BC7
-    SRGB_ALPHA_BPTC_UNORM,  // BC7 sRGB
+    RGB_BPTC_SIGNED_FLOAT,  // BC6H signed [105]
+    RGB_BPTC_UNSIGNED_FLOAT,// BC6H unsigned [106]
+    RGBA_BPTC_UNORM,        // BC7 [107]
+    SRGB_ALPHA_BPTC_UNORM,  // BC7 sRGB [108]
 };
 
 TextureType getTextureType(TextureFormat format) noexcept;
@@ -1140,6 +1173,19 @@ constexpr bool isDepthFormat(TextureFormat format) noexcept {
         case TextureFormat::DEPTH16:
         case TextureFormat::DEPTH32F_STENCIL8:
         case TextureFormat::DEPTH24_STENCIL8:
+            return true;
+        default:
+            return false;
+    }
+}
+
+//! returns whether this format a 32-bit float format
+constexpr bool isFp32ColorFormat(TextureFormat format) noexcept {
+    switch (format) {
+        case TextureFormat::R32F:
+        case TextureFormat::RG32F:
+        case TextureFormat::RGB32F:
+        case TextureFormat::RGBA32F:
             return true;
         default:
             return false;
@@ -1385,7 +1431,7 @@ static_assert(sizeof(SamplerParams) <= sizeof(uint64_t),
 
 struct DescriptorSetLayout {
     std::variant<utils::StaticString, utils::CString, std::monostate> label;
-    utils::FixedCapacityVector<DescriptorSetLayoutBinding> bindings;
+    utils::FixedCapacityVector<DescriptorSetLayoutDescriptor> descriptors;
 };
 
 //! blending equation function
@@ -1569,6 +1615,14 @@ struct RenderPassFlags {
     TargetBufferFlags discardEnd;
 };
 
+// A clear-color value for a color attachment, stored as four doubles. The actual type family
+// (float / signed-int / unsigned-int) is inferred from the attachment's TextureFormat at clear
+// time, and the doubles are converted as-is into the matching GL/Vulkan/Metal/WebGPU call.
+// The caller must put a value into this double4 that is meaningful for the attachment family --
+// e.g., for a UINT attachment, put a value in [0, UINT32_MAX]. int32/uint32 round-trip through a
+// double exactly because double has a 53-bit mantissa.
+using ClearColorValue = math::double4;
+
 /**
  * Parameters of a render pass.
  */
@@ -1578,8 +1632,11 @@ struct RenderPassParams {
     Viewport viewport{};        //!< viewport for this pass
     DepthRange depthRange{};    //!< depth range for this pass
 
-    //! Color to use to clear the COLOR buffer. RenderPassFlags::clear must be set.
-    math::float4 clearColor = {};
+    //! Value used to clear the COLOR attachments. RenderPassFlags::clear must be set.
+    //! For integer-format attachments, put a value in the matching range (e.g., values in
+    //! [0, UINT32_MAX] for a UINT attachment); the backend converts the doubles as-is into the
+    //! matching native clear entry-point based on the attachment's TextureFormat.
+    ClearColorValue clearColor{};
 
     //! Depth value to clear the depth buffer with
     double clearDepth = 0.0;
@@ -1712,6 +1769,14 @@ using StereoscopicType = Platform::StereoscopicType;
 using FrameTimestamps = Platform::FrameTimestamps;
 
 using CompositorTiming = Platform::CompositorTiming;
+
+using AsynchronousMode = Platform::AsynchronousMode;
+
+using AsyncCallId = uint32_t;
+
+static constexpr AsyncCallId InvalidAsyncCallId = std::numeric_limits<AsyncCallId>::max();
+
+using AsynchronousMode = Platform::AsynchronousMode;
 
 } // namespace filament::backend
 

@@ -16,7 +16,6 @@
 
 #include <jni.h>
 
-#include <functional>
 #include <stdlib.h>
 #include <string.h>
 
@@ -24,6 +23,7 @@
 
 #include "common/CallbackUtils.h"
 #include "common/NioUtils.h"
+#include <common/JniUtils.h>
 
 using namespace filament;
 using namespace backend;
@@ -58,13 +58,36 @@ Java_com_google_android_filament_MorphTargetBuffer_nBuilderCount(JNIEnv*, jclass
     builder->count((size_t) count);
 }
 
+extern "C" JNIEXPORT void JNICALL
+        Java_com_google_android_filament_MorphTargetBuffer_nBuilderWithPositions(JNIEnv*, jclass,
+                jlong nativeBuilder, jboolean enabled) {
+    MorphTargetBuffer::Builder* builder = (MorphTargetBuffer::Builder*) nativeBuilder;
+    builder->withPositions(enabled);
+}
+
+extern "C" JNIEXPORT void JNICALL
+        Java_com_google_android_filament_MorphTargetBuffer_nBuilderWithTangents(JNIEnv*, jclass,
+                jlong nativeBuilder, jboolean enabled) {
+    MorphTargetBuffer::Builder* builder = (MorphTargetBuffer::Builder*) nativeBuilder;
+    builder->withTangents(enabled);
+}
+
+extern "C" JNIEXPORT void JNICALL
+        Java_com_google_android_filament_MorphTargetBuffer_nBuilderEnableCustomMorphing(JNIEnv*,
+                jclass, jlong nativeBuilder, jboolean enabled) {
+    MorphTargetBuffer::Builder* builder = (MorphTargetBuffer::Builder*) nativeBuilder;
+    builder->enableCustomMorphing(enabled);
+}
+
 extern "C"
 JNIEXPORT jlong JNICALL
-Java_com_google_android_filament_MorphTargetBuffer_nBuilderBuild(JNIEnv*, jclass,
+Java_com_google_android_filament_MorphTargetBuffer_nBuilderBuild(JNIEnv* env, jclass,
         jlong nativeBuilder, jlong nativeEngine) {
     MorphTargetBuffer::Builder* builder = (MorphTargetBuffer::Builder *) nativeBuilder;
     Engine *engine = (Engine *) nativeEngine;
-    return (jlong) builder->build(*engine);
+    return filament::android::wrapJni<jlong>(env, [=]() {
+        return (jlong) builder->build(*engine);
+    });
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -76,11 +99,13 @@ Java_com_google_android_filament_MorphTargetBuffer_nSetPositionsAt(JNIEnv* env, 
         jint targetIndex, jfloatArray positions, jint count) {
     MorphTargetBuffer *morphTargetBuffer = (MorphTargetBuffer *) nativeObject;
     Engine *engine = (Engine *) nativeEngine;
-    jfloat* data = env->GetFloatArrayElements(positions, NULL);
-    morphTargetBuffer->setPositionsAt(*engine, targetIndex,
-            (math::float4*) data, size_t(count));
-    env->ReleaseFloatArrayElements(positions, data, JNI_ABORT);
-    return 0;
+    return filament::android::wrapJni<jint>(env, [=]() {
+        jfloat* data = env->GetFloatArrayElements(positions, NULL);
+        morphTargetBuffer->setPositionsAt(*engine, targetIndex,
+                (math::float4*) data, size_t(count));
+        env->ReleaseFloatArrayElements(positions, data, JNI_ABORT);
+        return 0;
+    });
 }
 
 extern "C"
@@ -90,11 +115,13 @@ Java_com_google_android_filament_MorphTargetBuffer_nSetTangentsAt(JNIEnv* env, j
         jint targetIndex, jshortArray tangents, jint count) {
     MorphTargetBuffer *morphTargetBuffer = (MorphTargetBuffer *) nativeObject;
     Engine *engine = (Engine *) nativeEngine;
-    jshort* data = env->GetShortArrayElements(tangents, NULL);
-    morphTargetBuffer->setTangentsAt(*engine, targetIndex,
-            (math::short4*) data, size_t(count));
-    env->ReleaseShortArrayElements(tangents, data, JNI_ABORT);
-    return 0;
+    return filament::android::wrapJni<jint>(env, [=]() {
+        jshort* data = env->GetShortArrayElements(tangents, NULL);
+        morphTargetBuffer->setTangentsAt(*engine, targetIndex,
+                (math::short4*) data, size_t(count));
+        env->ReleaseShortArrayElements(tangents, data, JNI_ABORT);
+        return 0;
+    });
 }
 
 extern "C"
@@ -111,4 +138,25 @@ Java_com_google_android_filament_MorphTargetBuffer_nGetCount(JNIEnv*, jclass,
         jlong nativeObject) {
     MorphTargetBuffer *morphTargetBuffer = (MorphTargetBuffer *) nativeObject;
     return (jint)morphTargetBuffer->getCount();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+        Java_com_google_android_filament_MorphTargetBuffer_nHasPositions(JNIEnv*, jclass,
+                jlong nativeObject) {
+    MorphTargetBuffer* morphTargetBuffer = (MorphTargetBuffer*) nativeObject;
+    return (jboolean) morphTargetBuffer->hasPositions();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+        Java_com_google_android_filament_MorphTargetBuffer_nHasTangents(JNIEnv*, jclass,
+                jlong nativeObject) {
+    MorphTargetBuffer* morphTargetBuffer = (MorphTargetBuffer*) nativeObject;
+    return (jboolean) morphTargetBuffer->hasTangents();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+        Java_com_google_android_filament_MorphTargetBuffer_nIsCustomMorphingEnabled(JNIEnv*, jclass,
+                jlong nativeObject) {
+    MorphTargetBuffer* morphTargetBuffer = (MorphTargetBuffer*) nativeObject;
+    return (jboolean) morphTargetBuffer->isCustomMorphingEnabled();
 }

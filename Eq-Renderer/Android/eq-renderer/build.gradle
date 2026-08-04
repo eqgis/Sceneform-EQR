@@ -12,8 +12,8 @@ android {
         minSdk versions.minSdk
         targetSdk versions.targetSdk
         compileSdk versions.compileSdk
-        versionCode 12
-        versionName "1.2.0"
+        versionCode 13
+        versionName "1.2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -86,7 +86,7 @@ ext {
 
     PUBLISH_ARTIFACT_ID = 'eq-renderer'//自定义名
 
-    PUBLISH_VERSION = '1.2.0'//版本号，每一次更新迭代升级版本
+    PUBLISH_VERSION = '1.2.1'//版本号，每一次更新迭代升级版本
 }
 
 afterEvaluate {

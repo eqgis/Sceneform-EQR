@@ -26,6 +26,8 @@
 
 #include <math/vec4.h>
 
+#include <chrono>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -107,14 +109,17 @@ public:
         time_point_ns presentDeadline;      //!< deadline for queuing a frame [ns]
         duration_ns displayPresentInterval; //!< display refresh rate [ns]
         duration_ns compositionToPresentLatency; //!< time between the start of composition and the expected present time [ns]
-        time_point_ns expectedPresentTime;  //!< system's expected presentation time since epoch [ns]
+        duration_ns expectedPresentLatency; //!< time between vsync and the system's expected presentation time [ns]
+        time_point_ns frameScheduleTime;    //!< frame scheduling callback entry time since epoch [ns]
     };
 
     /**
      * Retrieve a history of frame timing information. The maximum frame history size is
      * given by getMaxFrameHistorySize().
+     * All or part of the history can be lost when using a different SwapChain in beginFrame().
      * @param historySize requested history size. The returned vector could be smaller.
      * @return A vector of FrameInfo.
+     * @see beginFrame()
      */
     utils::FixedCapacityVector<FrameInfo> getFrameInfoHistory(
             size_t historySize = 1) const noexcept;
@@ -159,10 +164,16 @@ public:
      */
     struct ClearOptions {
         /**
-         * Color (sRGB linear) to use to clear the RenderTarget (typically the SwapChain).
+         * Color to use to clear the RenderTarget (typically the SwapChain).
          *
          * The RenderTarget is cleared using this color, which won't be tone-mapped since
          * tone-mapping is part of View rendering (this is not).
+         *
+         * The value is stored as four doubles. The backend converts them as-is into the
+         * matching native clear entry-point based on the attachment's format -- so the
+         * caller is responsible for putting a value here that makes sense for the
+         * attachment family (e.g. for a UINT attachment, a value in [0, UINT32_MAX]).
+         * int32_t / uint32_t values round-trip exactly because double has a 53-bit mantissa.
          *
          * When a View is rendered, there are 3 scenarios to consider:
          * - Pixels rendered by the View replace the clear color (or blend with it in
@@ -178,7 +189,7 @@ public:
          * For consistency, it is recommended to always use a Skybox to clear an opaque View's
          * background, or to use black or fully-transparent (i.e. {0,0,0,0}) as the clear color.
          */
-        math::float4 clearColor = {};
+        math::double4 clearColor = {};
 
         /** Value to clear the stencil buffer */
         uint8_t clearStencil = 0u;
@@ -232,7 +243,7 @@ public:
      *
      * @return A constant pointer to the Engine instance this Renderer is associated to.
      */
-    inline Engine const* UTILS_NONNULL getEngine() const noexcept {
+    Engine const* UTILS_NONNULL getEngine() const noexcept {
         return const_cast<Renderer *>(this)->getEngine();
     }
 
@@ -296,8 +307,10 @@ public:
      * This is a convenience method that returns the same value as beginFrame().
      *
      * @return
-     *      *false* the current frame should be skipped,
+     *      *false* the current frame should be skipped, or an unrecoverable backend exception has occurred.
      *      *true* the current frame can be rendered
+     *
+     * @note This method will return false once a backend exception has been delivered to the main thread.
      *
      * @see
      * beginFrame()
@@ -326,6 +339,8 @@ public:
      *                                 or 0 if unknown. This value should be the timestamp of
      *                                 the last h/w vsync. It is expressed in the
      *                                 std::chrono::steady_clock time base.
+     *                                 On Android this should be the frame time received from
+     *                                 a Choreographer.
      * @param swapChain A pointer to the SwapChain instance to use.
      *
      * @return
@@ -337,6 +352,12 @@ public:
      *
      * @note
      * All calls to render() must happen *after* beginFrame().
+     * It is recommended to use the same swapChain for every call to beginFrame, failing to do
+     * so can result is losing all or part of the FrameInfo history.
+     *
+     * @throws std::exception (or derived) if the backend thread encountered an unrecoverable error (when exceptions are enabled).
+     *
+     * @note This method will return false if called again after a backend exception was already thrown and delivered to the main thread.
      *
      * @see
      * endFrame()
@@ -345,18 +366,76 @@ public:
             uint64_t vsyncSteadyClockTimeNano = 0u);
 
     /**
-     * Set the time at which the frame must be presented to the display.
+     * Set the time at which the frame must be presented to the display hardware.
      *
-     * This must be called between beginFrame() and endFrame().
+     * This value is used to configure the hardware and must typically be strictly smaller than the
+     * desired presentation time (i.e. it must include some headroom but not too much). For instance,
+     * on Android, it is typically set to desired_presentation_time - vsync_period / 2. This behavior
+     * can vary on other platforms.
      *
-     * @param monotonic_clock_ns  the time in nanoseconds corresponding to the system monotonic up-time clock.
-     *                            the presentation time is typically set in the middle of the period
-     *                            of interest. The presentation time cannot be too far in the
-     *                            future because it is limited by how many buffers are available in
-     *                            the display sub-system. Typically it is set to 1 or 2 vsync periods
-     *                            away.
+     * This must be called before endFrame().
+     *
+     * @param monotonic_clock_ns  the presentation configuration timestamp in nanoseconds on the steady clock.
      */
     void setPresentationTime(int64_t monotonic_clock_ns);
+
+    /**
+     * Set the time at which the frame must be presented to the display hardware using a strong steady clock time point.
+     *
+     * This value is used to configure the hardware and must typically be strictly smaller than the
+     * desired presentation time (i.e. it must include some headroom but not too much). For instance,
+     * on Android, it is typically set to desired_presentation_time - vsync_period / 2. This behavior
+     * can vary on other platforms.
+     *
+     * This must be called before endFrame().
+     *
+     * @param monotonic_clock  the presentation configuration time point on the steady clock.
+     */
+    void setPresentationTime(std::chrono::steady_clock::time_point monotonic_clock);
+
+    /**
+     * Set the real desired presentation time targeted for this frame.
+     *
+     * Unlike setPresentationTime(), which configures hardware headroom, this is the exact target
+     * presentation time and is used for FrameInfo frame history reporting.
+     *
+     * This must be called before endFrame().
+     *
+     * @param monotonic_clock_ns  the desired presentation timestamp in nanoseconds on the steady clock.
+     */
+    void setDesiredPresentationTime(int64_t monotonic_clock_ns);
+
+    /**
+     * Set the real desired presentation time targeted for this frame.
+     *
+     * Unlike setPresentationTime(), which configures hardware headroom, this is the exact target
+     * presentation time and is used for FrameInfo frame history reporting.
+     *
+     * This must be called before endFrame().
+     *
+     * @param monotonic_clock  the desired presentation time point on the steady clock.
+     */
+    void setDesiredPresentationTime(std::chrono::steady_clock::time_point monotonic_clock);
+
+    /**
+     * Set the deadline time point on the steady clock by which CPU and GPU rendering must complete
+     * for the buffer to meet its target display latching window.
+     *
+     * This must be called before endFrame().
+     *
+     * @param monotonic_clock_ns  the deadline timestamp in nanoseconds on the steady clock.
+     */
+    void setRenderingDeadline(int64_t monotonic_clock_ns);
+
+    /**
+     * Set the deadline time point on the steady clock by which CPU and GPU rendering must complete
+     * for the buffer to meet its target display latching window.
+     *
+     * This must be called before endFrame().
+     *
+     * @param monotonic_clock  the deadline time point on the steady clock.
+     */
+    void setRenderingDeadline(std::chrono::steady_clock::time_point monotonic_clock);
 
     /**
      * Render a View into this renderer's window.
@@ -407,6 +486,9 @@ public:
      *
      * @remark
      * render() is typically called once per frame (but not necessarily).
+     *
+     * @throws std::exception (or derived) if the backend thread encountered an unrecoverable error (when exceptions are enabled).
+     * @throws utils::Panic if called again after a backend exception was already thrown.
      *
      * @see
      * beginFrame(), endFrame(), View
@@ -499,6 +581,9 @@ public:
      * All calls to render() must happen *before* endFrame(). endFrame() must be called if
      * beginFrame() returned true, otherwise, endFrame() must not be called unless the caller
      * ignored beginFrame()'s return value.
+     *
+     * @throws std::exception (or derived) if the backend thread encountered an unrecoverable error (when exceptions are enabled).
+     * @throws utils::Panic if called again after a backend exception was already thrown.
      *
      * @see
      * beginFrame()
@@ -601,24 +686,25 @@ public:
 
 
     /**
-     * Returns the time in second of the last call to beginFrame(). This value is constant for all
-     * views rendered during a frame. The epoch is set with resetUserTime().
+     * Returns the material time in seconds evaluated for the current frame. This value is constant for all
+     * views rendered during a frame. When available, this time is projected forward to the predicted
+     * presentation time on the display; otherwise, it evaluates at the vsync time of beginFrame().
+     * The epoch is set with setMaterialTimeEpoch().
      *
      * In materials, this value can be queried using `vec4 getUserTime()`. The value returned
      * is a highp vec4 encoded as follows:
      *
-     *      time.x = (float)Renderer.getUserTime();
-     *      time.y = Renderer.getUserTime() - time.x;
+     *      time.x = (float)Renderer.getMaterialTime();
+     *      time.y = Renderer.getMaterialTime() - time.x;
      *
      * It follows that the following invariants are true:
      *
-     *      (double)time.x + (double)time.y == Renderer.getUserTime()
-     *      time.x == (float)Renderer.getUserTime()
+     *      (double)time.x + (double)time.y == Renderer.getMaterialTime()
+     *      time.x == (float)Renderer.getMaterialTime()
      *
-     * This encoding allows the shader code to perform high precision (i.e. double) time
-     * calculations when needed despite the lack of double precision in the shader, for e.g.:
-     *
-     *      To compute (double)time * vertex in the material, use the following construct:
+     * This "float-float" encoding allows the shader code to perform high precision (i.e. double) time
+     * calculations when needed despite the lack of double precision in the shader (e.g. using Dekker's
+     * algorithms). For example, to compute (double)time * vertex in the material, use the following construct:
      *
      *              vec3 result = time.x * vertex + time.y * vertex;
      *
@@ -633,42 +719,116 @@ public:
      *         77h      |   1/60s
      *
      *
-     * In other words, it only possible to get microsecond accuracy for about 16s or millisecond
+     * In other words, it is only possible to get microsecond accuracy for about 16s or millisecond
      * accuracy for just under 5h.
      *
-     * This problem can be mitigated by calling resetUserTime(), or using high precision time as
+     * This problem can be mitigated by calling setMaterialTimeEpoch(), or using high precision time as
      * described above.
      *
-     * @return The time is seconds since resetUserTime() was last called.
+     * @return The time in seconds since setMaterialTimeEpoch() was last called.
      *
      * @see
-     * resetUserTime()
+     * setMaterialTimeEpoch()
      */
-    double getUserTime() const;
+    double getMaterialTime() const;
 
     /**
-     * Sets the user time epoch to now, i.e. resets the user time to zero.
+     * Backward compatibility helper for getUserTime().
+     * @deprecated Use getMaterialTime() instead.
+     */
+    inline double getUserTime() const {
+        return getMaterialTime();
+    }
+
+    /**
+     * Sets the material time epoch to the specified steady clock timestamp in nanoseconds, i.e. resets
+     * the material time to zero relative to that time.
      *
-     * Use this method used to keep the precision of time high in materials, in practice it should
+     * Use this method to keep the precision of time high in materials, in practice it should
      * be called at least when the application is paused, e.g. Activity.onPause() in Android.
      *
+     * @param monotonic_clock_ns  the steady clock timestamp in nanoseconds to set as the material time epoch.
+     *
      * @see
-     * getUserTime()
+     * getMaterialTime()
      */
-    void resetUserTime();
+    void setMaterialTimeEpoch(int64_t monotonic_clock_ns);
+
+    /**
+     * Sets the material time epoch to the specified steady clock time point, i.e. resets
+     * the material time to zero relative to that time point.
+     *
+     * Use this method to keep the precision of time high in materials, in practice it should
+     * be called at least when the application is paused, e.g. Activity.onPause() in Android.
+     *
+     * @param monotonic_clock  the time point on the steady clock to set as the material time epoch.
+     *
+     * @see
+     * getMaterialTime()
+     */
+    void setMaterialTimeEpoch(std::chrono::steady_clock::time_point monotonic_clock);
+
+    /**
+     * Backward compatibility helper for resetUserTime().
+     * @deprecated Use setMaterialTimeEpoch() instead.
+     */
+    inline void resetUserTime() {
+        setMaterialTimeEpoch(std::chrono::steady_clock::now());
+    }
 
 
     /**
      * Requests the next frameCount frames to be skipped. For Debugging.
      * @param frameCount number of frames to skip.
      */
-    void skipNextFrames(size_t frameCount) const noexcept;
+    void skipNextFrames(size_t frameCount) noexcept;
 
     /**
      * Remainder count of frame to be skipped
      * @return remaining frames to be skipped
      */
     size_t getFrameToSkipCount() const noexcept;
+
+    /**
+     * Queries whether the GPU execution has fallen behind the CPU rendering execution.
+     *
+     * This is highly useful when managing the application's presentation loop manually (e.g.
+     * with the `FramePacer`), allowing the client to proactively detect and react to a latency build-up
+     * before continuing with frame execution.
+     *
+     * @return true if the GPU pipeline is delayed, false if ready.
+     */
+    bool hasGpuFallenBehind() const noexcept;
+
+    /**
+     * Sets the physical clock time when the frame scheduling callback was entered.
+     * This is used by the frame pacer and pipeline estimator to accurately
+     * measure the active CPU duration (including app logic running before beginFrame).
+     *
+     * @param time Monotonic steady clock time_point.
+     */
+    void setFrameScheduleTime(std::chrono::steady_clock::time_point time) noexcept;
+
+    /**
+     * Sets the physical clock time when the frame scheduling callback was entered.
+     * Helper overload accepting raw nanoseconds since epoch.
+     *
+     * @param timeSteadyClockNano Monotonic steady clock timestamp in nanoseconds since epoch.
+     */
+    inline void setFrameScheduleTime(uint64_t timeSteadyClockNano) noexcept {
+        setFrameScheduleTime(std::chrono::steady_clock::time_point(
+                std::chrono::steady_clock::duration(timeSteadyClockNano)));
+    }
+
+    /**
+     * Stalls the render thread (GPU submission pipeline) for the given duration in nanoseconds.
+     *
+     * This is useful for simulating long rendering frames (e.g. testing buffer stuffing recovery)
+     * without blocking the application's main event loop thread.
+     *
+     * @param duration_ns  the duration to pause the render thread in nanoseconds.
+     */
+    void pauseRenderThread(uint64_t duration_ns);
 
 protected:
     // prevent heap allocation

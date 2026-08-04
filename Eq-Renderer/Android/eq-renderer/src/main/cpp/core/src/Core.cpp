@@ -5,8 +5,8 @@ tinyply::PlyFile file;
 
 
 //版本信息
-std::string EQR_CORE_VERSION = "EQ-Renderer_v1.2.0";
-std::string FILAMENT_VERSION = "v1.67.1";
+std::string EQR_CORE_VERSION = "EQ-Renderer_v1.2.1";
+std::string FILAMENT_VERSION = "v1.75.0";
 
 
 #ifdef __cplusplus

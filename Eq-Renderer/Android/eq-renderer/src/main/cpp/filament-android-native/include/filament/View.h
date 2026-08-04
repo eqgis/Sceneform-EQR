@@ -26,8 +26,8 @@
 #include <utils/Entity.h>
 #include <utils/FixedCapacityVector.h>
 
-#include <math/mathfwd.h>
 #include <math/mat4.h>
+#include <math/mathfwd.h>
 
 #include <utility>
 
@@ -119,7 +119,8 @@ public:
      *
      * @note
      *  There is no reference-counting.
-     *  Make sure to dissociate a Scene from all Views before destroying it.
+     *  If a Scene is destroyed before it is dissociated from a View, it will be automatically
+     *  dissociated from that View (setting the View's Scene to nullptr).
      */
     void setScene(Scene* UTILS_NULLABLE scene);
 
@@ -318,6 +319,8 @@ public:
     /**
      * Sets how many samples are to be used for MSAA in the post-process stage.
      * Default is 1 and disables MSAA.
+     * Note that post-processing is disabled at FL0. If the feature level is 
+     * set to 0, values passed to this function are ignored.
      *
      * @param count number of samples to use for multi-sampled anti-aliasing.\n
      *              0: treated as 1
@@ -408,7 +411,9 @@ public:
 
     /**
      * Enables or disable multi-sample anti-aliasing (MSAA). Disabled by default.
-     *
+     * Note that MSAA is a post-processing effect, and post-processing is disabled at FL0. 
+     * If the feature level is set to 0, values passed to this function are ignored.
+     * 
      * @param options multi-sample anti-aliasing options
      */
     void setMultiSampleAntiAliasingOptions(MultiSampleAntiAliasingOptions options) noexcept;
@@ -460,7 +465,7 @@ public:
     /**
      * Enables or disables bloom in the post-processing stage. Disabled by default.
      *
-     * @param options options
+     * @param options options. Values may be silently clamped to valid ranges.
      */
     void setBloomOptions(BloomOptions options) noexcept;
 
@@ -542,6 +547,14 @@ public:
     DynamicResolutionOptions getDynamicResolutionOptions() const noexcept;
 
     /**
+     * Returns the last dynamic resolution scale factor used by this view. This value is updated
+     * when Renderer::render(View*) is called
+     * @return a float2 where x is the horizontal and y the vertical scale factor.
+     * @see Renderer::render
+     */
+    math::float2 getLastDynamicResolutionScale() const noexcept;
+
+    /**
      * Sets the rendering quality for this view. Refer to RenderQuality for more
      * information about the different settings available.
      *
@@ -577,6 +590,32 @@ public:
      *
      */
     void setDynamicLightingOptions(float zLightNear, float zLightFar) noexcept;
+
+    /**
+     * Sets the grid size for grid-based world origin snapping.
+     *
+     * The world origin used for rendering will snap to a grid of this size. 
+     * This avoids recomputing all transforms every frame when the camera moves within a grid cell.
+     *
+     * Hysteresis is applied automatically to avoid rapid snapping near edges.
+     *
+     * @param size The size of the grid cell in world units. If set to 0 or negative,
+     *             the grid size is automatically calculated based on the camera frustum.
+     */
+    void setGridSize(double size) noexcept;
+
+    /**
+     * Returns the grid size used for grid-based world origin snapping.
+     * @return The grid size in world units. A value of 0 or negative means automatic calculation is enabled.
+     */
+    double getGridSize() const noexcept;
+
+    /**
+     * Returns the effective grid size used for grid-based world origin snapping.
+     * If grid size was set to 0 or negative, this returns the automatically calculated size.
+     * @return The effective grid size in world units.
+     */
+    double getEffectiveGridSize() const noexcept;
 
     /*
      * Set the shadow mapping technique this View uses.
@@ -627,7 +666,7 @@ public:
      *
      * Additional light-specific soft shadow parameters can be set with LightManager::setShadowOptions.
      *
-     * Only applicable when shadow type is set to ShadowType::DPCF or ShadowType::PCSS.
+     * Only applicable when shadow type is set to ShadowType::PCSS.
      *
      * @param options Options for shadowing.
      *
@@ -952,6 +991,17 @@ public:
      * @return an Entity representing the large scale fog object.
      */
     utils::Entity getFogEntity() const noexcept;
+
+    /**
+     * Returns the most recent number of visible renderables for the current Scene as calculated
+     * the last time Renderer::render() was called with this View and Scene.
+     *
+     * Returns -1 if the cache is invalid (e.g. before the first render call, or if the scene
+     * was detached).
+     *
+     * @return the number of visible renderables, or -1 if no value is available.
+     */
+    int32_t getVisibleRenderableCount() const noexcept;
 
 
     /**

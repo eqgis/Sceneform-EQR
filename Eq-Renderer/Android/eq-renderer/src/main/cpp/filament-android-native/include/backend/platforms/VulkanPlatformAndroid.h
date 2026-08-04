@@ -17,11 +17,12 @@
 #ifndef TNT_FILAMENT_BACKEND_PLATFORMS_VULKAN_PLATFORM_ANDROID_H
 #define TNT_FILAMENT_BACKEND_PLATFORMS_VULKAN_PLATFORM_ANDROID_H
 
-#include "AndroidFrameCallback.h"
 #include "AndroidNdk.h"
 
 #include <backend/DriverEnums.h>
 #include <backend/platforms/VulkanPlatform.h>
+
+#include <utils/compiler.h>
 
 #include <android/hardware_buffer.h>
 
@@ -48,8 +49,11 @@ public:
 
     ExternalImageMetadata extractExternalImageMetadata(
             ExternalImageHandleRef image) const override;
+    bool copyExternalImageToMemoryYUV(ExternalImageHandleRef image, void* dstData,
+                                   uint32_t width, uint32_t height) const override;
 
-    ImageData createVkImageFromExternal(ExternalImageHandleRef image) const override;
+    ImageData createVkImageFromExternal(ExternalImageHandleRef image,
+            uint32_t logicalWidth, uint32_t logicalHeight) const override;
 
     /**
      * Converts a sync to an external file descriptor, if possible. Accepts an
@@ -80,6 +84,10 @@ public:
     bool queryFrameTimestamps(SwapChain const* swapchain, uint64_t frameId,
             FrameTimestamps* outFrameTimestamps) const noexcept override;
 
+    utils::tribool isFrameRateChangeSupported(void* nativeWindow) const noexcept override;
+    int setFrameRate(SwapChain const* swapchain, float frameRate,
+            FrameRateCompatibility compatibility,
+            ChangeFrameRateStrategy strategy) noexcept override;
 
 protected:
     ExtensionSet getSwapchainInstanceExtensions() const override;
@@ -99,7 +107,6 @@ private:
         ~ExternalImageVulkanAndroid() override;
     };
 
-    AndroidFrameCallback mAndroidFrameCallback;
     int mOSVersion{};
 };
 

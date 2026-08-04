@@ -166,6 +166,17 @@ public:
         };
 
         /**
+         * Type of morphing for a Renderable.
+         * This usually acts as a bitmask of multiple types.
+         */
+        enum class MorphType : uint8_t {
+            NONE = 0,
+            POSITION = 1,
+            TANGENT = 2,
+            CUSTOM = 4
+        };
+
+        /**
          * Creates a builder for renderable components.
          *
          * @param count the number of primitives that will be supplied to the builder
@@ -186,7 +197,7 @@ public:
         /**
          * Specifies the geometry data for a primitive.
          *
-         * Filament primitives must have an associated VertexBuffer and IndexBuffer. Typically, each
+         * Associates a vertex buffer and an index buffer with a primitive. Typically, each
          * primitive is specified with a pair of daisy-chained calls: \c geometry(...) and \c
          * material(...).
          *
@@ -213,11 +224,42 @@ public:
                 VertexBuffer* UTILS_NONNULL vertices,
                 IndexBuffer* UTILS_NONNULL indices) noexcept; //!< \overload
 
+        /**
+         * Specifies the geometry data for a primitive. (non-indexed version)
+         *
+         * Filament primitives normally have an associated vertex buffer and index buffer. Typically,
+         * each primitive is specified with a pair of daisy-chained calls: \c geometry(...) and
+         * \c material(...).
+         *
+         * Non-indexed rendering: when \p indices is not provided, the primitive is treated as a
+         * non-indexed draw and \p offset / \p count refer to vertex offset and vertex count
+         * respectively.
+         *
+         * Attribute-less rendering: This can be used for procedural rendering, where the vertex
+         * shader generates positions, UVs, etc procedurally, typically from \c gl_VertexIndex /
+         * \c gl_VertexID / and \c [[vertex_id]], which can be accessed by calling `getVertexIndex()`
+         * in vertex shader. The associated VertexBuffer may have \c bufferCount == 0 with
+         * no declared attributes (see \c VertexBuffer::Builder). Attribute-less rendering requires
+         * \c FEATURE_LEVEL_1 or higher as GLES2 has no `gl_VertexID` and is incompatible with
+         * skinning and morphing.
+         *
+         * @param index zero-based index of the primitive, must be less than the count passed to Builder constructor
+         * @param type specifies the topology of the primitive (e.g., \c RenderableManager::PrimitiveType::TRIANGLES)
+         * @param vertices specifies the vertex buffer, which in turn specifies a set of attributes
+         * @param offset specifies where in the vertex buffer to start reading (expressed as a number of vertices)
+         * @param count number of vertices to read (for triangles, this should be a multiple of 3)
+         */
+        Builder& geometry(size_t index, PrimitiveType type,
+                VertexBuffer* UTILS_NONNULL vertices, size_t offset, size_t count) noexcept; //!< \overload
+
+        Builder& geometry(size_t index, PrimitiveType type,
+                VertexBuffer* UTILS_NONNULL vertices) noexcept; //!< \overload
+
 
         /**
          * Specify the type of geometry for this renderable. DYNAMIC geometry has no restriction,
          * STATIC_BOUNDS geometry means that both the bounds and the world-space transform of the
-         * the renderable are immutable.
+         * renderable are immutable.
          * STATIC geometry has the same restrictions as STATIC_BOUNDS, but in addition disallows
          * skinning, morphing and changing the VertexBuffer or IndexBuffer in any way.
          * @param type type of geometry.
@@ -312,6 +354,7 @@ public:
          * @see Builder::blendOrder()
          * @see Builder::priority()
          * @see RenderableManager::setBlendOrderAt()
+         * @see RenderableManager::getChannel()
          */
         Builder& channel(uint8_t channel) noexcept;
 
@@ -511,13 +554,13 @@ public:
          * precedence.
          *
          * @param primitiveIndex the primitive of interest
-         * @param order draw order number (0 by default). Only the lowest 15 bits are used.
+         * @param blendOrder draw order number (0 by default). Only the lowest 15 bits are used.
          *
          * @return Builder reference for chaining calls.
          *
          * @see globalBlendOrderEnabled
          */
-        Builder& blendOrder(size_t primitiveIndex, uint16_t order) noexcept;
+        Builder& blendOrder(size_t primitiveIndex, uint16_t blendOrder) noexcept;
 
         /**
          * Sets whether the blend order is global or local to this Renderable (by default).
@@ -591,7 +634,7 @@ public:
          *            memory or other resources.
          * @exception utils::PreConditionPanic if a parameter to a builder function was invalid.
          */
-        Result build(Engine& engine, utils::Entity entity);
+        Result build(Engine& engine, utils::Entity entity) const;
 
     private:
         friend class FEngine;
@@ -604,6 +647,7 @@ public:
      */
     void destroy(utils::Entity e) noexcept;
 
+
     /**
      * Changes the bounding box used for frustum culling.
      * The renderable must not have staticGeometry enabled.
@@ -612,6 +656,14 @@ public:
      * \see RenderableManager::getAxisAlignedBoundingBox()
      */
     void setAxisAlignedBoundingBox(Instance instance, const Box& aabb);
+
+    /**
+     * Gets the bounding box used for frustum culling.
+     *
+     * \see Builder::boundingBox()
+     * \see RenderableManager::setAxisAlignedBoundingBox()
+     */
+    const Box& getAxisAlignedBoundingBox(Instance instance) const noexcept;
 
     /**
      * Changes the visibility bits.
@@ -623,11 +675,27 @@ public:
     void setLayerMask(Instance instance, uint8_t select, uint8_t values) noexcept;
 
     /**
+     * Get the visibility bits.
+     *
+     * \see Builder::layerMask()
+     * \see View::setVisibleLayers().
+     * \see RenderableManager::getLayerMask()
+     */
+    uint8_t getLayerMask(Instance instance) const noexcept;
+
+    /**
      * Changes the coarse-level draw ordering.
      *
      * \see Builder::priority().
      */
     void setPriority(Instance instance, uint8_t priority) noexcept;
+
+    /**
+     * Get the coarse-level draw ordering.
+     *
+     * \see Builder::priority().
+     */
+    uint8_t getPriority(Instance instance) const noexcept;
 
     /**
      * Changes the channel a renderable is associated to.
@@ -637,11 +705,25 @@ public:
     void setChannel(Instance instance, uint8_t channel) noexcept;
 
     /**
+     * Get the channel a renderable is associated to.
+     *
+     * \see Builder::channel().
+     */
+    uint8_t getChannel(Instance instance) const noexcept;
+
+    /**
      * Changes whether or not frustum culling is on.
      *
      * \see Builder::culling()
      */
     void setCulling(Instance instance, bool enable) noexcept;
+
+    /**
+     * Get whether or not frustum culling is on.
+     *
+     * \see Builder::culling()
+     */
+    bool isCullingEnabled(Instance instance) const noexcept;
 
     /**
      * Changes whether or not the large-scale fog is applied to this renderable
@@ -708,6 +790,13 @@ public:
     bool isShadowReceiver(Instance instance) const noexcept;
 
     /**
+     * Checks if the renderable can use screen-space contact shadows.
+     *
+     * \see Builder::screenSpaceContactShadows().
+     */
+    bool isScreenSpaceContactShadowsEnabled(Instance instance) const noexcept;
+
+    /**
      * Updates the bone transforms in the range [offset, offset + boneCount).
      * The bones must be pre-allocated using Builder::skinning().
      */
@@ -758,28 +847,13 @@ public:
 
     /**
      * Gets the number of morphing in the given entity.
+     * @see Builder::morphing()
      */
     size_t getMorphTargetCount(Instance instance) const noexcept;
 
     /**
-     * Gets the bounding box used for frustum culling.
-     *
-     * \see Builder::boundingBox()
-     * \see RenderableManager::setAxisAlignedBoundingBox()
-     */
-    const Box& getAxisAlignedBoundingBox(Instance instance) const noexcept;
-
-    /**
-     * Get the visibility bits.
-     *
-     * \see Builder::layerMask()
-     * \see View::setVisibleLayers().
-     * \see RenderableManager::getLayerMask()
-     */
-    uint8_t getLayerMask(Instance instance) const noexcept;
-
-    /**
      * Gets the immutable number of primitives in the given renderable.
+     * @see Builder::Builder(size_t count)
      */
     size_t getPrimitiveCount(Instance instance) const noexcept;
 
@@ -787,6 +861,7 @@ public:
      * Returns the number of instances for this renderable.
      * @param instance Instance of the component obtained from getInstance().
      * @return The number of instances.
+     * @see Builder::instances()
      */
     size_t getInstanceCount(Instance instance) const noexcept;
 
@@ -829,6 +904,15 @@ public:
             size_t offset, size_t count) noexcept;
 
     /**
+     * Changes the geometry for the given primitive. (non-indexed version)
+     *
+     * \see Builder::geometry()
+     */
+    void setGeometryAt(Instance instance, size_t primitiveIndex, PrimitiveType type,
+            VertexBuffer* UTILS_NONNULL vertices,
+            size_t offset, size_t count) noexcept;
+
+    /**
      * Changes the drawing order for blended primitives. The drawing order is either global or
      * local (default) to this Renderable. In either case, the Renderable priority takes precedence.
      *
@@ -841,6 +925,16 @@ public:
     void setBlendOrderAt(Instance instance, size_t primitiveIndex, uint16_t order) noexcept;
 
     /**
+     * Get the drawing order for blended primitives.
+     *
+     * @param instance the renderable of interest
+     * @param primitiveIndex the primitive of interest
+     *
+     * @see Builder::blendOrder(), setGlobalBlendOrderEnabledAt()
+     */
+    uint16_t getBlendOrderAt(Instance instance, size_t primitiveIndex) const noexcept;
+
+    /**
      * Changes whether the blend order is global or local to this Renderable (by default).
      *
      * @param instance the renderable of interest
@@ -850,6 +944,16 @@ public:
      * @see Builder::globalBlendOrderEnabled(), setBlendOrderAt()
      */
     void setGlobalBlendOrderEnabledAt(Instance instance, size_t primitiveIndex, bool enabled) noexcept;
+
+    /**
+     * Get whether the blend order is global or local to this Renderable (by default).
+     *
+     * @param instance the renderable of interest
+     * @param primitiveIndex the primitive of interest
+     *
+     * @see Builder::globalBlendOrderEnabled(), setBlendOrderAt()
+     */
+    bool isGlobalBlendOrderEnabledAt(Instance instance, size_t primitiveIndex) const noexcept;
 
     /**
      * Retrieves the set of enabled attribute slots in the given primitive's VertexBuffer.

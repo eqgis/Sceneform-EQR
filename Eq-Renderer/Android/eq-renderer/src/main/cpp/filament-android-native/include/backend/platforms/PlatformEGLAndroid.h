@@ -17,8 +17,6 @@
 #ifndef TNT_FILAMENT_BACKEND_OPENGL_OPENGL_PLATFORM_EGL_ANDROID_H
 #define TNT_FILAMENT_BACKEND_OPENGL_OPENGL_PLATFORM_EGL_ANDROID_H
 
-#include "AndroidSwapChainHelper.h"
-#include "AndroidFrameCallback.h"
 #include "AndroidNdk.h"
 
 #include <backend/AcquiredImage.h>
@@ -31,8 +29,6 @@
 #include <utils/compiler.h>
 
 #include <math/mat3.h>
-
-#include "AndroidNativeWindow.h"
 
 #include <chrono>
 
@@ -109,10 +105,18 @@ protected:
     bool queryFrameTimestamps(SwapChain const* swapchain, uint64_t frameId,
             FrameTimestamps* outFrameTimestamps) const noexcept override;
 
+    utils::tribool isFrameRateChangeSupported(void* nativeWindow) const noexcept override;
+
+    int setFrameRate(SwapChain const* swapchain, float frameRate,
+            FrameRateCompatibility compatibility,
+            ChangeFrameRateStrategy strategy) noexcept override;
+
     // --------------------------------------------------------------------------------------------
     // OpenGLPlatform Interface
 
     struct SyncEGLAndroid : public Sync {
+        explicit SyncEGLAndroid(EGLSyncKHR sync) noexcept
+            : sync(sync) {}
         EGLSyncKHR sync;
     };
 
@@ -170,20 +174,11 @@ protected:
     bool makeCurrent(ContextType type,
             SwapChain* drawSwapChain,
             SwapChain* readSwapChain) override;
-
-    struct SwapChainEGLAndroid : public SwapChainEGL {
-        SwapChainEGLAndroid(PlatformEGLAndroid const& platform,
-                void* nativeWindow, uint64_t flags);
-        SwapChainEGLAndroid(PlatformEGLAndroid const& platform,
-                uint32_t width, uint32_t height, uint64_t flags);
-        void terminate(PlatformEGLAndroid& platform);
-        bool setPresentFrameId(uint64_t frameId) const noexcept;
-        uint64_t getFrameId(uint64_t frameId) const noexcept;
-    private:
-        AndroidSwapChainHelper mImpl{};
-    };
+    void commit(SwapChain* swapChain) noexcept override;
 
 private:
+    struct SwapChainEGLAndroid;
+
     // prevent derived classes' implementations to call through
     [[nodiscard]] SwapChain* createSwapChain(void* nativeWindow, uint64_t flags) override;
     [[nodiscard]] SwapChain* createSwapChain(uint32_t width, uint32_t height, uint64_t flags) override;
@@ -193,27 +188,18 @@ private:
 
     int32_t setProducerThrottlingEnabled(EGLNativeWindowType nativeWindow, bool enabled) const;
 
-    struct InitializeJvmForPerformanceManagerIfNeeded {
-        InitializeJvmForPerformanceManagerIfNeeded();
-    };
-
     struct ExternalTextureAndroid : public ExternalTexture {
         EGLImageKHR eglImage = EGL_NO_IMAGE;
     };
 
     int mOSVersion;
-    ExternalStreamManagerAndroid& mExternalStreamManager;
-    InitializeJvmForPerformanceManagerIfNeeded const mInitializeJvmForPerformanceManagerIfNeeded;
+    ExternalStreamManagerAndroid* mExternalStreamManager = nullptr;
     utils::PerformanceHintManager mPerformanceHintManager;
     utils::PerformanceHintManager::Session mPerformanceHintSession;
-    SwapChainEGLAndroid* mCurrentDrawSwapChain{};
-
     using clock = std::chrono::high_resolution_clock;
     clock::time_point mStartTimeOfActualWork;
-    AndroidProducerThrottling mProducerThrottling;
+    SwapChainEGLAndroid* mCurrentDrawSwapChain{};
     bool mAssertNativeWindowIsValid = false;
-
-    AndroidFrameCallback mAndroidFrameCallback;
 };
 
 } // namespace filament::backend
