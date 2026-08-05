@@ -133,8 +133,8 @@ public class SampleCatalog {
         return Arrays.asList(
                 new SampleTopic(TOPIC_GEOMETRY, "基础几何与 Mesh", "从三角形、平面、立方体 到 GLTF/PLY格式 模型加载。", geometryLessons()),
                 new SampleTopic(TOPIC_ANDROID_VIEW, "Android View 渲染到 3D", "将 TextView、ImageView、WebView、常用控件和 XML Layout 渲染到三维空间。", androidViewLessons()),
-                new SampleTopic(TOPIC_MATERIAL_CAMERA, "材质、光照与相机", "学习材质、IBL、天空盒、FOV、裁剪面和阴影。", placeholderLessons("material_camera", "材质、光照与相机")),
-                new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", placeholderLessons("animation", "动画篇")),
+                new SampleTopic(TOPIC_MATERIAL_CAMERA, "材质、光照与相机", "学习材质、IBL、天空盒、FOV、裁剪面和阴影。", materialCameraLessons()),
+                new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", animationLessons()),
                 new SampleTopic(TOPIC_INTERACTION, "交互篇", "点击、触摸、AABB、碰撞体和射线拾取。", placeholderLessons("interaction", "交互篇")),
                 new SampleTopic(TOPIC_VIDEO_CAMERA, "视频、相机与外部纹理", "视频贴图、相机流、截图和 PixelCopy。", placeholderLessons("video_camera", "视频、相机与外部纹理")),
                 new SampleTopic(TOPIC_XR, "XR 篇", "ARCore、AREngine、3DoF AR、VR 和跟踪状态。", placeholderLessons("xr", "XR 篇")),
@@ -181,6 +181,36 @@ public class SampleCatalog {
                 new SampleLesson("android_view_web", "WebView", "使用本地 HTML 创建三维网页信息卡。", "com.eqgis.test.fragments.tutorial.AndroidWebViewLessonFragment"),
                 new SampleLesson("android_view_widgets", "常用 View", "展示 Button、Switch、CheckBox 和 ProgressBar。", "com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment"),
                 new SampleLesson("android_view_layout", "XML Layout", "把一组 Android View 作为完整布局渲染。", "com.eqgis.test.fragments.tutorial.AndroidLayoutLessonFragment")
+        );
+    }
+
+    /**
+     * 获取材质、光照与相机教程功能
+     * @return 材质、光照与相机教程功能列表
+     */
+    private static List<SampleLesson> materialCameraLessons() {
+        return Arrays.asList(
+                new SampleLesson("material_camera_material", "材质与 PBR 参数", "比较颜色、透明度、金属度和粗糙度带来的表面差异。", "com.eqgis.test.fragments.tutorial.MaterialPropertiesLessonFragment"),
+                new SampleLesson("material_camera_light", "灯光类型", "切换平行光、点光源与聚光灯，观察方向和衰减差异。", "com.eqgis.test.fragments.tutorial.LightTypesLessonFragment"),
+                new SampleLesson("material_camera_ibl", "环境光 IBL", "调节间接光强度，并比较不同粗糙度金属材质的反射。", "com.eqgis.test.fragments.tutorial.IblLessonFragment"),
+                new SampleLesson("material_camera_skybox", "天空盒", "加载 KTX 天空盒和匹配的 IBL，构建完整环境光照。", "com.eqgis.test.fragments.tutorial.SkyboxLessonFragment"),
+                new SampleLesson("material_camera_fov", "相机 FOV", "实时修改垂直视场角，观察空间透视与可见范围变化。", "com.eqgis.test.fragments.tutorial.CameraFovLessonFragment"),
+                new SampleLesson("material_camera_clip", "相机裁剪面", "切换近、远裁剪距离，观察不同深度物体的裁剪效果。", "com.eqgis.test.fragments.tutorial.CameraClipLessonFragment"),
+                new SampleLesson("material_camera_shadow", "实时阴影", "控制主光源阴影，理解投射物与接收面的配置。", "com.eqgis.test.fragments.tutorial.ShadowLessonFragment")
+        );
+    }
+
+    /**
+     * 获取动画篇教程功能
+     * @return 动画篇教程功能列表
+     */
+    private static List<SampleLesson> animationLessons() {
+        return Arrays.asList(
+                new SampleLesson("animation_overview", "动画总览", "在同一场景比较模型、旋转、位移与曲线路径动画。", "com.eqgis.test.fragments.tutorial.AnimationOverviewLessonFragment"),
+                new SampleLesson("animation_model", "模型动画", "使用 ARAnimationModel 播放和切换 GLB 内置动画片段。", "com.eqgis.test.fragments.tutorial.ModelAnimationLessonFragment"),
+                new SampleLesson("animation_rotation", "旋转动画", "使用 ARAnimationRotation 调整旋转轴、角度、方向和周期。", "com.eqgis.test.fragments.tutorial.RotationAnimationLessonFragment"),
+                new SampleLesson("animation_translation", "位移动画", "使用 Android 属性动画在两个 Vector3 坐标之间移动节点。", "com.eqgis.test.fragments.tutorial.TranslationAnimationLessonFragment"),
+                new SampleLesson("animation_path", "曲线路径动画", "使用 Bézier 估值器和 Android 属性动画沿曲线路径移动节点。", "com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment")
         );
     }
 

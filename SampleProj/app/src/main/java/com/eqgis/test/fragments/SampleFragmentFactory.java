@@ -9,10 +9,22 @@ import com.eqgis.test.fragments.tutorial.AndroidLayoutLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidTextViewLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidWebViewLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment;
+import com.eqgis.test.fragments.tutorial.AnimationOverviewLessonFragment;
+import com.eqgis.test.fragments.tutorial.CameraClipLessonFragment;
+import com.eqgis.test.fragments.tutorial.CameraFovLessonFragment;
 import com.eqgis.test.fragments.tutorial.CubeLessonFragment;
 import com.eqgis.test.fragments.tutorial.GltfLessonFragment;
+import com.eqgis.test.fragments.tutorial.IblLessonFragment;
+import com.eqgis.test.fragments.tutorial.LightTypesLessonFragment;
+import com.eqgis.test.fragments.tutorial.MaterialPropertiesLessonFragment;
+import com.eqgis.test.fragments.tutorial.ModelAnimationLessonFragment;
+import com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlyLessonFragment;
+import com.eqgis.test.fragments.tutorial.RotationAnimationLessonFragment;
+import com.eqgis.test.fragments.tutorial.ShadowLessonFragment;
+import com.eqgis.test.fragments.tutorial.SkyboxLessonFragment;
+import com.eqgis.test.fragments.tutorial.TranslationAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.TriangleLessonFragment;
 
 /**
@@ -54,6 +66,30 @@ public class SampleFragmentFactory {
                 return new AndroidWidgetLessonFragment();
             case "android_view_layout":
                 return new AndroidLayoutLessonFragment();
+            case "material_camera_material":
+                return new MaterialPropertiesLessonFragment();
+            case "material_camera_light":
+                return new LightTypesLessonFragment();
+            case "material_camera_ibl":
+                return new IblLessonFragment();
+            case "material_camera_skybox":
+                return new SkyboxLessonFragment();
+            case "material_camera_fov":
+                return new CameraFovLessonFragment();
+            case "material_camera_clip":
+                return new CameraClipLessonFragment();
+            case "material_camera_shadow":
+                return new ShadowLessonFragment();
+            case "animation_overview":
+                return new AnimationOverviewLessonFragment();
+            case "animation_model":
+                return new ModelAnimationLessonFragment();
+            case "animation_rotation":
+                return new RotationAnimationLessonFragment();
+            case "animation_translation":
+                return new TranslationAnimationLessonFragment();
+            case "animation_path":
+                return new PathAnimationLessonFragment();
             default:
                 return BaseInfoFragment.newInstance(lesson.getTitle(), lesson.getDescription(), lesson.getCodeLocation());
         }

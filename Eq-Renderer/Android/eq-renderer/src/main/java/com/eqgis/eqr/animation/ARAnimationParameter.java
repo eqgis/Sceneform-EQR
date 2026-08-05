@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * AR动画参数
- * */
+ * AR 动画参数
+ * <pre>
+ *     统一描述动画周期、重复方式、旋转轴、位移起终点以及曲线路径途经点。
+ * </pre>
+ */
 public class ARAnimationParameter {
     private long duration = 6000L;//周期
     private int RepeatCount=-1;//循环次数，值为-1时一直循环
@@ -87,6 +90,28 @@ public class ARAnimationParameter {
     }
 
     /**
+     * 获取旋转轴
+     * @return Sceneform 坐标系下的旋转轴
+     */
+    public Vector3 getRotationAxis() {
+        return new Vector3(rotationAxis.x, rotationAxis.y, rotationAxis.z);
+    }
+
+    /**
+     * 设置旋转轴
+     * @param rotationAxis Sceneform 坐标系下的旋转轴
+     */
+    public void setRotationAxis(Vector3 rotationAxis) {
+        if (rotationAxis == null) {
+            throw new IllegalArgumentException("rotationAxis must not be null");
+        }
+        if (rotationAxis.lengthSquared() < 0.000001f) {
+            throw new IllegalArgumentException("rotationAxis must not be zero");
+        }
+        this.rotationAxis = rotationAxis.normalized();
+    }
+
+    /**
      * 获取旋转动画旋转方向
      * 仅旋转动画使用
      * */
@@ -112,11 +137,41 @@ public class ARAnimationParameter {
     }
 
     /**
-     * 内部直接使用，符合ar坐标系
-     * @return
+     * 获取位移动画起点
+     * @return Sceneform 坐标系下的起点
      */
-    Vector3 getEndVector(){
-        return endVerctor;
+    public Vector3 getStartVector() {
+        return new Vector3(startVerctor.x, startVerctor.y, startVerctor.z);
+    }
+
+    /**
+     * 设置位移动画起点
+     * @param startVector Sceneform 坐标系下的起点
+     */
+    public void setStartVector(Vector3 startVector) {
+        if (startVector == null) {
+            throw new IllegalArgumentException("startVector must not be null");
+        }
+        startVerctor = new Vector3(startVector.x, startVector.y, startVector.z);
+    }
+
+    /**
+     * 获取位移动画终点
+     * @return Sceneform 坐标系下的终点
+     */
+    public Vector3 getEndVector() {
+        return new Vector3(endVerctor.x, endVerctor.y, endVerctor.z);
+    }
+
+    /**
+     * 设置位移动画终点
+     * @param endVector Sceneform 坐标系下的终点
+     */
+    public void setEndVector(Vector3 endVector) {
+        if (endVector == null) {
+            throw new IllegalArgumentException("endVector must not be null");
+        }
+        endVerctor = new Vector3(endVector.x, endVector.y, endVector.z);
     }
 
     boolean isLocationFlag() {
@@ -169,9 +224,28 @@ public class ARAnimationParameter {
      * @param wayPoint 途经点
      */
     public void addWayPoint(Vector3 wayPoint){
-        wayPoints.add(wayPoint);
+        if (wayPoint == null) {
+            throw new IllegalArgumentException("wayPoint must not be null");
+        }
+        wayPoints.add(new Vector3(wayPoint.x, wayPoint.y, wayPoint.z));
     }
-    List<Vector3> getWayPoints(){
-        return wayPoints;
+
+    /**
+     * 获取曲线路径途经控制点副本
+     * @return Sceneform 坐标系下的控制点列表
+     */
+    public List<Vector3> getWayPoints(){
+        List<Vector3> result = new ArrayList<>();
+        for (Vector3 wayPoint : wayPoints) {
+            result.add(new Vector3(wayPoint.x, wayPoint.y, wayPoint.z));
+        }
+        return result;
+    }
+
+    /**
+     * 清空曲线路径途经点
+     */
+    public void clearWayPoints() {
+        wayPoints.clear();
     }
 }

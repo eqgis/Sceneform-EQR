@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -17,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.eqgis.eqr.layout.SceneLayout;
+import com.eqgis.test.R;
 import com.eqgis.test.scene.ISampleScene;
 import com.google.android.filament.RenderableManager;
 import com.google.sceneform.Node;
@@ -36,6 +39,7 @@ public abstract class BaseSampleFragment extends Fragment {
     protected ISampleScene sampleScene;
     private FrameLayout contentContainer;
     private LinearLayout actionContainer;
+    private FrameLayout floatingActionRoot;
     private boolean viewDestroyed = true;
 
     /**
@@ -73,6 +77,39 @@ public abstract class BaseSampleFragment extends Fragment {
     }
 
     /**
+     * 是否将操作区悬浮在三维场景内
+     * @return true 表示操作区悬浮于场景左上角，false 表示操作区位于场景下方
+     */
+    protected boolean shouldOverlayActions() {
+        return false;
+    }
+
+    /**
+     * 创建教程悬浮面板统一使用的下拉框适配器
+     * @param items 下拉选项
+     * @return 已配置选中项和弹出项布局的适配器
+     */
+    protected final ArrayAdapter<String> createTutorialSpinnerAdapter(String[] items) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                R.layout.item_tutorial_spinner,
+                android.R.id.text1,
+                items);
+        adapter.setDropDownViewResource(R.layout.item_tutorial_spinner_dropdown);
+        return adapter;
+    }
+
+    /**
+     * 统一教程下拉框的行高和垂直对齐方式
+     * @param spinner 需要配置的下拉框
+     */
+    protected final void configureTutorialSpinner(Spinner spinner) {
+        spinner.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        spinner.setMinimumHeight(dp(44));
+        spinner.setPadding(0, 0, 0, 0);
+    }
+
+    /**
      * 向操作区添加图元类型下拉框
      * @param actionContainer 操作按钮容器
      */
@@ -93,12 +130,8 @@ public abstract class BaseSampleFragment extends Fragment {
                 RenderableManager.PrimitiveType.TRIANGLES
         };
         Spinner primitiveSpinner = new Spinner(requireContext());
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_spinner_item,
-                primitiveNames);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        primitiveSpinner.setAdapter(adapter);
+        configureTutorialSpinner(primitiveSpinner);
+        primitiveSpinner.setAdapter(createTutorialSpinnerAdapter(primitiveNames));
         primitiveSpinner.setSelection(primitiveNames.length - 1, false);
         primitiveSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -194,18 +227,154 @@ public abstract class BaseSampleFragment extends Fragment {
         actionContainer = new LinearLayout(requireContext());
         actionContainer.setOrientation(LinearLayout.HORIZONTAL);
         actionContainer.setPadding(dp(12), dp(8), dp(12), dp(8));
-        root.addView(actionContainer, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
 
         sceneLayout = createSceneLayout();
         contentContainer.addView(sceneLayout, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
+        if (shouldOverlayActions()) {
+            addFloatingActionContainer(contentContainer, actionContainer);
+        } else {
+            root.addView(actionContainer, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
         sceneLayout.init(requireContext());
         onSceneReady(sceneLayout);
         onActionsReady(actionContainer);
+        if (actionContainer.getChildCount() == 0) {
+            actionContainer.setVisibility(View.GONE);
+            if (floatingActionRoot != null) {
+                floatingActionRoot.setVisibility(View.GONE);
+            }
+        }
         return root;
+    }
+
+    /**
+     * 将可折叠操作区作为轻量悬浮窗添加到三维场景左上角
+     * @param container 三维场景容器
+     * @param actions 操作控件容器
+     */
+    private void addFloatingActionContainer(FrameLayout container, LinearLayout actions) {
+        int availableWidth = getResources().getDisplayMetrics().widthPixels - dp(32);
+        int panelWidth = Math.min(dp(320), availableWidth);
+
+        floatingActionRoot = new FrameLayout(requireContext());
+        ImageButton settingsButton = createSettingsButton();
+        FrameLayout.LayoutParams settingsParams = new FrameLayout.LayoutParams(
+                dp(48),
+                dp(48),
+                Gravity.TOP | Gravity.START);
+        floatingActionRoot.addView(settingsButton, settingsParams);
+
+        LinearLayout panel = new LinearLayout(requireContext());
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setBackgroundResource(R.drawable.bg_tutorial_floating_panel);
+        panel.setClickable(true);
+        panel.setElevation(dp(6));
+        panel.setVisibility(View.GONE);
+        actions.setPadding(dp(12), dp(4), dp(12), dp(10));
+
+        FrameLayout header = new FrameLayout(requireContext());
+
+        ImageView headerIcon = new ImageView(requireContext());
+        headerIcon.setImageResource(R.drawable.ic_tutorial_settings);
+        headerIcon.setScaleType(ImageView.ScaleType.CENTER);
+        headerIcon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        FrameLayout.LayoutParams headerIconParams = new FrameLayout.LayoutParams(
+                dp(22),
+                dp(22),
+                Gravity.START | Gravity.CENTER_VERTICAL);
+        headerIconParams.leftMargin = dp(14);
+        header.addView(headerIcon, headerIconParams);
+
+        ImageButton collapseButton = new ImageButton(requireContext());
+        collapseButton.setImageResource(R.drawable.ic_tutorial_collapse);
+        collapseButton.setContentDescription("收起参数面板");
+        collapseButton.setScaleType(ImageView.ScaleType.CENTER);
+        collapseButton.setPadding(dp(10), dp(10), dp(10), dp(10));
+        collapseButton.setBackgroundResource(R.drawable.bg_tutorial_panel_icon);
+        FrameLayout.LayoutParams collapseParams = new FrameLayout.LayoutParams(
+                dp(44),
+                dp(44),
+                Gravity.TOP | Gravity.END);
+        collapseParams.topMargin = dp(2);
+        collapseParams.rightMargin = dp(4);
+        header.addView(collapseButton, collapseParams);
+        panel.addView(header, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(48)));
+
+        View divider = new View(requireContext());
+        divider.setBackgroundColor(0x40d2d2d7);
+        LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(1));
+        dividerParams.setMargins(dp(14), 0, dp(14), 0);
+        panel.addView(divider, dividerParams);
+        panel.addView(actions, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        floatingActionRoot.addView(panel, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.START));
+
+        settingsButton.setOnClickListener(view -> {
+            settingsButton.setVisibility(View.GONE);
+            panel.setVisibility(View.VISIBLE);
+            //desc- 面板由 GONE 首次变为可见后刷新 Spinner，避免初始选中视图沿用未测量状态而向下偏移。
+            panel.post(() -> refreshSpinnerViews(actions));
+        });
+        collapseButton.setOnClickListener(view -> {
+            panel.setVisibility(View.GONE);
+            settingsButton.setVisibility(View.VISIBLE);
+        });
+
+        FrameLayout.LayoutParams actionParams = new FrameLayout.LayoutParams(
+                panelWidth,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.START);
+        actionParams.setMargins(dp(12), dp(12), dp(12), 0);
+        container.addView(floatingActionRoot, actionParams);
+    }
+
+    /**
+     * 刷新容器内所有下拉框的选中视图与测量状态
+     * @param view 当前遍历的控件或控件容器
+     */
+    private void refreshSpinnerViews(View view) {
+        if (view instanceof Spinner) {
+            Spinner spinner = (Spinner) view;
+            if (spinner.getAdapter() instanceof ArrayAdapter) {
+                ((ArrayAdapter<?>) spinner.getAdapter()).notifyDataSetChanged();
+            }
+            spinner.requestLayout();
+            spinner.invalidate();
+            return;
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                refreshSpinnerViews(group.getChildAt(index));
+            }
+        }
+    }
+
+    /**
+     * 创建悬浮设置图标按钮
+     * @return 已完成样式和无障碍描述配置的按钮
+     */
+    private ImageButton createSettingsButton() {
+        ImageButton button = new ImageButton(requireContext());
+        button.setImageResource(R.drawable.ic_tutorial_settings);
+        button.setContentDescription("打开参数设置");
+        button.setScaleType(ImageView.ScaleType.CENTER);
+        button.setPadding(dp(12), dp(12), dp(12), dp(12));
+        button.setBackgroundResource(R.drawable.bg_tutorial_settings_button);
+        button.setElevation(dp(6));
+        return button;
     }
 
     @Override
@@ -243,6 +412,9 @@ public abstract class BaseSampleFragment extends Fragment {
             sceneLayout.destroy();
             sceneLayout = null;
         }
+        floatingActionRoot = null;
+        actionContainer = null;
+        contentContainer = null;
         super.onDestroyView();
     }
 
