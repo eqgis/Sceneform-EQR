@@ -4,7 +4,6 @@ import android.widget.LinearLayout;
 
 import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.layout.SceneLayout;
-import com.eqgis.test.fragments.BaseSampleFragment;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Quaternion;
 import com.google.sceneform.math.Vector3;
@@ -19,7 +18,7 @@ import com.google.sceneform.rendering.MaterialFactory;
  * </pre>
  * @author tanyx
  */
-public class CubeLessonFragment extends BaseSampleFragment {
+public class CubeLessonFragment extends BaseTutorialFragment {
     private Node cubeNode;
 
     @Override

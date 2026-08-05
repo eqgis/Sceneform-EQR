@@ -6,7 +6,6 @@ import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.eqr.utils.ScaleTool;
 import com.eqgis.test.SampleLesson;
-import com.eqgis.test.fragments.BaseSampleFragment;
 import com.eqgis.test.fragments.LessonHostFragment;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
@@ -30,7 +29,7 @@ import java.util.List;
  * </pre>
  * @author tanyx
  */
-public class GeometryTopicFragment extends BaseSampleFragment implements LessonHostFragment {
+public class GeometryTopicFragment extends BaseTutorialFragment implements LessonHostFragment {
     private final List<Node> lessonNodes = new ArrayList<>();
     private SampleLesson pendingLesson;
 

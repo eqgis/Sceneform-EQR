@@ -3,7 +3,6 @@ package com.eqgis.test.fragments.tutorial;
 import android.widget.LinearLayout;
 
 import com.eqgis.eqr.layout.SceneLayout;
-import com.eqgis.test.fragments.BaseSampleFragment;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -23,7 +22,7 @@ import java.util.Collections;
  * </pre>
  * @author tanyx
  */
-public class TriangleLessonFragment extends BaseSampleFragment {
+public class TriangleLessonFragment extends BaseTutorialFragment {
     private Node triangleNode;
 
     @Override

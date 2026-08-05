@@ -3,7 +3,6 @@ package com.eqgis.test.fragments.tutorial;
 import android.widget.LinearLayout;
 
 import com.eqgis.eqr.layout.SceneLayout;
-import com.eqgis.test.fragments.BaseSampleFragment;
 import com.eqgis.test.scene.GltfSampleScene;
 
 /**
@@ -14,7 +13,7 @@ import com.eqgis.test.scene.GltfSampleScene;
  * </pre>
  * @author tanyx
  */
-public class GltfLessonFragment extends BaseSampleFragment {
+public class GltfLessonFragment extends BaseTutorialFragment {
     @Override
     protected String getLessonTitle() {
         return "加载 GLTF/GLB 模型";

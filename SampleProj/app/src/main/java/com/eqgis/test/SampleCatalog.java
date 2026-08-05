@@ -132,7 +132,7 @@ public class SampleCatalog {
     public static List<SampleTopic> tutorialTopics() {
         return Arrays.asList(
                 new SampleTopic(TOPIC_GEOMETRY, "基础几何与 Mesh", "从三角形、平面、立方体 到 GLTF/PLY格式 模型加载。", geometryLessons()),
-                new SampleTopic(TOPIC_ANDROID_VIEW, "Android View 渲染到 3D", "将 TextView、ImageView 和自定义布局渲染到三维空间。", placeholderLessons("android_view", "Android View 渲染到 3D")),
+                new SampleTopic(TOPIC_ANDROID_VIEW, "Android View 渲染到 3D", "将 TextView、ImageView、WebView、常用控件和 XML Layout 渲染到三维空间。", androidViewLessons()),
                 new SampleTopic(TOPIC_MATERIAL_CAMERA, "材质、光照与相机", "学习材质、IBL、天空盒、FOV、裁剪面和阴影。", placeholderLessons("material_camera", "材质、光照与相机")),
                 new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", placeholderLessons("animation", "动画篇")),
                 new SampleTopic(TOPIC_INTERACTION, "交互篇", "点击、触摸、AABB、碰撞体和射线拾取。", placeholderLessons("interaction", "交互篇")),
@@ -167,6 +167,20 @@ public class SampleCatalog {
                 new SampleLesson("lesson_cube", "绘制 Cube", "使用几何工具生成立方体并调整位置。", "com.eqgis.test.fragments.tutorial.CubeLessonFragment"),
                 new SampleLesson("lesson_gltf", "加载 GLTF/GLB 模型", "使用 ModelRenderable 加载 Filament GLTF 模型。", "com.eqgis.test.fragments.tutorial.GltfLessonFragment"),
                 new SampleLesson("lesson_ply", "加载 PLY 模型", "加载 PLY 数据并观察点云/Mesh 渲染。", "com.eqgis.test.fragments.tutorial.PlyLessonFragment")
+        );
+    }
+
+    /**
+     * 获取 Android View 三维渲染教程功能
+     * @return Android View 教程功能列表
+     */
+    private static List<SampleLesson> androidViewLessons() {
+        return Arrays.asList(
+                new SampleLesson("android_view_text", "TextView", "在场景中放置多个文字标签和状态信息。", "com.eqgis.test.fragments.tutorial.AndroidTextViewLessonFragment"),
+                new SampleLesson("android_view_image", "ImageView", "将 Drawable 图标作为 ViewRenderable 展示。", "com.eqgis.test.fragments.tutorial.AndroidImageViewLessonFragment"),
+                new SampleLesson("android_view_web", "WebView", "使用本地 HTML 创建三维网页信息卡。", "com.eqgis.test.fragments.tutorial.AndroidWebViewLessonFragment"),
+                new SampleLesson("android_view_widgets", "常用 View", "展示 Button、Switch、CheckBox 和 ProgressBar。", "com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment"),
+                new SampleLesson("android_view_layout", "XML Layout", "把一组 Android View 作为完整布局渲染。", "com.eqgis.test.fragments.tutorial.AndroidLayoutLessonFragment")
         );
     }
 

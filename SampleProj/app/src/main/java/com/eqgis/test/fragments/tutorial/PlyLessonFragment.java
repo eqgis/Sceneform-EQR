@@ -3,7 +3,6 @@ package com.eqgis.test.fragments.tutorial;
 import android.widget.LinearLayout;
 
 import com.eqgis.eqr.layout.SceneLayout;
-import com.eqgis.test.fragments.BaseSampleFragment;
 import com.eqgis.test.scene.PlyDataScene;
 
 /**
@@ -14,7 +13,7 @@ import com.eqgis.test.scene.PlyDataScene;
  * </pre>
  * @author tanyx
  */
-public class PlyLessonFragment extends BaseSampleFragment {
+public class PlyLessonFragment extends BaseTutorialFragment {
     @Override
     protected String getLessonTitle() {
         return "加载 PLY 模型";

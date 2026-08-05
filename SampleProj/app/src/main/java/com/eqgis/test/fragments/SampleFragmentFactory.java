@@ -4,6 +4,11 @@ import androidx.fragment.app.Fragment;
 
 import com.eqgis.test.SampleLesson;
 import com.eqgis.test.fragments.common.CommonSampleLaunchFragment;
+import com.eqgis.test.fragments.tutorial.AndroidImageViewLessonFragment;
+import com.eqgis.test.fragments.tutorial.AndroidLayoutLessonFragment;
+import com.eqgis.test.fragments.tutorial.AndroidTextViewLessonFragment;
+import com.eqgis.test.fragments.tutorial.AndroidWebViewLessonFragment;
+import com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment;
 import com.eqgis.test.fragments.tutorial.CubeLessonFragment;
 import com.eqgis.test.fragments.tutorial.GltfLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
@@ -39,6 +44,16 @@ public class SampleFragmentFactory {
                 return new GltfLessonFragment();
             case "lesson_ply":
                 return new PlyLessonFragment();
+            case "android_view_text":
+                return new AndroidTextViewLessonFragment();
+            case "android_view_image":
+                return new AndroidImageViewLessonFragment();
+            case "android_view_web":
+                return new AndroidWebViewLessonFragment();
+            case "android_view_widgets":
+                return new AndroidWidgetLessonFragment();
+            case "android_view_layout":
+                return new AndroidLayoutLessonFragment();
             default:
                 return BaseInfoFragment.newInstance(lesson.getTitle(), lesson.getDescription(), lesson.getCodeLocation());
         }

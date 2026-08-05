@@ -4,7 +4,6 @@ import android.widget.LinearLayout;
 
 import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.layout.SceneLayout;
-import com.eqgis.test.fragments.BaseSampleFragment;
 import com.google.sceneform.Node;
 import com.google.sceneform.math.Vector3;
 import com.google.sceneform.rendering.Color;
@@ -18,7 +17,7 @@ import com.google.sceneform.rendering.MaterialFactory;
  * </pre>
  * @author tanyx
  */
-public class PlaneLessonFragment extends BaseSampleFragment {
+public class PlaneLessonFragment extends BaseTutorialFragment {
     private Node planeNode;
 
     @Override
