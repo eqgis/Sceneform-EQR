@@ -1,5 +1,7 @@
 package com.eqgis.test.fragments.tutorial;
 
+import android.widget.LinearLayout;
+
 import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.test.fragments.BaseSampleFragment;
@@ -28,6 +30,15 @@ public class CubeLessonFragment extends BaseSampleFragment {
     @Override
     protected String getLessonDescription() {
         return "使用几何工具创建立方体，观察顶点、面、法线和材质在三维空间中的效果。";
+    }
+
+    /**
+     * 初始化图元类型切换操作
+     * @param actionContainer 操作按钮容器
+     */
+    @Override
+    protected void onActionsReady(LinearLayout actionContainer) {
+        addPrimitiveTypeSpinner(actionContainer);
     }
 
     /**

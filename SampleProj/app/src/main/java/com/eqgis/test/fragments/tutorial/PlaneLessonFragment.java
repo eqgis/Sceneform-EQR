@@ -1,5 +1,7 @@
 package com.eqgis.test.fragments.tutorial;
 
+import android.widget.LinearLayout;
+
 import com.eqgis.eqr.geometry.GeometryUtils;
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.test.fragments.BaseSampleFragment;
@@ -27,6 +29,15 @@ public class PlaneLessonFragment extends BaseSampleFragment {
     @Override
     protected String getLessonDescription() {
         return "创建一个带透明材质的平面，用于理解平面 Mesh、UV 和场景中的参考面。";
+    }
+
+    /**
+     * 初始化图元类型切换操作
+     * @param actionContainer 操作按钮容器
+     */
+    @Override
+    protected void onActionsReady(LinearLayout actionContainer) {
+        addPrimitiveTypeSpinner(actionContainer);
     }
 
     /**

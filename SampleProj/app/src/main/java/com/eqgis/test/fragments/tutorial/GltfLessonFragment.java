@@ -1,5 +1,7 @@
 package com.eqgis.test.fragments.tutorial;
 
+import android.widget.LinearLayout;
+
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.test.fragments.BaseSampleFragment;
 import com.eqgis.test.scene.GltfSampleScene;
@@ -21,6 +23,15 @@ public class GltfLessonFragment extends BaseSampleFragment {
     @Override
     protected String getLessonDescription() {
         return "使用 ModelRenderable 加载 GLB 模型，并通过 ScaleTool 将模型缩放到合适尺寸。";
+    }
+
+    /**
+     * 初始化图元类型切换操作
+     * @param actionContainer 操作按钮容器
+     */
+    @Override
+    protected void onActionsReady(LinearLayout actionContainer) {
+        addPrimitiveTypeSpinner(actionContainer);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.eqgis.test.fragments.tutorial;
 
+import android.widget.LinearLayout;
+
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.test.fragments.BaseSampleFragment;
 import com.google.sceneform.Node;
@@ -32,6 +34,15 @@ public class TriangleLessonFragment extends BaseSampleFragment {
     @Override
     protected String getLessonDescription() {
         return "本示例手动创建三个顶点和一个三角形索引，理解 Mesh 最小构成：顶点、法线、UV、索引和材质。";
+    }
+
+    /**
+     * 初始化图元类型切换操作
+     * @param actionContainer 操作按钮容器
+     */
+    @Override
+    protected void onActionsReady(LinearLayout actionContainer) {
+        addPrimitiveTypeSpinner(actionContainer);
     }
 
     /**

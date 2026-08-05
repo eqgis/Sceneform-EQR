@@ -1,5 +1,7 @@
 package com.eqgis.test.fragments.tutorial;
 
+import android.widget.LinearLayout;
+
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.test.fragments.BaseSampleFragment;
 import com.eqgis.test.scene.PlyDataScene;
@@ -21,6 +23,15 @@ public class PlyLessonFragment extends BaseSampleFragment {
     @Override
     protected String getLessonDescription() {
         return "加载 assets 中的 PLY 数据，理解从数据解析到 ModelRenderable 渲染的基本流程。";
+    }
+
+    /**
+     * 初始化图元类型切换操作
+     * @param actionContainer 操作按钮容器
+     */
+    @Override
+    protected void onActionsReady(LinearLayout actionContainer) {
+        addPrimitiveTypeSpinner(actionContainer);
     }
 
     /**

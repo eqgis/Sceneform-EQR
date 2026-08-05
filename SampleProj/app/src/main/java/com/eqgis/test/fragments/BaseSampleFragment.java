@@ -1,11 +1,15 @@
 package com.eqgis.test.fragments;
 
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,6 +18,10 @@ import androidx.fragment.app.Fragment;
 
 import com.eqgis.eqr.layout.SceneLayout;
 import com.eqgis.test.scene.ISampleScene;
+import com.google.android.filament.RenderableManager;
+import com.google.sceneform.Node;
+
+import java.util.List;
 
 /**
  * 普通渲染示例 Fragment 基类
@@ -62,6 +70,67 @@ public abstract class BaseSampleFragment extends Fragment {
      * @param actionContainer 操作按钮容器
      */
     protected void onActionsReady(LinearLayout actionContainer) {
+    }
+
+    /**
+     * 向操作区添加图元类型下拉框
+     * @param actionContainer 操作按钮容器
+     */
+    protected void addPrimitiveTypeSpinner(LinearLayout actionContainer) {
+        TextView label = new TextView(requireContext());
+        label.setText("图元类型：");
+        label.setTextColor(0xff333333);
+        label.setTextSize(14);
+        label.setGravity(Gravity.CENTER_VERTICAL);
+        actionContainer.addView(label, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        String[] primitiveNames = {"点图元", "线图元", "三角图元"};
+        RenderableManager.PrimitiveType[] primitiveTypes = {
+                RenderableManager.PrimitiveType.POINTS,
+                RenderableManager.PrimitiveType.LINES,
+                RenderableManager.PrimitiveType.TRIANGLES
+        };
+        Spinner primitiveSpinner = new Spinner(requireContext());
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                primitiveNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        primitiveSpinner.setAdapter(adapter);
+        primitiveSpinner.setSelection(primitiveNames.length - 1, false);
+        primitiveSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                changePrimitiveType(primitiveTypes[position]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        actionContainer.addView(primitiveSpinner, new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1));
+    }
+
+    /**
+     * 切换当前场景直属可渲染节点的图元类型
+     * @param type {@link RenderableManager.PrimitiveType} 目标图元类型
+     */
+    protected void changePrimitiveType(RenderableManager.PrimitiveType type) {
+        if (!isSceneActive()) {
+            return;
+        }
+        List<Node> children = sceneLayout.getRootNode().getChildren();
+        for (int i = 0; i < children.size(); i++) {
+            Node node = children.get(i);
+            if (node.getRenderableInstance() != null) {
+                node.getRenderableInstance().changePrimitive(type);
+            }
+        }
     }
 
     /**
