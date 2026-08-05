@@ -11,16 +11,7 @@
         android:id="@+id/base_scene_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-    <TextView
-        android:textColor="#fff"
-        android:textSize="24dp"
-        android:layout_marginTop="20dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="EQ-Renderer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+
     <View
         android:id="@+id/touch_view"
         android:layout_width="match_parent"
