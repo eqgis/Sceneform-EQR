@@ -15,6 +15,8 @@
  */
 
 #include "FFilamentAsset.h"
+#include "GltfEnums.h"
+#include "Wireframe.h"
 
 #include <gltfio/Animator.h>
 
@@ -24,9 +26,6 @@
 #include <utils/EntityManager.h>
 #include <utils/Log.h>
 #include <utils/NameComponentManager.h>
-
-#include "GltfEnums.h"
-#include "Wireframe.h"
 
 using namespace filament;
 using namespace utils;
@@ -107,34 +106,32 @@ const char* FFilamentAsset::getExtras(utils::Entity entity) const noexcept {
 void FFilamentAsset::addTextureBinding(MaterialInstance* materialInstance,
         const char* parameterName, const cgltf_texture* srcTexture,
         TextureProvider::TextureFlags flags) {
-    if (!srcTexture->image && !srcTexture->basisu_image) {
+    if (!srcTexture->image && !srcTexture->basisu_image && !srcTexture->webp_image) {
 #ifndef NDEBUG
         slog.w << "Texture is missing image (" << srcTexture->name << ")." << io::endl;
 #endif
         return;
     }
 
-    const size_t textureIndex = (size_t) (srcTexture - mSourceAsset->hierarchy->textures);
-    TextureInfo& info = mTextures[textureIndex];
-
-    // All bindings for a particular glTF texture must have the same transform function.
-    assert_invariant(info.bindings.size() == 0 || info.flags == flags);
-    info.flags = flags;
+    const size_t gltfTextureIndex = (size_t) (srcTexture - mSourceAsset->hierarchy->textures);
+    const size_t assetTextureIndex = obtainAssetTextureIndex(gltfTextureIndex, flags);
+    TextureInfo& info = mTextures[assetTextureIndex];
 
     const TextureSlot slot = { materialInstance, parameterName };
     if (info.texture) {
-        applyTextureBinding(textureIndex, slot, false);
+        applyTextureBinding(assetTextureIndex, slot, false);
     } else {
         mDependencyGraph.addEdge(materialInstance, parameterName);
         info.bindings.push_back(slot);
     }
 }
 
-void FFilamentAsset::applyTextureBinding(size_t textureIndex, const TextureSlot& tb,
+void FFilamentAsset::applyTextureBinding(size_t assetTextureIndex, const TextureSlot& tb,
         bool addDependency) {
-    const TextureInfo& info = mTextures[textureIndex];
+    const TextureInfo& info = mTextures[assetTextureIndex];
     assert_invariant(info.texture);
-    const cgltf_sampler* srcSampler = mSourceAsset->hierarchy->textures[textureIndex].sampler;
+    const cgltf_sampler* srcSampler =
+            mSourceAsset->hierarchy->textures[info.gltfTextureIndex].sampler;
     TextureSampler sampler;
     if (srcSampler) {
         sampler.setWrapModeS(getWrapMode(srcSampler->wrap_s));

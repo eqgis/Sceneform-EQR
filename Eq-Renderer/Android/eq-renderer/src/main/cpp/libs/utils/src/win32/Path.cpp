@@ -17,12 +17,14 @@
 #include <utils/Path.h>
 
 #include <direct.h>
-#include <Strsafe.h>
 #include <shlobj.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <windows.h>
 #include <shlwapi.h>
+#include <Strsafe.h>
+#include <windows.h>
+
+#include <sys/stat.h>
+
+#include <stdlib.h>
 
 namespace utils {
 
@@ -64,6 +66,14 @@ std::vector<Path> Path::listContents() const {
 
     WIN32_FIND_DATA findData;
     HANDLE find = FindFirstFile(dirName, &findData);
+    if (find == INVALID_HANDLE_VALUE) {
+        return {};
+    }
+
+    struct FindCloser {
+        HANDLE h;
+        ~FindCloser() { FindClose(h); }
+    } closer{find};
 
     std::vector<Path> directory_contents;
     do

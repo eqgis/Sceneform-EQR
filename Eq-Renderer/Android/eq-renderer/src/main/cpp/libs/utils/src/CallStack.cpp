@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#if !defined(__ANDROID__) && !defined(WIN32) && !defined(__EMSCRIPTEN__)
+#if !defined(__ANDROID__) && !defined(WIN32) && !defined(__EMSCRIPTEN__) && !(defined(__linux__) && !defined(__GLIBC__))
 #include <execinfo.h>
 #define HAS_EXECINFO 1
 #else
@@ -140,7 +140,8 @@ CString CallStack::demangleTypeName(const char* mangled) {
 
 // ------------------------------------------------------------------------------------------------
 
-io::ostream& operator<<(io::ostream& stream, CallStack const& UTILS_UNUSED callstack) {
+template <typename Stream>
+Stream& printCallStack(Stream& stream, CallStack const& UTILS_UNUSED callstack) {
 #if HAS_EXECINFO
     size_t const size = callstack.getFrameCount();
     char buf[1024];
@@ -149,14 +150,16 @@ io::ostream& operator<<(io::ostream& stream, CallStack const& UTILS_UNUSED calls
         void* pc = (void*)callstack[i];
 #if HAS_DLADDR
         if (::dladdr(pc, &info)) {
-            char const* exe = strrchr(info.dli_fname, '/');
+            char const* fname = info.dli_fname ? info.dli_fname : "<unknown>";
+            char const* sname = info.dli_sname ? info.dli_sname : "<unknown>";
+            char const* exe = strrchr(fname, '/');
             snprintf(buf, sizeof(buf), "#%u\t%-31s %*p %s + %zd\n",
                     unsigned(i),
-                    exe ? exe + 1 : info.dli_fname,
+                    exe ? exe + 1 : fname,
                     int(2 + sizeof(void*)*2),
                     pc,
-                    CallStack::demangle(info.dli_sname).c_str(),
-                    (char *)callstack[i] - (char *)info.dli_saddr);
+                    CallStack::demangle(sname).c_str(),
+                    (char *)callstack[i] - (char *)(info.dli_saddr ? info.dli_saddr : pc));
             stream << buf;
         } else
 #endif
@@ -166,9 +169,18 @@ io::ostream& operator<<(io::ostream& stream, CallStack const& UTILS_UNUSED calls
             free((void*)symbols);
         }
     }
-    stream << io::endl;
 #endif
     return stream;
 }
+
+io::ostream& operator<<(io::ostream& stream, CallStack const& callstack) {
+    return printCallStack(stream, callstack) << io::endl;
+}
+
+#if defined(FILAMENT_USE_ABSEIL_LOGGING)
+std::ostream& operator<<(std::ostream& stream, CallStack const& callstack) {
+    return printCallStack(stream, callstack) << '\n' << std::flush;
+}
+#endif
 
 } // namespace utils

@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-#include <utils/CString.h>
-
 #include <utils/compiler.h>
+#include <utils/CString.h>
 #include <utils/Logger.h>
 #include <utils/ostream.h>
+#include <utils/Panic.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
+#include <limits>
 #include <memory>
 
 
@@ -59,24 +60,26 @@ void CString::do_tracking(bool ctor) {
 UTILS_NOINLINE
 CString::CString(const char* cstr, size_t const length) {
     track(true);
-    if (length && cstr) {
-        Data* const p = static_cast<Data*>(std::malloc(sizeof(Data) + length + 1));
-        p->length = size_type(length);
+    size_t const len = std::min(length, (size_t)std::numeric_limits<size_type>::max());
+    if (len && cstr) {
+        Data* const p = static_cast<Data*>(std::malloc(sizeof(Data) + len + 1));
+        p->length = size_type(len);
         mCStr = reinterpret_cast<value_type*>(p + 1);
         // we don't use memcpy here to avoid a call to libc, the generated code is pretty good.
-        std::uninitialized_copy_n(cstr, length, mCStr);
-        mCStr[length] = '\0';
+        std::uninitialized_copy_n(cstr, len, mCStr);
+        mCStr[len] = '\0';
     }
 }
 
 CString::CString(size_t const length) {
     track(true);
-    if (length) {
-        Data* const p = static_cast<Data*>(std::malloc(sizeof(Data) + length + 1));
-        p->length = size_type(length);
+    size_t const len = std::min(length, (size_t)std::numeric_limits<size_type>::max());
+    if (len) {
+        Data* const p = static_cast<Data*>(std::malloc(sizeof(Data) + len + 1));
+        p->length = size_type(len);
         mCStr = reinterpret_cast<value_type*>(p + 1);
-        std::fill_n(mCStr, length, 0);
-        mCStr[length] = '\0';
+        std::fill_n(mCStr, len, 0);
+        mCStr[len] = '\0';
     }
 }
 
@@ -107,7 +110,9 @@ CString& CString::replace(size_type const pos, size_type len, char const* str, s
 
     len = std::min(len, size() - pos);
 
-    const size_type newSize = size() - len + l;
+    const size_type remainder = size() - len;
+    FILAMENT_CHECK_POSTCONDITION(l <= std::numeric_limits<size_type>::max() - remainder);
+    const size_type newSize = remainder + l;
 
     // if the new string is not longer, we can do it in-place, which is much faster.
     if (newSize <= size()) {
@@ -154,6 +159,12 @@ CString& CString::replace(size_type const pos, size_type len, char const* str, s
 
 #if !defined(NDEBUG)
 io::ostream& operator<<(io::ostream& out, const CString& rhs) {
+    return out << rhs.c_str_safe();
+}
+#endif
+
+#if defined(FILAMENT_USE_ABSEIL_LOGGING)
+std::ostream& operator<<(std::ostream& out, const CString& rhs) {
     return out << rhs.c_str_safe();
 }
 #endif

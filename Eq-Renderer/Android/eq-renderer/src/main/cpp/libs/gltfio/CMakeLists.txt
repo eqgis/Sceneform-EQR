@@ -49,6 +49,7 @@ set(SRCS
         src/UbershaderProvider.cpp
         src/Utility.cpp
         src/Utility.h
+        src/WebpProvider.cpp
         src/Wireframe.cpp
         src/Wireframe.h
         src/downcast.h
@@ -61,6 +62,7 @@ set(SRCS
         src/extended/TangentSpaceMeshWrapper.cpp
         src/extended/TangentSpaceMeshWrapper.h
 )
+
 
 # ==================================================================================================
 # Build materials
@@ -181,6 +183,10 @@ set_target_properties(uberarchive PROPERTIES FOLDER Libs)
 # Build the "core" library (no filamat)
 # ==================================================================================================
 
+if(FILAMENT_SUPPORTS_WEBP_TEXTURES)
+    set(WEBP_DECODER_LIB_TARGET webpdecoder)
+endif()
+
 include_directories(${PUBLIC_HDR_DIR} ${RESOURCE_DIR})
 link_libraries(math utils filament cgltf stb ktxreader geometry tsl uberzlib)
 
@@ -190,15 +196,15 @@ target_include_directories(gltfio_core PUBLIC ${PUBLIC_HDR_DIR})
 set_target_properties(gltfio_core PROPERTIES FOLDER Libs)
 
 target_compile_definitions(gltfio_core PUBLIC -DGLTFIO_DRACO_SUPPORTED=1)
-target_link_libraries(gltfio_core PUBLIC dracodec meshoptimizer)
+target_link_libraries(gltfio_core PUBLIC dracodec meshoptimizer ${WEBP_DECODER_LIB_TARGET})
 
-if (WEBGL_PTHREADS)
+if (WASM_PTHREADS)
     target_compile_definitions(gltfio_core PUBLIC -DFILAMENT_WASM_THREADS)
 endif()
 
 target_compile_options(gltfio_core PRIVATE ${FILAMENT_WARNINGS})
 
-if (NOT WEBGL AND NOT ANDROID AND NOT IOS)
+if (NOT WASM AND NOT ANDROID AND NOT IOS)
 
     # ==================================================================================================
     # Link the core library with additional dependencies to create the "full" library
@@ -219,37 +225,40 @@ endif()
 # Tests
 # ==================================================================================================
 
-set(GLTF_TEST_FILES)
-function(add_test_gltf SOURCE TARGET)
-    set(source_path "${ROOT_DIR}/${SOURCE}")
-    set(target_path "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}")
-    add_custom_command(
-        OUTPUT ${target_path}
-        DEPENDS ${source_path}
-        COMMAND ${CMAKE_COMMAND} -E copy ${source_path} ${target_path}
-    )
-    list(APPEND GLTF_TEST_FILES "${target_path}")
-    set(GLTF_TEST_FILES ${GLTF_TEST_FILES} PARENT_SCOPE)
-endfunction()
+if (FILAMENT_BUILD_TESTING)
+    set(GLTF_TEST_FILES)
+    function(add_test_gltf SOURCE TARGET)
+        set(source_path "${ROOT_DIR}/${SOURCE}")
+        set(target_path "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}")
+        add_custom_command(
+            OUTPUT ${target_path}
+            DEPENDS ${source_path}
+            COMMAND ${CMAKE_COMMAND} -E copy ${source_path} ${target_path}
+        )
+        list(APPEND GLTF_TEST_FILES "${target_path}")
+        set(GLTF_TEST_FILES ${GLTF_TEST_FILES} PARENT_SCOPE)
+    endfunction()
 
-add_test_gltf("third_party/models/AnimatedMorphCube/AnimatedMorphCube.glb" "AnimatedMorphCube.glb")
+    add_test_gltf("third_party/models/AnimatedMorphCube/AnimatedMorphCube.glb" "AnimatedMorphCube.glb")
+    add_test_gltf("third_party/models/DamagedHelmet/DamagedHelmetWebp.glb" "DamagedHelmetWebp.glb")
 
-add_custom_target(test_gltfio_files DEPENDS ${GLTF_TEST_FILES})
+    add_custom_target(test_gltfio_files DEPENDS ${GLTF_TEST_FILES})
 
-# The following tests rely on private APIs that are stripped
-# away in Release builds
-if (TNT_DEV AND NOT WEBGL AND NOT ANDROID AND NOT IOS)
-    set(TEST_TARGET test_gltfio)
+    # The following tests rely on private APIs that are stripped
+    # away in Release builds
+    if (TNT_DEV AND NOT WASM AND NOT ANDROID AND NOT IOS)
+        set(TEST_TARGET test_gltfio)
 
-    add_executable(${TEST_TARGET} test/gltfio_test.cpp)
-    add_dependencies(${TEST_TARGET} test_gltfio_files)
-    set_property(TARGET test_gltfio PROPERTY LINK_LIBRARIES)
+        add_executable(${TEST_TARGET} test/gltfio_test.cpp)
+        add_dependencies(${TEST_TARGET} test_gltfio_files)
+        set_property(TARGET test_gltfio PROPERTY LINK_LIBRARIES)
 
-    target_link_libraries(${TEST_TARGET} PRIVATE ${TARGET} gtest uberarchive)
-    if (NOT MSVC)
-        target_compile_options(${TEST_TARGET} PRIVATE ${GLTFIO_WARNINGS})
+        target_link_libraries(${TEST_TARGET} PRIVATE ${TARGET} gtest uberarchive)
+        if (NOT MSVC)
+            target_compile_options(${TEST_TARGET} PRIVATE ${GLTFIO_WARNINGS})
+        endif()
+        set_target_properties(${TEST_TARGET} PROPERTIES FOLDER Tests)
     endif()
-    set_target_properties(${TEST_TARGET} PROPERTIES FOLDER Tests)
 endif()
 
 # ==================================================================================================

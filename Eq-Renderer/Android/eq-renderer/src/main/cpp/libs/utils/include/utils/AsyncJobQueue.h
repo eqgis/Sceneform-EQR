@@ -17,10 +17,10 @@
 #ifndef TNT_ASYNCJOBQUEUE_H
 #define TNT_ASYNCJOBQUEUE_H
 
-#include <utils/JobSystem.h>
-#include <utils/Invocable.h>
-#include <utils/Mutex.h> // NOLINT(*-include-cleaner)
 #include <utils/Condition.h> // NOLINT(*-include-cleaner)
+#include <utils/Invocable.h>
+#include <utils/JobSystem.h>
+#include <utils/Mutex.h> // NOLINT(*-include-cleaner)
 
 #include <thread>
 #include <vector>
@@ -48,6 +48,9 @@ public:
     // blocks until all jobs are executed and quits the thread
     void drainAndExit();
 
+    // blocks until all currently queued jobs are executed
+    void drain();
+
     // adds a job to the queue. no-op if drainAndExit() was called.
     void push(Job&& job);
 
@@ -55,12 +58,13 @@ public:
 
 private:
 #if !defined(__EMSCRIPTEN__)
+    void workerThreadLoop(const char* name, Priority priority);
     using Container = std::vector<Job>;
     std::thread mThread;
     Mutex mLock; // NOLINT(*-include-cleaner)
     Condition mCondition; // NOLINT(*-include-cleaner)
-    Container mQueue;
-    bool mExitRequested = false;
+    Container mQueue UTILS_GUARDED_BY(mLock);
+    bool mExitRequested UTILS_GUARDED_BY(mLock) = false;
 #endif
 };
 

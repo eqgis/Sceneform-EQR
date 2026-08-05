@@ -16,10 +16,12 @@
 
 #include <utils/AsyncJobQueue.h>
 #include <utils/compiler.h>
-#include <utils/JobSystem.h>
+#include <utils/CountDownLatch.h>
 #include <utils/debug.h>
+#include <utils/JobSystem.h>
 #include <utils/Logger.h>
 
+#include <memory>
 #include <mutex>
 #include <utility>
 
@@ -28,57 +30,69 @@ namespace utils {
 AsyncJobQueue::AsyncJobQueue(const char* name, Priority priority) {
 #if !defined(__EMSCRIPTEN__)
     mQueue.reserve(2);
-    mThread = std::thread([this, name, priority]() {
-        JobSystem::setThreadName(name);
-        JobSystem::setThreadPriority(priority);
-        bool exitRequested;
-        do {
-            std::unique_lock lock(mLock);
-            // wait until we get a job, or we're asked to exit
-            mCondition.wait(lock, [this]() -> bool {
-                return mExitRequested || !mQueue.empty();
-            });
-            exitRequested = mExitRequested;
-            auto const queue = std::move(mQueue);
-            // here we have drained the whole queue, and if exitRequested is set, we're guaranteed
-            // no more job will be added after we unlock.
-            lock.unlock();
-
-            // execute the jobs without holding a lock. These jobs must be executed in order,
-            // front to back, and are allowed to be long-running (like waiting on a fence).
-            for (auto& job : queue) {
-                job();
-            }
-        } while (!exitRequested);
-    });
+    mThread = std::thread(&AsyncJobQueue::workerThreadLoop, this, name, priority);
 #endif
 }
 
-AsyncJobQueue::~AsyncJobQueue() noexcept {
 #if !defined(__EMSCRIPTEN__)
+void AsyncJobQueue::workerThreadLoop(const char* name, Priority priority) {
+    JobSystem::setThreadName(name);
+    JobSystem::setThreadPriority(priority);
+    bool exitRequested;
+    decltype(mQueue) tempQueue;
+    do {
+        UniqueLock lock(mLock);
+        // wait until we get a job, or we're asked to exit
+        while (!mExitRequested && mQueue.empty()) {
+            mCondition.wait(lock);
+        }
+        exitRequested = mExitRequested;
+        tempQueue.swap(mQueue);
+        // here we have drained the whole queue, and if exitRequested is set, we're guaranteed
+        // no more job will be added after we unlock.
+        lock.unlock();
+
+        // execute the jobs without holding a lock. These jobs must be executed in order,
+        // front to back, and are allowed to be long-running (like waiting on a fence).
+        for (auto& job: tempQueue) {
+            job();
+        }
+
+        tempQueue.clear();
+    } while (!exitRequested);
+}
+#endif
+
+
+AsyncJobQueue::~AsyncJobQueue() noexcept {
+    // wait for all pending callbacks to be called & terminate the thread
+    drainAndExit();
+#if !defined(__EMSCRIPTEN__)
+    assert_invariant(!mThread.joinable());
     assert_invariant(mQueue.empty());
 #endif
 }
 
 void AsyncJobQueue::cancelAll() noexcept {
 #if !defined(__EMSCRIPTEN__)
-    std::unique_lock const lock(mLock);
+    LockGuard const lock(mLock);
     mQueue.clear();
 #endif
 }
 
 void AsyncJobQueue::push(Job&& job) {
 #if !defined(__EMSCRIPTEN__)
-    std::unique_lock lock(mLock);
-    if (UTILS_UNLIKELY(mExitRequested)) {
-        LOG(WARNING) << "AsyncJobQueue::push() called after drainAndExit()";
+    {
+        LockGuard const lock(mLock);
+        if (UTILS_UNLIKELY(mExitRequested)) {
+            LOG(WARNING) << "AsyncJobQueue::push() called after drainAndExit()";
+        }
+        assert_invariant(!mExitRequested);
+        if (UTILS_LIKELY(!mExitRequested)) {
+            mQueue.push_back(std::move(job));
+        }
     }
-    assert_invariant(!mExitRequested);
-    if (UTILS_LIKELY(!mExitRequested)) {
-        mQueue.push_back(std::move(job));
-        lock.unlock();
-        mCondition.notify_one();
-    }
+    mCondition.notify_one();
 #endif
 }
 
@@ -93,15 +107,50 @@ bool AsyncJobQueue::isValid() const noexcept {
 
 void AsyncJobQueue::drainAndExit() {
 #if !defined(__EMSCRIPTEN__)
-    std::unique_lock lock(mLock);
-    // we request the service thread to exit, but we're guaranteed that it'll only exit
-    // after all current callbacks are processed. In addition, once mExitRequested is set,
-    // no new jobs can be added, so we can join the thread.
-    mExitRequested = true;
-    lock.unlock();
+    {
+        LockGuard const lock(mLock);
+        if (mExitRequested) {
+            return;
+        }
+        // we request the service thread to exit, but we're guaranteed that it'll only exit
+        // after all current callbacks are processed. In addition, once mExitRequested is set,
+        // no new jobs can be added, so we can join the thread.
+        mExitRequested = true;
+    }
     mCondition.notify_one();
     if (mThread.joinable()) {
         mThread.join();
+    }
+#endif
+}
+
+void AsyncJobQueue::drain() {
+#if !defined(__EMSCRIPTEN__)
+    CountDownLatch latch(1);
+    bool pushed = false;
+    {
+        LockGuard const lock(mLock);
+
+        // If the service thread is already asked to exit, we shouldn't push new jobs or wait,
+        // as doing so will cause a deadlock.
+        if (!mExitRequested) {
+            // We use a shared_ptr's custom deleter to guarantee the latch is signaled EXACTLY once.
+            // This elegantly handles edge cases:
+            // 1. cancelAll(): If cancelAll() is called, the queue is cleared and the job is destroyed
+            //    without being executed. The shared_ptr drops to 0 refs and signals the latch.
+            // 2. Normal execution: The worker thread executes the empty lambda, then destroys the job.
+            //    The shared_ptr drops to 0 refs and signals the latch.
+            std::shared_ptr<CountDownLatch> sp(&latch, [](CountDownLatch* l) {
+                l->latch();
+            });
+            mQueue.push_back([sp]() {});
+            pushed = true;
+        }
+    }
+
+    if (pushed) {
+        mCondition.notify_one();
+        latch.await();
     }
 #endif
 }

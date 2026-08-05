@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-#include <gltfio/Animator.h>
-#include <gltfio/AssetLoader.h>
-#include <gltfio/MaterialProvider.h>
-#include <gltfio/math.h>
-
+#include "downcast.h"
 #include "FFilamentAsset.h"
 #include "FNodeManager.h"
 #include "FTrsTransformManager.h"
 #include "GltfEnums.h"
 #include "Utility.h"
+
 #include "extended/AssetLoaderExtended.h"
+
+#include <gltfio/Animator.h>
+#include <gltfio/AssetLoader.h>
+#include <gltfio/MaterialProvider.h>
+#include <gltfio/math.h>
 
 #include <filament/Box.h>
 #include <filament/BufferObject.h>
@@ -40,24 +42,21 @@
 #include <filament/TransformManager.h>
 #include <filament/VertexBuffer.h>
 
-#include <math/mat4.h>
-#include <math/vec3.h>
-#include <math/vec4.h>
-
 #include <private/utils/Tracing.h>
 
 #include <utils/compiler.h>
 #include <utils/EntityManager.h>
 #include <utils/FixedCapacityVector.h>
 #include <utils/Log.h>
-#include <utils/Panic.h>
 #include <utils/NameComponentManager.h>
+#include <utils/Panic.h>
 
-#include <tsl/robin_map.h>
+#include <math/mat4.h>
+#include <math/vec3.h>
+#include <math/vec4.h>
 
 #include <cgltf.h>
-
-#include "downcast.h"
+#include <tsl/robin_map.h>
 
 #include <codecvt>
 #include <locale>
@@ -261,6 +260,8 @@ struct FAssetLoader : public AssetLoader {
             mTransformManager(config.engine->getTransformManager()),
             mMaterials(*config.materials),
             mEngine(*config.engine),
+            mNodeManager(mEntityManager),
+            mTrsTransformManager(mEntityManager),
             mDefaultNodeName(config.defaultNodeName) {
         if (config.ext) {
             FILAMENT_CHECK_POSTCONDITION(AssetConfigurationExtended::isSupported())
@@ -282,6 +283,14 @@ struct FAssetLoader : public AssetLoader {
 
     void destroyAsset(const FFilamentAsset* asset) {
         delete asset;
+    }
+
+    void gc() noexcept {
+        mNodeManager.gc();
+        mTrsTransformManager.gc();
+        if (mNameManager) {
+            mNameManager->gc();
+        }
     }
 
     size_t getMaterialsCount() const noexcept {
@@ -804,13 +813,30 @@ void FAssetLoader::createRenderable(const cgltf_node* node, Entity entity, const
 
         builder.morphing(morphTargetBuffer);
 
+        // The Primitive structs in mMeshCache are shared across all instances of the same
+        // mesh. Only the first call should populate morphTargetBuffer in the shared Primitive
+        // and write into the existing BufferSlots (which were allocated by createPrimitive).
+        // Subsequent instances must append NEW BufferSlots so that ResourceLoader uploads
+        // morph data to every instance's MorphTargetBuffer independently.
+        //
+        // NOTE: This fix covers morph position data only. Morph tangent recomputation in
+        // ResourceLoader::computeTangents() reads MorphTargetBuffer from the shared Primitive,
+        // so additional instances with lit morph targets may have incorrect tangent frames.
+        const bool isFirstMorphSetup = (prims.data()->morphTargetBuffer == nullptr);
+
         outputPrim = prims.data();
         inputPrim = &mesh->primitives[0];
         for (cgltf_size index = 0; index < primitiveCount; ++index, ++outputPrim, ++inputPrim) {
-            outputPrim->morphTargetBuffer = morphTargetBuffer;
+            if (isFirstMorphSetup) {
+                outputPrim->morphTargetBuffer = morphTargetBuffer;
+            }
 
             UTILS_UNUSED_IN_RELEASE cgltf_accessor const* previous = nullptr;
-            for (int tindex = 0; tindex < numMorphTargets; ++tindex) {
+            // createPrimitives() caps the per-primitive morph-target count at MAX_MORPH_TARGETS and
+            // sizes slotIndices accordingly; iterate only over the slots that exist so a mesh with
+            // more morph targets than the cap does not index slotIndices out of bounds.
+            const size_t numSlots = outputPrim->slotIndices.size();
+            for (int tindex = 0; tindex < numMorphTargets && (size_t) tindex < numSlots; ++tindex) {
                 const cgltf_morph_target& inTarget = inputPrim->targets[tindex];
                 for (cgltf_size aindex = 0; aindex < inTarget.attributes_count; ++aindex) {
                     const cgltf_attribute& attribute = inTarget.attributes[aindex];
@@ -821,23 +847,42 @@ void FAssetLoader::createRenderable(const cgltf_node* node, Entity entity, const
                         assert_invariant(!previous || previous->type == accessor->type);
                         previous = accessor;
 
-                        assert_invariant(outputPrim->morphTargetBuffer);
-
                         if (std::holds_alternative<FFilamentAsset::ResourceInfo>(
                                 fAsset->mResourceInfo)) {
                             using BufferSlot = FFilamentAsset::ResourceInfo::BufferSlot;
                             auto& slots = std::get<FFilamentAsset::ResourceInfo>(
                                     fAsset->mResourceInfo).mBufferSlots;
-                            BufferSlot& slot = slots[outputPrim->slotIndices[tindex]];
 
-                            assert_invariant(!slot.vertexBuffer);
-                            assert_invariant(!slot.indexBuffer);
+                            if (isFirstMorphSetup) {
+                                // First instance: write into the pre-allocated slot.
+                                BufferSlot& slot = slots[outputPrim->slotIndices[tindex]];
 
-                            slot.morphTargetBuffer = outputPrim->morphTargetBuffer;
-                            slot.morphTargetOffset = outputPrim->morphTargetOffset;
-                            slot.morphTargetCount = outputPrim->vertices->getVertexCount();
-                            slot.bufferIndex = tindex;
+                                assert_invariant(!slot.vertexBuffer);
+                                assert_invariant(!slot.indexBuffer);
+
+                                slot.morphTargetBuffer = morphTargetBuffer;
+                                slot.morphTargetOffset = outputPrim->morphTargetOffset;
+                                slot.morphTargetCount = outputPrim->vertices->getVertexCount();
+                                slot.bufferIndex = tindex;
+                            } else {
+                                // Additional instances: append a new slot so that
+                                // ResourceLoader uploads morph data to this instance's
+                                // MorphTargetBuffer without overwriting the original.
+                                BufferSlot newSlot = {};
+                                newSlot.accessor = accessor;
+                                newSlot.morphTargetBuffer = morphTargetBuffer;
+                                newSlot.morphTargetOffset = outputPrim->morphTargetOffset;
+                                newSlot.morphTargetCount = outputPrim->vertices->getVertexCount();
+                                newSlot.bufferIndex = tindex;
+                                slots.push_back(newSlot);
+                            }
                         }
+                        // NOTE: The ResourceInfoExtended path is not handled here for
+                        // additional instances because it requires CPU-side geometry
+                        // processing (targetData.positions, targetData.tbn) that is only
+                        // performed in AssetLoaderExtended::createPrimitive(). The extended
+                        // path is currently limited to desktop platforms and does not support
+                        // multi-instance morph targets.
                         else if (std::holds_alternative<FFilamentAsset::ResourceInfoExtended>(
                                 fAsset->mResourceInfo))
                         {
@@ -845,15 +890,19 @@ void FAssetLoader::createRenderable(const cgltf_node* node, Entity entity, const
                             auto& slots = std::get<FFilamentAsset::ResourceInfoExtended>(
                                     fAsset->mResourceInfo).slots;
 
-                            BufferSlot& slot = slots[outputPrim->slotIndices[tindex]];
+                            if (isFirstMorphSetup) {
+                                BufferSlot& slot = slots[outputPrim->slotIndices[tindex]];
 
-                            assert_invariant(slot.slot == tindex);
-                            assert_invariant(!slot.vertices);
-                            assert_invariant(!slot.indices);
+                                assert_invariant(slot.slot == tindex);
+                                assert_invariant(!slot.vertices);
+                                assert_invariant(!slot.indices);
 
-                            slot.target = outputPrim->morphTargetBuffer;
-                            slot.offset = outputPrim->morphTargetOffset;
-                            slot.count = outputPrim->vertices->getVertexCount();
+                                slot.target = morphTargetBuffer;
+                                slot.offset = outputPrim->morphTargetOffset;
+                                slot.count = outputPrim->vertices->getVertexCount();
+                            }
+                            // Additional instances: skip. The extended loader requires
+                            // targetData that is not available at createRenderable() time.
                         }
 
                         break;
@@ -864,7 +913,11 @@ void FAssetLoader::createRenderable(const cgltf_node* node, Entity entity, const
     }
 
     FixedCapacityVector<CString> morphTargetNames(numMorphTargets);
-    for (cgltf_size i = 0, c = mesh->target_names_count; i < c; ++i) {
+    // A mesh's morph-target name count (mesh.extras.targetNames) is parsed independently of its
+    // morph-target count, and is not constrained when the mesh has no primitives (numMorphTargets
+    // is then 0). Bound the copy by the destination capacity so that a mesh declaring more target
+    // names than morph targets does not write past morphTargetNames.
+    for (cgltf_size i = 0, c = std::min(numMorphTargets, mesh->target_names_count); i < c; ++i) {
         morphTargetNames[i] = CString(mesh->target_names[i]);
     }
     auto& nm = mNodeManager;
@@ -977,6 +1030,10 @@ bool FAssetLoader::createPrimitive(const cgltf_primitive& inPrim, const char* na
 
         const size_t indexDataSize = vertexCount * sizeof(uint32_t);
         uint32_t* indexData = (uint32_t*) malloc(indexDataSize);
+        if (!indexData) {
+            utils::slog.e << "Out of memory allocating generated index buffer." << utils::io::endl;
+            return false;
+        }
         for (size_t i = 0; i < vertexCount; ++i) {
             indexData[i] = i;
         }
@@ -1250,6 +1307,10 @@ bool FAssetLoader::createPrimitive(const cgltf_primitive& inPrim, const char* na
             mDummyBufferObject = BufferObject::Builder().size(requiredSize).build(mEngine);
             fAsset->mBufferObjects.push_back(mDummyBufferObject);
             uint32_t* dummyData = (uint32_t*) malloc(requiredSize);
+            if (!dummyData) {
+                utils::slog.e << "Out of memory allocating dummy vertex data." << utils::io::endl;
+                return false;
+            }
             memset(dummyData, 0xff, requiredSize);
             VertexBuffer::BufferDescriptor bd(dummyData, requiredSize, FREE_CALLBACK);
             mDummyBufferObject->setBuffer(mEngine, std::move(bd));
@@ -1397,6 +1458,7 @@ MaterialKey FAssetLoader::getMaterialKey(const cgltf_data* srcAsset,
         .hasSheen = !!inputMat->has_sheen,
         .hasIOR = !!inputMat->has_ior,
         .hasVolume = !!inputMat->has_volume,
+        .hasDispersion = !!inputMat->has_dispersion,
         .hasSpecular = !!inputMat->has_specular,
         .hasSpecularTexture = spConfig.specular_texture.texture != nullptr,
         .hasSpecularColorTexture = spConfig.specular_color_texture.texture != nullptr,
@@ -1488,6 +1550,7 @@ MaterialInstance* FAssetLoader::createMaterialInstance(const cgltf_material* inp
     auto sgConfig = inputMat->pbr_specular_glossiness;
     auto ccConfig = inputMat->clearcoat;
     auto trConfig = inputMat->transmission;
+    auto dpConfig = inputMat->dispersion;
     auto shConfig = inputMat->sheen;
     auto vlConfig = inputMat->volume;
     auto spConfig = inputMat->specular;
@@ -1671,6 +1734,10 @@ MaterialInstance* FAssetLoader::createMaterialInstance(const cgltf_material* inp
         }
     }
 
+    if (matkey.hasDispersion) {
+        mi->setParameter("dispersion", dpConfig.dispersion);
+    }
+
     // IOR can be implemented as either IOR or reflectance because of ubershaders
     if (matkey.hasIOR) {
         if (mi->getMaterial()->hasParameter("ior")) {
@@ -1779,6 +1846,10 @@ void AssetLoader::enableDiagnostics(bool enable) {
 
 void AssetLoader::destroyAsset(const FilamentAsset* asset) {
     downcast(this)->destroyAsset(downcast(asset));
+}
+
+void AssetLoader::gc() noexcept {
+    downcast(this)->gc();
 }
 
 size_t AssetLoader::getMaterialsCount() const noexcept {

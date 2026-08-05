@@ -14,28 +14,36 @@
  * limitations under the License.
  */
 
-#include <utils/Panic.h>
-
 #include "ostream_.h"
 
 #include <utils/CallStack.h>
 #include <utils/compiler.h>
+#include <utils/CString.h>
 #include <utils/Log.h>
 #include <utils/Logger.h>
+#include <utils/Mutex.h>
 #include <utils/ostream.h>
+#include <utils/Panic.h>
+
+#include <cstdlib>
+#include <cstring>
+#include <mutex>
+#include <new>
+#include <string_view>
+#include <utility>
+#if defined(__ANDROID__)
+#    include <android/log.h>                // __android_log_default_aborter
+#    include <android/set_abort_message.h>  // android_set_abort_message
+#endif
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <cstdlib>
-#include <cstring>
-#include <mutex>
-#include <new>
-#include <string>
-#include <string_view>
-#include <utility>
+#if defined(__ANDROID__)
+extern "C" __attribute__((weak)) void android_set_abort_message(const char *);
+#endif
 
 namespace utils {
 
@@ -52,11 +60,11 @@ class UserPanicHandler {
         }
     };
 
-    mutable std::mutex mLock{};
+    mutable Mutex mLock{};
     CallBack mCallBack{};
 
     CallBack getCallback() const noexcept {
-        std::lock_guard const lock(mLock);
+        LockGuard const lock(mLock);
         return mCallBack;
     }
 
@@ -71,7 +79,7 @@ public:
     }
 
     void set(Panic::PanicHandlerCallback const handler, void* user) noexcept {
-        std::lock_guard const lock(mLock);
+        LockGuard const lock(mLock);
         mCallBack = { handler, user };
     }
 };
@@ -79,8 +87,8 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 UTILS_NOINLINE
-static std::string sprintfToString(const char* format, va_list args) noexcept {
-    std::string s;
+static CString sprintfToString(const char* format, va_list args) noexcept {
+    CString s;
     va_list tmp;
     va_copy(tmp, args);
     int n = vsnprintf(nullptr, 0, format, tmp);
@@ -91,23 +99,23 @@ static std::string sprintfToString(const char* format, va_list args) noexcept {
         char* const buf = new(std::nothrow) char[n];
         if (buf) {
             vsnprintf(buf, size_t(n), format, args);
-            s.assign(buf);
+            s = CString(buf);
             delete [] buf;
         }
     }
     return s;
 }
 
-static std::string sprintfToString(const char* format, ...) noexcept {
+static CString sprintfToString(const char* format, ...) noexcept {
     va_list args;
     va_start(args, format);
-    std::string const s{ sprintfToString(format, args) };
+    CString const s{ sprintfToString(format, args) };
     va_end(args);
     return s;
 }
 
-static std::string buildPanicString(
-        std::string_view const& msg, const char* function, int line,
+static CString buildPanicString(
+        std::string_view const& msg, const char* function, int const line,
         const char* file, const char* reason) {
 #ifndef NDEBUG
     return sprintfToString("%.*s\nin %s:%d\nin file %s\nreason: %s",
@@ -130,7 +138,7 @@ void Panic::setPanicHandler(PanicHandlerCallback const handler, void* user) noex
 
 template<typename T>
 TPanic<T>::TPanic(const char* function, const char* file, int const line, char const* literal,
-        std::string reason)
+        CString reason)
         : mFile(file),
           mFunction(function),
           mLine(line),
@@ -185,8 +193,8 @@ const CallStack& TPanic<T>::getCallStack() const noexcept {
 
 template<typename T>
 void TPanic<T>::log() const noexcept {
-    slog.e << what() << io::endl;
-    slog.e << mCallstack << io::endl;
+    LOG(ERROR) << what();
+    LOG(ERROR) << mCallstack;
 }
 
 UTILS_ALWAYS_INLINE
@@ -200,33 +208,48 @@ void TPanic<T>::panic(char const* function, char const* file, int const line, ch
         const char* format, ...) {
     va_list args;
     va_start(args, format);
-    std::string reason{ sprintfToString(format, args) };
+    CString reason{ sprintfToString(format, args) };
     va_end(args);
 
     panic(function, file, line, literal, std::move(reason));
 }
 
 template<typename T>
-void TPanic<T>::panic(char const* function, char const* file, int line, char const* literal,
-        std::string reason) {
+void TPanic<T>::panic(char const* function, char const* file, int line, char const* literal, CString reason) {
 
     if (reason.empty()) {
-        reason = literal;
+        reason = CString(literal);
     }
 
     T e(function, formatFile(file), line, literal, std::move(reason));
 
-    // always log the Panic at the point it is detected
+#ifndef __EXCEPTIONS
+    // log the Panic at the point it is detected unless we have exceptions, the exception handler will be
+    // responsible for that.
     e.log();
+#endif
 
     // Call the user provided handler
     UserPanicHandler::get().call(e);
 
     // if exceptions are enabled, throw now.
 #ifdef __EXCEPTIONS
-    throw e;
+    throw std::move(e);
 #endif
 
+    // Register the full panic message as the tombstone "Abort message:" so that it
+    // appears in crash reports collected by Google Play Console and other tools that
+    // read tombstones from field devices (which never have access to logcat output).
+#if defined(__ANDROID__)
+    if (__builtin_available(android 30, *)) {
+        __android_log_default_aborter(e.what());
+    } else {
+        // For API < 30, we can try to use this private API if it's available.
+        if (&android_set_abort_message) {
+            android_set_abort_message(e.what());
+        }
+    }
+#endif
     // and finally abort if we somehow get here
     std::abort();
 }
@@ -238,22 +261,20 @@ namespace details {
 void panicLog(char const* function, char const* file, int const line, const char* format, ...) noexcept {
     va_list args;
     va_start(args, format);
-    std::string const reason{ sprintfToString(format, args) };
+    CString const reason{ sprintfToString(format, args) };
     va_end(args);
 
-    std::string const msg = buildPanicString("PanicLog",
-            function, line, file, reason.c_str());
-
-    slog.e << msg << io::endl;
-    slog.e << CallStack::unwind(1) << io::endl;
+    CString const msg = buildPanicString("PanicLog", function, line, file, reason.c_str());
+    LOG(ERROR) << msg;
+    LOG(ERROR) << CallStack::unwind(1);
 }
 
 PanicStream::PanicStream(
         char const* function,
         char const* file,
         int const line,
-        char const* condition) noexcept
-        : mFunction(function), mFile(file), mLine(line), mLiteral(condition) {
+        char const* message) noexcept
+    : mFunction(function), mFile(file), mLine(line), mLiteral(message) {
 }
 
 PanicStream::~PanicStream() = default;
@@ -343,7 +364,7 @@ PanicStream& PanicStream::operator<<(unsigned char const* value) noexcept {
     return *this;
 }
 
-PanicStream& PanicStream::operator<<(std::string const& value) noexcept {
+PanicStream& PanicStream::operator<<(CString const& value) noexcept {
     mStream << value;
     return *this;
 }

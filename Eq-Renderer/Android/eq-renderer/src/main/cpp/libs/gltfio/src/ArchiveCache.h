@@ -17,17 +17,17 @@
 #ifndef GLTFIO_ARCHIVE_CACHE_H
 #define GLTFIO_ARCHIVE_CACHE_H
 
+#include <uberz/ReadableArchive.h>
+
 #include <filament/Engine.h>
 #include <filament/Material.h>
+
+#include <utils/CString.h>
+#include <utils/FixedCapacityVector.h>
 
 #include <tsl/robin_map.h>
 
 #include <string_view>
-
-#include <uberz/ReadableArchive.h>
-
-#include <utils/CString.h>
-#include <utils/FixedCapacityVector.h>
 
 namespace filament::gltfio {
 
@@ -58,7 +58,7 @@ namespace filament::gltfio {
     struct ArchiveRequirements {
         Shading shadingModel;
         BlendingMode blendingMode;
-        tsl::robin_map<utils::CString, bool, utils::CString::Hasher> features;
+        tsl::robin_map<utils::CString, bool> features;
     };
 
 } // namespace filament::uberz

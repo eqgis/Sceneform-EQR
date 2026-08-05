@@ -24,8 +24,8 @@
 #include <utils/PrivateImplementation-impl.h>
 
 #include <algorithm>
+#include <limits>
 #include <mutex>
-#include <string>
 #include <string_view>
 #include <utility>
 
@@ -41,7 +41,7 @@ ostream::~ostream() = default;
 
 void ostream::setConsumer(ConsumerCallback consumer, void* user) noexcept {
     auto* const pImpl = mImpl;
-    std::lock_guard const lock(pImpl->mLock);
+    LockGuard const lock(pImpl->mLock);
     pImpl->mConsumer = { consumer, user };
 }
 
@@ -75,7 +75,7 @@ ostream::Buffer const& ostream::getBuffer() const noexcept {
     return mImpl->mData;
 }
 
-const char* ostream::getFormat(type t) const noexcept {
+const char* ostream::getFormat(type const t) const noexcept {
     switch (t) {
         case SHORT:       return mImpl->mShowHex ? "0x%hx"  : "%hd";
         case USHORT:      return mImpl->mShowHex ? "0x%hx"  : "%hu";
@@ -104,6 +104,10 @@ ostream& ostream::print(const char* format, ...) noexcept {
     ssize_t const s = vsnprintf(nullptr, 0, format, args0);
     va_end(args0);
 
+    if (UTILS_UNLIKELY(s < 0)) {
+        va_end(args1);
+        return *this;
+    }
 
     { // scope for the lock
         std::lock_guard const lock(mImpl->mLock);
@@ -125,72 +129,72 @@ ostream& ostream::print(const char* format, ...) noexcept {
     return *this;
 }
 
-ostream& ostream::operator<<(short value) noexcept {
+ostream& ostream::operator<<(short const value) noexcept {
     const char* format = getFormat(SHORT);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(unsigned short value) noexcept {
+ostream& ostream::operator<<(unsigned short const value) noexcept {
     const char* format = getFormat(USHORT);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(char value) noexcept {
+ostream& ostream::operator<<(char const value) noexcept {
     const char* format = getFormat(CHAR);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(unsigned char value) noexcept {
+ostream& ostream::operator<<(unsigned char const value) noexcept {
     const char* format = getFormat(UCHAR);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(int value) noexcept {
+ostream& ostream::operator<<(int const value) noexcept {
     const char* format = getFormat(INT);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(unsigned int value) noexcept {
+ostream& ostream::operator<<(unsigned int const value) noexcept {
     const char* format = getFormat(UINT);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(long value) noexcept {
+ostream& ostream::operator<<(long const value) noexcept {
     const char* format = getFormat(LONG);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(unsigned long value) noexcept {
+ostream& ostream::operator<<(unsigned long const value) noexcept {
     const char* format = getFormat(ULONG);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(long long value) noexcept {
+ostream& ostream::operator<<(long long const value) noexcept {
     const char* format = getFormat(LONG_LONG);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(unsigned long long value) noexcept {
+ostream& ostream::operator<<(unsigned long long const value) noexcept {
     const char* format = getFormat(ULONG_LONG);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(float value) noexcept {
+ostream& ostream::operator<<(float const value) noexcept {
     const char* format = getFormat(FLOAT);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(double value) noexcept {
+ostream& ostream::operator<<(double const value) noexcept {
     const char* format = getFormat(DOUBLE);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(long double value) noexcept {
+ostream& ostream::operator<<(long double const value) noexcept {
     const char* format = getFormat(LONG_DOUBLE);
     return print(format, value);
 }
 
-ostream& ostream::operator<<(bool value) noexcept {
+ostream& ostream::operator<<(bool const value) noexcept {
     return operator<<(value ? "true" : "false");
 }
 
@@ -204,10 +208,6 @@ ostream& ostream::operator<<(const unsigned char* string) noexcept {
 
 ostream& ostream::operator<<(const void* value) noexcept {
     return print("%p", value);
-}
-
-ostream& ostream::operator<<(std::string const& s) noexcept {
-    return print("%s", s.c_str());
 }
 
 ostream& ostream::operator<<(std::string_view const& s) noexcept {
@@ -235,7 +235,7 @@ ostream::Buffer::~Buffer() noexcept {
     free(buffer);
 }
 
-void ostream::Buffer::advance(ssize_t n) noexcept {
+void ostream::Buffer::advance(ssize_t const n) noexcept {
     if (n > 0) {
         size_t const written = n < sizeRemaining ? size_t(n) : sizeRemaining;
         curr += written;
@@ -243,12 +243,12 @@ void ostream::Buffer::advance(ssize_t n) noexcept {
     }
 }
 
-void ostream::Buffer::reserve(size_t newCapacity) noexcept {
+void ostream::Buffer::reserve(size_t const newCapacity) noexcept {
     size_t const offset = curr - buffer;
     if (buffer == nullptr) {
-        buffer = (char*)malloc(newCapacity);
+        buffer = static_cast<char*>(malloc(newCapacity));
     } else {
-        buffer = (char*)realloc(buffer, newCapacity);
+        buffer = static_cast<char*>(realloc(buffer, newCapacity));
     }
     assert(buffer);
     capacity = newCapacity;
@@ -260,7 +260,7 @@ void ostream::Buffer::reset() noexcept {
     // aggressively shrink the buffer
     if (capacity > 1024) {
         free(buffer);
-        buffer = (char*)malloc(1024);
+        buffer = static_cast<char*>(malloc(1024));
         capacity = 1024;
     }
     curr = buffer;
@@ -271,10 +271,16 @@ size_t ostream::Buffer::length() const noexcept {
     return curr - buffer;
 }
 
-std::pair<char*, size_t> ostream::Buffer::grow(size_t s) noexcept {
+std::pair<char*, size_t> ostream::Buffer::grow(size_t const s) noexcept {
     if (UTILS_UNLIKELY(sizeRemaining < s)) {
         size_t const usedSize = curr - buffer;
         size_t const neededCapacity = usedSize + s;
+
+        // Bounded capacity scale check to gracefully drop the write
+        if (UTILS_UNLIKELY(neededCapacity < usedSize || neededCapacity > std::numeric_limits<size_t>::max() / 3)) {
+            return { nullptr, 0 };
+        }
+
         size_t const newCapacity = std::max(size_t(32), (neededCapacity * 3 + 1) / 2); // 32 bytes minimum
         reserve(newCapacity);
         assert(sizeRemaining >= s);

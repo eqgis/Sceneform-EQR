@@ -4,6 +4,7 @@ project(utils)
 set(TARGET utils)
 set(TARGET_LINUX ${TARGET}/linux)
 set(TARGET_GENERIC ${TARGET}/generic)
+set(TARGET_DEBUG ${TARGET}/debug)
 set(PUBLIC_HDR_DIR include)
 
 # ==================================================================================================
@@ -12,6 +13,7 @@ set(PUBLIC_HDR_DIR include)
 file(GLOB_RECURSE PUBLIC_HDRS ${PUBLIC_HDR_DIR}/${TARGET}/*.h)
 
 set(DIST_HDRS
+        ${PUBLIC_HDR_DIR}/${TARGET}/getopt.h
         ${PUBLIC_HDR_DIR}/${TARGET}/algorithm.h
         ${PUBLIC_HDR_DIR}/${TARGET}/bitset.h
         ${PUBLIC_HDR_DIR}/${TARGET}/CallStack.h
@@ -21,6 +23,7 @@ set(DIST_HDRS
         ${PUBLIC_HDR_DIR}/${TARGET}/compiler.h
         ${PUBLIC_HDR_DIR}/${TARGET}/compressed_pair.h
         ${PUBLIC_HDR_DIR}/${TARGET}/CString.h
+        ${PUBLIC_HDR_DIR}/${TARGET}/tribool.h
         ${PUBLIC_HDR_DIR}/${TARGET}/ImmutableCString.h
         ${PUBLIC_HDR_DIR}/${TARGET}/Entity.h
         ${PUBLIC_HDR_DIR}/${TARGET}/EntityInstance.h
@@ -31,11 +34,14 @@ set(DIST_HDRS
         ${PUBLIC_HDR_DIR}/${TARGET}/Invocable.h
         ${PUBLIC_HDR_DIR}/${TARGET}/Log.h
         ${PUBLIC_HDR_DIR}/${TARGET}/Logger.h
+        ${PUBLIC_HDR_DIR}/${TARGET}/LruCache.h
         ${PUBLIC_HDR_DIR}/${TARGET}/memalign.h
         ${PUBLIC_HDR_DIR}/${TARGET}/MonotonicRingMap.h
         ${PUBLIC_HDR_DIR}/${TARGET}/Mutex.h
         ${PUBLIC_HDR_DIR}/${TARGET}/NameComponentManager.h
         ${PUBLIC_HDR_DIR}/${TARGET}/ostream.h
+        ${PUBLIC_HDR_DIR}/${TARGET}/PagedArenaBitset.h
+        ${PUBLIC_HDR_DIR}/${TARGET}/PagedArenaBitsetPool.h
         ${PUBLIC_HDR_DIR}/${TARGET}/Panic.h
         ${PUBLIC_HDR_DIR}/${TARGET}/Path.h
         ${PUBLIC_HDR_DIR}/${TARGET}/PrivateImplementation.h
@@ -60,19 +66,26 @@ set(DIST_GENERIC_HDRS
         ${PUBLIC_HDR_DIR}/${TARGET_GENERIC}/Mutex.h
 )
 
+set(DIST_DEBUG_HDRS
+        ${PUBLIC_HDR_DIR}/${TARGET_DEBUG}/Mutex.h
+)
+
 set(SRCS
         src/api_level.cpp
         src/architecture.cpp
         src/ashmem.cpp
         src/debug.cpp
+        src/debug/Mutex.cpp
         src/Allocator.cpp
         src/AsyncJobQueue.cpp
         src/CallStack.cpp
         src/CString.cpp
         src/CountDownLatch.cpp
         src/CyclicBarrier.cpp
+        src/InternalDebugRegistry.cpp
         src/EntityManager.cpp
         src/EntityManagerImpl.h
+        src/FeatureFlagManager.cpp
         src/FixedCapacityVectorBase.cpp
         src/ImmutableCString.cpp
         src/Invocable.cpp
@@ -83,10 +96,13 @@ set(SRCS
         src/Panic.cpp
         src/Path.cpp
         src/Profiler.cpp
+        src/SingleInstanceComponentManager.cpp
         src/sstream.cpp
         src/string.cpp
         src/ThreadUtils.cpp
         src/Status.cpp
+        src/PagedArenaBitset.cpp
+        src/PagedArenaBitsetPool.cpp
 )
 
 if (WIN32)
@@ -110,7 +126,7 @@ if (APPLE)
     list(APPEND SRCS src/darwin/Systrace.cpp)
     list(APPEND SRCS src/darwin/Tracing.cpp)
 endif()
-if (WEBGL)
+if (WASM)
     list(APPEND SRCS src/web/Path.cpp)
 endif()
 
@@ -120,6 +136,11 @@ endif()
 include_directories(${PUBLIC_HDR_DIR})
 
 add_library(${TARGET} STATIC ${PUBLIC_HDRS} ${SRCS})
+if (HAS_SYSTEM_GETOPT)
+    target_compile_definitions(${TARGET} PUBLIC HAS_SYSTEM_GETOPT)
+else()
+    target_link_libraries(${TARGET} PUBLIC getopt)
+endif()
 target_include_directories(${TARGET} PUBLIC ${PUBLIC_HDR_DIR})
 set_target_properties(${TARGET} PROPERTIES FOLDER Libs)
 target_link_libraries(${TARGET} PUBLIC tsl)
@@ -150,6 +171,10 @@ if (LINUX)
     target_link_libraries(${TARGET} PRIVATE dl)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(${TARGET} PRIVATE -Wthread-safety)
+endif()
+
 # ==================================================================================================
 # Installation
 # ==================================================================================================
@@ -161,62 +186,71 @@ if (ANDROID)
 else()
     install(FILES ${DIST_GENERIC_HDRS} DESTINATION include/${TARGET_GENERIC})
 endif()
+install(FILES ${DIST_DEBUG_HDRS} DESTINATION include/${TARGET_DEBUG})
 
 # ==================================================================================================
 # Test executables
 # ==================================================================================================
 
-set(TEST_SRCS
-        test/test_algorithm.cpp
-        test/test_Allocators.cpp
-        test/test_bitset.cpp
-        test/test_CountDownLatch.cpp
-        test/test_CString.cpp
-        test/test_ImmutableCString.cpp
-        test/test_CyclicBarrier.cpp
-        test/test_Entity.cpp
-        test/test_FixedCapacityVector.cpp
-        test/test_FixedCircularBuffer.cpp
-        test/test_Hash.cpp
-        test/test_InternPool.cpp
-        test/test_JobSystem.cpp
-        test/test_MonotonicRingMap.cpp
-        test/test_QuadTreeArray.cpp
-        test/test_RangeMap.cpp
-        test/test_RefCountedMap.cpp
-        test/test_Slice.cpp
-        test/test_StructureOfArrays.cpp
-        test/test_sstream.cpp
-        test/test_string.cpp
-        test/test_utils_main.cpp
-        test/test_Zip2Iterator.cpp
-        test/test_BinaryTreeArray.cpp
-        test/test_Status.cpp
-)
+if (FILAMENT_BUILD_TESTING)
+    set(TEST_SRCS
+            test/test_algorithm.cpp
+            test/test_Allocators.cpp
+            test/test_bitset.cpp
+            test/test_EntitySet.cpp
+            test/test_PagedArenaBitsetPool.cpp
+            test/test_tribool.cpp
+            test/test_CountDownLatch.cpp
+            test/test_CString.cpp
+            test/test_ImmutableCString.cpp
+            test/test_CyclicBarrier.cpp
+            test/test_Entity.cpp
+            test/test_FixedCapacityVector.cpp
+            test/test_FixedCircularBuffer.cpp
+            test/test_Hash.cpp
+            test/test_InternPool.cpp
+            test/test_LruCache.cpp
+            test/test_JobSystem.cpp
+            test/test_MonotonicRingMap.cpp
+            test/test_QuadTreeArray.cpp
+            test/test_RangeMap.cpp
+            test/test_RefCountedMap.cpp
+            test/test_SingleInstanceComponentManager.cpp
+            test/test_Slice.cpp
+            test/test_StructureOfArrays.cpp
+            test/test_sstream.cpp
+            test/test_string.cpp
+            test/test_utils_main.cpp
+            test/test_Zip2Iterator.cpp
+            test/test_BinaryTreeArray.cpp
+            test/test_Status.cpp
+            test/test_Mutex.cpp
+    )
 
-if (WEBGL_PTHREADS)
-    target_compile_definitions(${TARGET} PUBLIC -DFILAMENT_WASM_THREADS)
-endif()
-
-# The Path tests are platform-specific
-if (NOT WEBGL)
-    if (WIN32)
-        list(APPEND TEST_SRCS test/test_WinPath.cpp)
-    else()
-        list(APPEND TEST_SRCS test/test_Path.cpp)
+    if (WASM_PTHREADS)
+        target_compile_definitions(${TARGET} PUBLIC -DFILAMENT_WASM_THREADS)
     endif()
+
+    # The Path tests are platform-specific
+    if (NOT WASM)
+        if (WIN32)
+            list(APPEND TEST_SRCS test/test_WinPath.cpp)
+        else()
+            list(APPEND TEST_SRCS test/test_Path.cpp)
+        endif()
+    endif()
+
+    add_executable(test_${TARGET} ${TEST_SRCS})
+
+    target_link_libraries(test_${TARGET} PRIVATE gtest utils tsl math)
+    set_target_properties(test_${TARGET} PROPERTIES FOLDER Tests)
 endif()
-
-add_executable(test_${TARGET} ${TEST_SRCS})
-
-target_link_libraries(test_${TARGET} PRIVATE gtest utils tsl math)
-set_target_properties(test_${TARGET} PROPERTIES FOLDER Tests)
 
 # ==================================================================================================
 # Benchmarks
 # ==================================================================================================
 
-if (NOT WEBGL)
+if (FILAMENT_BUILD_TESTING AND NOT WASM)
 
     add_library(benchmark_${TARGET}_callee SHARED benchmark/benchmark_callee.cpp)
     set_target_properties(benchmark_${TARGET}_callee PROPERTIES FOLDER Benchmarks)
@@ -227,7 +261,9 @@ if (NOT WEBGL)
             benchmark/benchmark_calls.cpp
             benchmark/benchmark_JobSystem.cpp
             benchmark/benchmark_mutex.cpp
-            benchmark/benchmark_memcpy.cpp)
+            benchmark/benchmark_memcpy.cpp
+            benchmark/benchmark_EntitySet.cpp
+            benchmark/benchmark_EntityManager.cpp)
 
 
     add_executable(benchmark_${TARGET} ${BENCHMARK_SRCS})

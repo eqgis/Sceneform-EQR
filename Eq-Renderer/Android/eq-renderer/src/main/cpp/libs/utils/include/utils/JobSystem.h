@@ -17,15 +17,14 @@
 #ifndef TNT_UTILS_JOBSYSTEM_H
 #define TNT_UTILS_JOBSYSTEM_H
 
-#include <utility>
 #include <utils/Allocator.h>
 #include <utils/architecture.h>
 #include <utils/compiler.h>
 #include <utils/Condition.h>
 #include <utils/memalign.h>
 #include <utils/Mutex.h>
-#include <utils/Slice.h>
 #include <utils/ostream.h>
+#include <utils/Slice.h>
 #include <utils/WorkStealingDequeue.h>
 
 #include <tsl/robin_map.h>
@@ -33,8 +32,9 @@
 #include <atomic>
 #include <functional>
 #include <mutex>
-#include <type_traits>
 #include <thread>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <assert.h>
@@ -51,6 +51,8 @@ class JobSystem {
     using WorkQueue = WorkStealingDequeue<uint16_t, MAX_JOB_COUNT>;
     using Mutex = utils::Mutex;
     using Condition = utils::Condition;
+    using UniqueLock = utils::UniqueLock<Mutex>;
+    using LockGuard = utils::LockGuard<Mutex>;
 
 public:
     class Job;
@@ -95,7 +97,19 @@ public:
     static_assert(sizeof(Job) == 64);
 #endif
 
-    explicit JobSystem(size_t threadCount = 0, size_t adoptableThreadsCount = 1) noexcept;
+    /**
+     * Special value for userThreadCount to configure the JobSystem in single-threaded mode.
+     */
+    static constexpr uint32_t SINGLE_THREADED = std::numeric_limits<uint32_t>::max();
+
+    /**
+     * Create a JobSystem and initializes its thread pool. The pool can have zero threads if SINGLE_THREADED is used
+     * as the userThreadCount, in that case adoptableThreadsCount is forced to 1.
+     *
+     * @param userThreadCount number of threads in the JobSystem thread pool.
+     * @param adoptableThreadsCount number of calling threads outside the thread pool.
+     */
+    explicit JobSystem(uint32_t userThreadCount = 0, uint32_t adoptableThreadsCount = 1) noexcept;
 
     ~JobSystem();
 
@@ -437,8 +451,8 @@ private:
     Job* steal(WorkQueue& workQueue) noexcept;
 
     [[nodiscard]]
-    uint32_t wait(std::unique_lock<Mutex>& lock, Job* job) noexcept;
-    void wait(std::unique_lock<Mutex>& lock) noexcept;
+    uint32_t wait(UniqueLock& lock, Job* job) noexcept;
+    void wait(UniqueLock& lock) noexcept;
     void wakeAll() noexcept;
     void wakeOne() noexcept;
 
@@ -468,7 +482,7 @@ private:
     Job* mRootJob = nullptr;
 
     Mutex mThreadMapLock; // this should have very little contention
-    tsl::robin_map<std::thread::id, ThreadState *> mThreadMap;
+    tsl::robin_map<std::thread::id, ThreadState *> mThreadMap UTILS_GUARDED_BY(mThreadMapLock);
 };
 
 // -------------------------------------------------------------------------------------------------

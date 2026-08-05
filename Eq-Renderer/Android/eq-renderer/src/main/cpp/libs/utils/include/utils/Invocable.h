@@ -65,6 +65,7 @@ public:
     // Creates an Invocable that does not contain a functor.
     // Will evaluate to false.
     Invocable() = default;
+    Invocable(std::nullptr_t) noexcept {}
 
     ~Invocable() noexcept;
 
@@ -77,6 +78,7 @@ public:
 
     Invocable& operator=(const Invocable&) = delete;
     Invocable& operator=(Invocable&& rhs) noexcept;
+    Invocable& operator=(std::nullptr_t) noexcept;
 
     // Invokes the invocable with the args passed in.
     // If the Invocable is empty, this will assert.
@@ -134,10 +136,27 @@ Invocable<R(Args...)>::Invocable(Invocable&& rhs) noexcept
 template<typename R, typename... Args>
 Invocable<R(Args...)>& Invocable<R(Args...)>::operator=(Invocable&& rhs) noexcept {
     if (this != &rhs) {
-        std::swap(mInvocable, rhs.mInvocable);
-        std::swap(mDeleter, rhs.mDeleter);
-        std::swap(mInvoker, rhs.mInvoker);
+        if (mDeleter) {
+            mDeleter(mInvocable);
+        }
+        mInvocable = rhs.mInvocable;
+        mDeleter = rhs.mDeleter;
+        mInvoker = rhs.mInvoker;
+        rhs.mInvocable = nullptr;
+        rhs.mDeleter = nullptr;
+        rhs.mInvoker = nullptr;
     }
+    return *this;
+}
+
+template<typename R, typename... Args>
+Invocable<R(Args...)>& Invocable<R(Args...)>::operator=(std::nullptr_t) noexcept {
+    if (mDeleter) {
+        mDeleter(mInvocable);
+    }
+    mInvocable = nullptr;
+    mDeleter = nullptr;
+    mInvoker = nullptr;
     return *this;
 }
 

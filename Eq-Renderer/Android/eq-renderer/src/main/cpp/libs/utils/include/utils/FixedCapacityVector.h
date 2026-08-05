@@ -17,9 +17,9 @@
 #ifndef TNT_UTILS_FIXEDCAPACITYVECTOR_H
 #define TNT_UTILS_FIXEDCAPACITYVECTOR_H
 
-#include <utils/Slice.h>
 #include <utils/compiler.h>
 #include <utils/compressed_pair.h>
+#include <utils/Slice.h>
 
 #include <algorithm>
 #include <initializer_list>
@@ -128,7 +128,7 @@ public:
         this->swap(rhs);
     }
 
-    FixedCapacityVector(utils::Slice<const T> rhs,
+    explicit FixedCapacityVector(utils::Slice<const T> rhs,
             const allocator_type& alloc = allocator_type())
             : mSize(rhs.size()),
               mCapacityAllocator(mSize, alloc) {

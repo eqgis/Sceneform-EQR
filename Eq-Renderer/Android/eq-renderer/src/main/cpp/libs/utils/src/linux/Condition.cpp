@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-#include <utils/linux/Condition.h>
-
 #include "futex.h"
+
+#include <utils/linux/Condition.h>
 
 namespace utils {
 
-std::cv_status Condition::wait_until(Mutex* lock,
-        bool realtimeClock, struct timespec* ts) noexcept {
+int Condition::futex_wait(uint32_t old_state, bool realtimeClock, struct timespec* ts) noexcept {
+    return linuxutil::futex_wait_ex(&mState, false, old_state, realtimeClock, ts);
+}
+
+std::cv_status Condition::wait_until(linuxutil::Mutex* lock,
+        bool realtimeClock, struct timespec* ts) noexcept UTILS_NO_THREAD_SAFETY_ANALYSIS {
     if (ts && ts->tv_sec < 0) {
         return std::cv_status::timeout;
     }
