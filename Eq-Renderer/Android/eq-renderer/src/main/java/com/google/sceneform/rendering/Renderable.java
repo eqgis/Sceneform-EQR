@@ -407,7 +407,7 @@ public abstract class Renderable {
 
         public B setSource(Context context, Uri sourceUri, boolean enableCaching) {
 //            return null;
-            //updated by ikkyu 2022/03/19，我也不知道为什么，此处源码是return null; 修改如下：
+            //updated by ikkyu 2022/03/19，此处源码是return null; 修改如下：
             return setRemoteSourceHelper(context, sourceUri, enableCaching);
         }
 
@@ -596,7 +596,9 @@ public abstract class Renderable {
             Preconditions.checkNotNull(sourceUri);
             this.sourceUri = sourceUri;
             this.context = context;
-            this.registryId = sourceUri;
+            //desc- 禁用缓存时不能复用 ResourceRegistry 中的 GLTF 数据，否则场景切换时旧实例
+            // 释放 ResourceLoader 会同时破坏新场景中由同一 URI 创建的模型实例。
+            this.registryId = enableCaching ? sourceUri : null;
             //配置缓存
             if (enableCaching) {
                 this.setCachingEnabled(context);

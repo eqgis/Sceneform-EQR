@@ -268,7 +268,9 @@ public class Material {
                     new InternalMaterialInstance(materialData.getFilamentMaterial());
         } else {
             // Do the glTF thing.
-            InternalGltfMaterialInstance internalGltfMaterialInstance = new InternalGltfMaterialInstance(materialData.getFilamentMaterial());
+            InternalGltfMaterialInstance internalGltfMaterialInstance =
+                    new InternalGltfMaterialInstance(
+                            materialData.getFilamentMaterial(), isSetMatInstance);
             if (isSetMatInstance){
                 internalGltfMaterialInstance.setMaterialInstance(materialData.getFilamentMaterial().createInstance());
             }
@@ -569,9 +571,16 @@ public class Material {
     static class InternalGltfMaterialInstance implements IMaterialInstance {
         MaterialInstance instance;
         final com.google.android.filament.Material material;
+        private final boolean ownsInstance;
 
         public InternalGltfMaterialInstance(com.google.android.filament.Material mat) {
+            this(mat, false);
+        }
+
+        public InternalGltfMaterialInstance(
+                com.google.android.filament.Material mat, boolean ownsInstance) {
             this.material = mat;
+            this.ownsInstance = ownsInstance;
         }
 
         void setMaterialInstance(MaterialInstance instance) {
@@ -590,12 +599,20 @@ public class Material {
 
         @Override
         public void disposeInstance() {
+            MaterialInstance materialInstance = instance;
+            instance = null;
+            //desc- AssetLoader 创建的 glTF MaterialInstance 由 FFilamentInstance 统一销毁。
+            // Java 清理器只释放 clone() 等路径自行创建并明确持有的实例，避免延迟 GC
+            // 使用旧 native 指针误删新模型仍在使用的 MaterialInstance。
+            if (!ownsInstance || materialInstance == null) {
+                return;
+            }
             IEngine engine = EngineInstance.getEngine();
             if (engine != null && engine.isValid()) {
                 try{
-                    instance.getNativeObject();
-                    if (engine.getFilamentEngine().isValidMaterialInstance(material,instance)){
-                        engine.destroyMaterialInstance(instance);
+                    materialInstance.getNativeObject();
+                    if (engine.getFilamentEngine().isValidMaterialInstance(material, materialInstance)){
+                        engine.destroyMaterialInstance(materialInstance);
                     }
                     //备注：Material通过materialInternalData.release()最后释放
                 }catch (IllegalStateException ignored){

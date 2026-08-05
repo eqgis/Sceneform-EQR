@@ -14,13 +14,10 @@ import android.view.SurfaceView;
 
 import androidx.annotation.Nullable;
 
-import com.eqgis.eqr.core.FilamentMaterialProviderManager;
 import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Renderer;
-import com.google.sceneform.rendering.ResourceManager;
 import com.google.sceneform.utilities.MovingAverageMillisecondsTracker;
 import com.google.sceneform.rendering.EngineInstance;
-import com.google.sceneform.rendering.RenderableInternalFilamentAssetData;
 import com.google.sceneform.utilities.AndroidPreconditions;
 import com.google.sceneform.utilities.Preconditions;
 import com.google.android.filament.ColorGrading;
@@ -202,11 +199,9 @@ public class SceneView extends SurfaceView implements Choreographer.FrameCallbac
             }
         }
 
-        EngineInstance.releaseSceneView(() -> {
-            ResourceManager.getInstance().destroyAllResources();
-            FilamentMaterialProviderManager.destroy();
-            EngineInstance.destroyEngine();
-        });
+        //desc- 由 EngineInstance 根据活动 SceneView 数量判断；仅最后一个场景退出且
+        // 延迟窗口内没有新场景创建时，才统一释放共享资源和 Filament Engine。
+        EngineInstance.releaseSceneView(Renderer::destroyAllResources);
     }
 
     /**

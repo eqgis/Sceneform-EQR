@@ -44,12 +44,21 @@ public final class FilamentMaterialProviderManager {
     }
 
     /**
-     * 销毁并释放共享 {@link UbershaderProvider}。
+     * 销毁共享 {@link UbershaderProvider} 持有的材质缓存并释放 Provider。
+     * <p>
+     * 必须在所有 GLTF {@link com.google.android.filament.MaterialInstance} 已释放后、
+     * Filament {@link Engine} 销毁前调用。
+     * </p>
      */
     public static synchronized void destroy() {
         if (sUbershaderProvider != null) {
-            sUbershaderProvider.destroy();
-            sUbershaderProvider = null;
+            try {
+                //desc- Provider.destroy() 不会释放缓存材质，需先显式销毁材质模板与 dummy texture。
+                sUbershaderProvider.destroyMaterials();
+            } finally {
+                sUbershaderProvider.destroy();
+                sUbershaderProvider = null;
+            }
         }
     }
 

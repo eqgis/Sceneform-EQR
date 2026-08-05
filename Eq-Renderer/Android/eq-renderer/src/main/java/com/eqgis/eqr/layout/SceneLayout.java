@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -205,26 +206,33 @@ public class SceneLayout extends FrameLayout{
     }
 
     /**
-     * 移除节点
-     * @param node
+     * 递归移除节点及其子节点，并释放当前子树持有的渲染和光照实例。
+     * <p>
+     * 传入 {@link RootNode} 时仅清理其子节点，不删除场景根节点本身。
+     * </p>
+     * @param node 需要移除的节点或子树根节点
      */
     public void removeNode(Node node){
-        List<Node> children = node.getChildren();
-        if (children.size() == 0){
-            //不移除根节点
-            if (node instanceof RootNode)return;
-
-            if(node.getRenderableInstance() != null){
-                //销毁node节点的图形资源占用
-                node.getRenderableInstance().destroy();
-            }
-            node.setParent(null);
-            node.setEnabled(false);
+        if (node == null) {
             return;
         }
-        while (children.size()!=0){
-            removeNode(children.get(0));
+
+        //desc- 使用快照递归，避免 setParent(null) 修改原 children 集合导致遍历错位。
+        List<Node> children = new ArrayList<>(node.getChildren());
+        for (Node child : children) {
+            removeNode(child);
         }
+
+        //不移除根节点
+        if (node instanceof RootNode) {
+            return;
+        }
+
+        //desc- 先解除并销毁节点资源，再断开父子关系，避免失活回调访问已释放实例。
+        node.setRenderable(null);
+        node.setLight(null);
+        node.setParent(null);
+        node.setEnabled(false);
     }
 
     /**
@@ -257,11 +265,20 @@ public class SceneLayout extends FrameLayout{
     }
 
     /**
-     * 销毁
+     * 销毁当前场景布局。
+     * <p>
+     * 先释放当前布局节点树持有的独占资源，再销毁 {@link SceneView}。共享资源由
+     * SceneView/EngineInstance 根据活动场景数量自动判断，仅在最后一个场景退出后统一释放。
+     * </p>
      */
     public void destroy(){
+        if (rootNode != null) {
+            //desc- SceneLayout 负责当前场景的局部资源，全局资源不能在 Tab 切换时直接销毁。
+            removeNode(rootNode);
+            rootNode.setEnabled(false);
+            rootNode = null;
+        }
         if (sceneView !=null) {
-            //deleteNode(rootNode);
             sceneView.destroy();
             sceneView = null;
         }

@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
+import com.eqgis.eqr.core.FilamentMaterialProviderManager;
 import com.google.android.filament.Skybox;
 import com.google.sceneform.utilities.EnvironmentalHdrParameters;
 import com.google.android.filament.View;
@@ -672,6 +673,8 @@ public class Renderer implements EqUiHelper.RendererCallback {
     /** 立即释放所有渲染资源，即使正在使用。 */
     public static void destroyAllResources() {
         ResourceManager.getInstance().destroyAllResources();
+        //desc- Engine 销毁前释放 gltfio 共享材质缓存，避免材质模板常驻 native 内存。
+        FilamentMaterialProviderManager.destroy();
         EngineInstance.destroyEngine();
     }
 }
