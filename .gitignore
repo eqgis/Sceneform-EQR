@@ -10,3 +10,5 @@ SampleProj/.idea/misc.xml
 /.agents/
 AGENTS.md
 /tmp
+SampleProj/app/release/output-metadata.json
+SampleProj/app/release/app-release.apk
