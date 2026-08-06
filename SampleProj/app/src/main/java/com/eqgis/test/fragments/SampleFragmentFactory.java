@@ -13,6 +13,7 @@ import com.eqgis.test.fragments.tutorial.AnimationOverviewLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraClipLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraFovLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraGestureLessonFragment;
+import com.eqgis.test.fragments.tutorial.CameraStreamLessonFragment;
 import com.eqgis.test.fragments.tutorial.CollisionClickLessonFragment;
 import com.eqgis.test.fragments.tutorial.CubeLessonFragment;
 import com.eqgis.test.fragments.tutorial.GltfLessonFragment;
@@ -22,6 +23,7 @@ import com.eqgis.test.fragments.tutorial.MaterialPropertiesLessonFragment;
 import com.eqgis.test.fragments.tutorial.ModelAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.NodeGestureLessonFragment;
 import com.eqgis.test.fragments.tutorial.NodePickingLessonFragment;
+import com.eqgis.test.fragments.tutorial.PanoramaVideoLessonFragment;
 import com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlyLessonFragment;
@@ -31,6 +33,8 @@ import com.eqgis.test.fragments.tutorial.SkyboxLessonFragment;
 import com.eqgis.test.fragments.tutorial.TranslationAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.TriangleLessonFragment;
 import com.eqgis.test.fragments.tutorial.ViewPickingLessonFragment;
+import com.eqgis.test.fragments.tutorial.VideoBackgroundLessonFragment;
+import com.eqgis.test.fragments.tutorial.VideoTextureLessonFragment;
 
 /**
  * 示例 Fragment 工厂
@@ -105,6 +109,14 @@ public class SampleFragmentFactory {
                 return new ViewPickingLessonFragment();
             case "interaction_node_picking":
                 return new NodePickingLessonFragment();
+            case "video_camera_background":
+                return new VideoBackgroundLessonFragment();
+            case "video_camera_texture":
+                return new VideoTextureLessonFragment();
+            case "video_camera_panorama":
+                return new PanoramaVideoLessonFragment();
+            case "video_camera_stream":
+                return new CameraStreamLessonFragment();
             default:
                 return BaseInfoFragment.newInstance(lesson.getTitle(), lesson.getDescription(), lesson.getCodeLocation());
         }

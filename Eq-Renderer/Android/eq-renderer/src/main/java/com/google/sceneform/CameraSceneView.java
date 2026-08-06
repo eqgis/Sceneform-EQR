@@ -64,6 +64,8 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     //Camera2相关
     private CameraDevice cameraDevice;
     private CameraCaptureSession captureSession;
+    private boolean lifecycleResumed;
+    private boolean cameraOpening;
     private int screenRotation = Surface.ROTATION_0;
     private int cameraWidth,cameraHeight;
 
@@ -184,6 +186,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     @Override
     public void resume() {
         super.resume();
+        lifecycleResumed = true;
         openCamera();
         registerListener();
         Log.i("IKKYU", "resume: ");
@@ -191,6 +194,7 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
     @Override
     public void pause() {
+        lifecycleResumed = false;
         unRegisterListener();
         closeCamera();
         super.pause();
@@ -198,6 +202,12 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
     @Override
     public void destroy() {
+        //desc- Camera2 打开与会话配置均为异步回调，销毁前先阻止回调继续创建预览资源。
+        lifecycleResumed = false;
+        unRegisterListener();
+        closeCamera();
+        initializeListener = null;
+        beginFrameListener = null;
         super.destroy();
     }
 
@@ -260,6 +270,10 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
      * 关闭相机
      */
     private void closeCamera(){
+        if (captureSession != null) {
+            captureSession.close();
+            captureSession = null;
+        }
         if (cameraDevice != null) {
             cameraDevice.close();
             cameraDevice = null;
@@ -269,6 +283,9 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
     @SuppressLint("MissingPermission")
     private void openCamera() {
 //        getScene().getCamera().setFOV();
+        if (!lifecycleResumed || cameraDevice != null || cameraOpening) {
+            return;
+        }
         CameraManager manager = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
         try {
             String cameraId = manager.getCameraIdList()[0];
@@ -301,15 +318,25 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
                 }
             }
 //            Log.i(CameraSceneView.class.getSimpleName(), "openCamera: IKKYU: video size :cameraWidth:"+cameraWidth+" cameraHeight:"+cameraHeight);
+            cameraOpening = true;
             manager.openCamera(cameraId, stateCallback, null);
         } catch (CameraAccessException e) {
+            cameraOpening = false;
             Log.e(CameraSceneView.class.getSimpleName(), "openCamera: ", e);
+        } catch (SecurityException e) {
+            cameraOpening = false;
+            Log.e(CameraSceneView.class.getSimpleName(), "缺少相机权限，无法打开 CameraSceneView", e);
         }
     }
 
     private CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice camera) {
+            cameraOpening = false;
+            if (!lifecycleResumed) {
+                camera.close();
+                return;
+            }
             cameraDevice = camera;
             startPreview();
             //Log.i(CameraSceneView.class.getSimpleName(), "onOpened: ");
@@ -317,20 +344,29 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
         @Override
         public void onDisconnected(CameraDevice camera) {
+            cameraOpening = false;
             camera.close();
-            cameraDevice = null;
+            if (cameraDevice == camera) {
+                cameraDevice = null;
+            }
             //Log.i(CameraSceneView.class.getSimpleName(), "onDisconnected: ");
         }
 
         @Override
         public void onError(CameraDevice camera, int error) {
+            cameraOpening = false;
             camera.close();
-            cameraDevice = null;
+            if (cameraDevice == camera) {
+                cameraDevice = null;
+            }
             //Log.i(CameraSceneView.class.getSimpleName(), "onError: ");
         }
     };
 
     private void startPreview() {
+        if (!lifecycleResumed || cameraDevice == null || externalTexture == null) {
+            return;
+        }
         try {
             SurfaceTexture texture = externalTexture.getSurfaceTexture();
             Surface surface = externalTexture.getSurface();
@@ -359,10 +395,14 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
             cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession session) {
+                    if (!lifecycleResumed || cameraDevice == null) {
+                        session.close();
+                        return;
+                    }
                     captureSession = session;
                     try {
                         captureSession.setRepeatingRequest(builder.build(), null, null);
-                    } catch (CameraAccessException e) {
+                    } catch (CameraAccessException | IllegalStateException e) {
                         Log.e(CameraSceneView.class.getSimpleName(), "onConfigured: ", e);
                     }
                 }
@@ -435,8 +475,10 @@ public class CameraSceneView extends SceneView implements SensorEventListener {
 
 //    DecimalFormat df = new DecimalFormat("#.#");
     public void registerListener(){
-        mSensorManager.registerListener(this,mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
-                SensorManager.SENSOR_DELAY_GAME);
+        Sensor rotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        if (rotationSensor != null) {
+            mSensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_GAME);
+        }
 
         //2
 //        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),

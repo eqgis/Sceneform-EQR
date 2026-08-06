@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.eqgis.eqr.R;
 import com.google.sceneform.ExSceneView;
+import com.google.sceneform.Scene;
 import com.google.sceneform.SceneView;
 
 /**
@@ -36,6 +37,8 @@ public class VideoTimeLine extends FrameLayout {
     private int current;
     private boolean hasPause = false;
     private MediaPlayer mediaPlayer;
+    private SceneView boundSceneView;
+    private Scene.OnUpdateListener sceneUpdateListener;
 
     /**
      * 更新监听事件
@@ -80,7 +83,7 @@ public class VideoTimeLine extends FrameLayout {
      * @return 取值区间[0,1]
      */
     public float getProgress(){
-        return (float)current / max;
+        return max > 0 ? (float) current / max : 0;
     }
 
 
@@ -93,10 +96,12 @@ public class VideoTimeLine extends FrameLayout {
     public VideoTimeLine bindView(SceneView exSceneView, MediaPlayer mediaPlayer){
 //        if (!(mediaPlayer.getDuration() > 0))
 //            throw new IllegalArgumentException("The duration of media was error.");
+        unbindView();
         this.mediaPlayer = mediaPlayer;
+        boundSceneView = exSceneView;
         initSeekBarSetting(mediaPlayer);
 
-        exSceneView.getScene().addOnUpdateListener(frameTime -> {
+        sceneUpdateListener = frameTime -> {
             if (isSeekBarTouching){
                 //如果在拖拽进度条，这就不更新
                 return;
@@ -107,14 +112,34 @@ public class VideoTimeLine extends FrameLayout {
             int position = mediaPlayer.getCurrentPosition();
 //            Log.i("IKKYU ", "bindView: " + position);
             mSeekBar.setProgress(position);
-        });
+        };
+        exSceneView.getScene().addOnUpdateListener(sceneUpdateListener);
 
         //seekTo(0)，恢复为第一帧
         reset();
         return this;
     }
 
+    /**
+     * 解除 SceneView 帧监听和 MediaPlayer 引用
+     * <p>应在播放器 release 之前调用，避免场景切换后时间轴继续访问已释放的播放器。</p>
+     */
+    public void unbindView() {
+        if (boundSceneView != null && sceneUpdateListener != null) {
+            boundSceneView.getScene().removeOnUpdateListener(sceneUpdateListener);
+        }
+        mSeekBar.setOnSeekBarChangeListener(null);
+        sceneUpdateListener = null;
+        boundSceneView = null;
+        mediaPlayer = null;
+        isSeekBarTouching = false;
+        hasPause = false;
+    }
+
     public void reset(){
+        if (mediaPlayer == null) {
+            return;
+        }
         current = 0;
 //                Log.i("IKKYU ", "onProgressChanged: "+current);
         startTime.setText(format(current,0));

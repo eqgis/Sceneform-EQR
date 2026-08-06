@@ -136,7 +136,7 @@ public class SampleCatalog {
                 new SampleTopic(TOPIC_MATERIAL_CAMERA, "材质、光照与相机", "学习材质、IBL、天空盒、FOV、裁剪面和阴影。", materialCameraLessons()),
                 new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", animationLessons()),
                 new SampleTopic(TOPIC_INTERACTION, "交互篇", "学习相机与节点手势、碰撞点击、ViewNode 和三维节点射线拾取。", interactionLessons()),
-                new SampleTopic(TOPIC_VIDEO_CAMERA, "视频、相机与外部纹理", "视频贴图、相机流、截图和 PixelCopy。", placeholderLessons("video_camera", "视频、相机与外部纹理")),
+                new SampleTopic(TOPIC_VIDEO_CAMERA, "视频、相机与外部纹理", "学习二维视频背景、三维视频贴图、全景视频与实时相机流。", videoCameraLessons()),
                 new SampleTopic(TOPIC_XR, "XR 篇", "ARCore、AREngine、3DoF AR、VR 和跟踪状态。", placeholderLessons("xr", "XR 篇")),
                 new SampleTopic(TOPIC_ADVANCED, "进阶专题", "生命周期、性能优化、Native 加载和 Filament 材质工作流。", placeholderLessons("advanced", "进阶专题"))
         );
@@ -225,6 +225,19 @@ public class SampleCatalog {
                 new SampleLesson("interaction_collision_click", "碰撞检测点击", "点击三维物体并读取射线与碰撞体相交的世界坐标。", "com.eqgis.test.fragments.tutorial.CollisionClickLessonFragment"),
                 new SampleLesson("interaction_view_picking", "Android View 交互", "通过 Ray-picked ViewNode 操作 Button、Switch 与 CheckBox。", "com.eqgis.test.fragments.tutorial.ViewPickingLessonFragment"),
                 new SampleLesson("interaction_node_picking", "3D Node 交互", "通过 Ray hit-test 拾取多个 Node（Renderable），点击后切换材质颜色。", "com.eqgis.test.fragments.tutorial.NodePickingLessonFragment")
+        );
+    }
+
+    /**
+     * 获取视频、相机与外部纹理教程功能
+     * @return 视频与相机教程功能列表
+     */
+    private static List<SampleLesson> videoCameraLessons() {
+        return Arrays.asList(
+                new SampleLesson("video_camera_background", "2D 视频背景", "使用 ExSceneView 把视频作为二维背景，并通过时间轴控制播放进度。", "com.eqgis.test.fragments.tutorial.VideoBackgroundLessonFragment"),
+                new SampleLesson("video_camera_texture", "视频纹理", "通过 ExternalTexture 将循环视频同时贴到 Cube 和 Quad。", "com.eqgis.test.fragments.tutorial.VideoTextureLessonFragment"),
+                new SampleLesson("video_camera_panorama", "全景视频", "将 360° 视频贴到内球面，在球体内部观看全景画面。", "com.eqgis.test.fragments.tutorial.PanoramaVideoLessonFragment"),
+                new SampleLesson("video_camera_stream", "实时相机流", "使用 CameraSceneView 把 Camera2 预览作为场景背景，并叠加三维物体。", "com.eqgis.test.fragments.tutorial.CameraStreamLessonFragment")
         );
     }
 

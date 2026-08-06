@@ -79,7 +79,7 @@ public class PlyGSDataScene implements ISampleScene{
                         Vector3 scaled = Vector3.one()
                                 .scaled(ScaleTool.calculateUnitsScale(modelRenderable));
                         modelNode.setLocalScale(scaled);
-                        Toast.makeText(context, "Scale: "+scaled, Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(context, "Scale: "+scaled, Toast.LENGTH_SHORT).show();
 
 //                        modelNode.setLocalScale(Vector3.one().scaled(0.001f));
                         //当sceneView不为null时，则将在sceneView的中心作射线，在距离distance的位置加载模型

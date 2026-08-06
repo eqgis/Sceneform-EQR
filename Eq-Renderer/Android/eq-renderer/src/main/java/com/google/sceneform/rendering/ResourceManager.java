@@ -104,17 +104,17 @@ public class ResourceManager {
     }
 
     private ResourceManager() {
-        //注意Cleanup顺序
-        // 例如：Renderable需要在MaterialInstance之前，MaterialInstance需要在Material之前释放
+        //desc- 先销毁 Renderable/CameraStream，再销毁 MaterialInstance，最后才能销毁其绑定的纹理。
+        // Filament 不允许 Texture 在仍被 MaterialInstance 引用时释放，否则下一次 commit 会触发 PreconditionPanic。
         addResourceHolder(modelRenderableRegistry);
         addResourceHolder(viewRenderableRegistry);
         addResourceHolder(textureRegistry);
         addResourceHolder(materialRegistry);
         addResourceHolder(renderableInstanceCleanupRegistry);
         addResourceHolder(cameraStreamCleanupRegistry);
+        addResourceHolder(materialCleanupRegistry);
         addResourceHolder(externalTextureCleanupRegistry);
         addResourceHolder(depthTextureCleanupRegistry);
-        addResourceHolder(materialCleanupRegistry);
         addResourceHolder(textureCleanupRegistry);
     }
 
