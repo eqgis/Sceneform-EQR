@@ -39,7 +39,7 @@ public abstract class BaseTutorialFragment extends BaseSampleFragment {
     }
 
     /**
-     * 教程操作控件统一悬浮在三维场景左上角
+     * 教程操作控件统一显示在页面标题栏右上角
      * @return 始终返回 true
      */
     @Override

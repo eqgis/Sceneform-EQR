@@ -1,6 +1,8 @@
 package com.eqgis.test.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +13,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -77,8 +80,8 @@ public abstract class BaseSampleFragment extends Fragment {
     }
 
     /**
-     * 是否将操作区悬浮在三维场景内
-     * @return true 表示操作区悬浮于场景左上角，false 表示操作区位于场景下方
+     * 是否将操作区作为可折叠面板放置在页面标题栏右侧
+     * @return true 表示操作区位于页面右上角，false 表示操作区位于场景下方
      */
     protected boolean shouldOverlayActions() {
         return false;
@@ -184,17 +187,36 @@ public abstract class BaseSampleFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewDestroyed = false;
+        boolean overlayActions = shouldOverlayActions();
+        FrameLayout pageRoot = new FrameLayout(requireContext());
+        pageRoot.setBackgroundColor(0xfff5f5f5);
+
         LinearLayout root = new LinearLayout(requireContext());
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(0xfff5f5f5);
+        pageRoot.addView(root, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
 
+        FrameLayout titleBar = new FrameLayout(requireContext());
         TextView title = new TextView(requireContext());
         title.setText(getLessonTitle());
         title.setTextColor(0xff212121);
         title.setTextSize(20);
         title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setPadding(dp(16), dp(12), dp(16), dp(4));
-        root.addView(title, new LinearLayout.LayoutParams(
+        if (overlayActions) {
+            title.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+            title.setSingleLine(true);
+            title.setEllipsize(TextUtils.TruncateAt.END);
+            title.setMinHeight(dp(64));
+            title.setPadding(dp(16), 0, dp(76), 0);
+        } else {
+            title.setPadding(dp(16), dp(12), dp(16), dp(4));
+        }
+        titleBar.addView(title, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        root.addView(titleBar, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -232,8 +254,8 @@ public abstract class BaseSampleFragment extends Fragment {
         contentContainer.addView(sceneLayout, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
-        if (shouldOverlayActions()) {
-            addFloatingActionContainer(contentContainer, actionContainer);
+        if (overlayActions) {
+            addFloatingActionContainer(pageRoot, actionContainer);
         } else {
             root.addView(actionContainer, new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -248,24 +270,29 @@ public abstract class BaseSampleFragment extends Fragment {
                 floatingActionRoot.setVisibility(View.GONE);
             }
         }
-        return root;
+        return pageRoot;
     }
 
     /**
-     * 将可折叠操作区作为轻量悬浮窗添加到三维场景左上角
-     * @param container 三维场景容器
+     * 将可折叠操作区添加到页面标题栏右上角
+     * <p>面板作为页面根容器的顶层叠加层，不参与标题、说明和 SceneLayout 的尺寸测量。</p>
+     * @param container 页面根叠加容器
      * @param actions 操作控件容器
      */
     private void addFloatingActionContainer(FrameLayout container, LinearLayout actions) {
         int availableWidth = getResources().getDisplayMetrics().widthPixels - dp(32);
         int panelWidth = Math.min(dp(320), availableWidth);
+        int maxPanelHeight = Math.max(
+                dp(240),
+                Math.min(dp(360), getResources().getDisplayMetrics().heightPixels / 3));
 
         floatingActionRoot = new FrameLayout(requireContext());
+        floatingActionRoot.setElevation(dp(10));
         ImageButton settingsButton = createSettingsButton();
         FrameLayout.LayoutParams settingsParams = new FrameLayout.LayoutParams(
                 dp(48),
                 dp(48),
-                Gravity.TOP | Gravity.START);
+                Gravity.TOP | Gravity.END);
         floatingActionRoot.addView(settingsButton, settingsParams);
 
         LinearLayout panel = new LinearLayout(requireContext());
@@ -288,6 +315,18 @@ public abstract class BaseSampleFragment extends Fragment {
                 Gravity.START | Gravity.CENTER_VERTICAL);
         headerIconParams.leftMargin = dp(14);
         header.addView(headerIcon, headerIconParams);
+
+        TextView panelTitle = new TextView(requireContext());
+        panelTitle.setText("参数设置");
+        panelTitle.setTextColor(0xff1d1d1f);
+        panelTitle.setTextSize(15);
+        panelTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        panelTitle.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        FrameLayout.LayoutParams panelTitleParams = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        panelTitleParams.setMargins(dp(46), 0, dp(54), 0);
+        header.addView(panelTitle, panelTitleParams);
 
         ImageButton collapseButton = new ImageButton(requireContext());
         collapseButton.setImageResource(R.drawable.ic_tutorial_collapse);
@@ -313,13 +352,22 @@ public abstract class BaseSampleFragment extends Fragment {
                 dp(1));
         dividerParams.setMargins(dp(14), 0, dp(14), 0);
         panel.addView(divider, dividerParams);
-        panel.addView(actions, new LinearLayout.LayoutParams(
+
+        MaxHeightScrollView actionScroller = new MaxHeightScrollView(
+                requireContext(), maxPanelHeight - dp(49));
+        actionScroller.setFillViewport(false);
+        actionScroller.setClipToPadding(false);
+        actionScroller.setVerticalScrollBarEnabled(true);
+        actionScroller.addView(actions, new ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        panel.addView(actionScroller, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
         floatingActionRoot.addView(panel, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                Gravity.TOP | Gravity.START));
+                Gravity.TOP | Gravity.END));
 
         settingsButton.setOnClickListener(view -> {
             settingsButton.setVisibility(View.GONE);
@@ -335,9 +383,10 @@ public abstract class BaseSampleFragment extends Fragment {
         FrameLayout.LayoutParams actionParams = new FrameLayout.LayoutParams(
                 panelWidth,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                Gravity.TOP | Gravity.START);
-        actionParams.setMargins(dp(12), dp(12), dp(12), 0);
+                Gravity.TOP | Gravity.END);
+        actionParams.setMargins(dp(12), dp(8), dp(12), dp(8));
         container.addView(floatingActionRoot, actionParams);
+        floatingActionRoot.bringToFront();
     }
 
     /**
@@ -375,6 +424,28 @@ public abstract class BaseSampleFragment extends Fragment {
         button.setBackgroundResource(R.drawable.bg_tutorial_settings_button);
         button.setElevation(dp(6));
         return button;
+    }
+
+    /** 限制参数面板最大高度，内容超出后在面板内部滚动。 */
+    private static final class MaxHeightScrollView extends ScrollView {
+        private final int maxHeight;
+
+        MaxHeightScrollView(Context context, int maxHeight) {
+            super(context);
+            this.maxHeight = maxHeight;
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int parentMode = MeasureSpec.getMode(heightMeasureSpec);
+            int measuredLimit = maxHeight;
+            if (parentMode != MeasureSpec.UNSPECIFIED) {
+                measuredLimit = Math.min(maxHeight, MeasureSpec.getSize(heightMeasureSpec));
+            }
+            super.onMeasure(
+                    widthMeasureSpec,
+                    MeasureSpec.makeMeasureSpec(measuredLimit, MeasureSpec.AT_MOST));
+        }
     }
 
     @Override
