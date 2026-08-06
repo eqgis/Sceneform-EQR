@@ -71,8 +71,15 @@ public class ARAnimationModel extends ARAnimation {
      */
     @Keep
     public void setCurrentProgress(float progress){
-        RenderableInstance instance = getNode().getRenderableInstance();
-        if (instance == null)return;
+        Node node = getNode();
+        if (node == null) {
+            return;
+        }
+        RenderableInstance instance = node.getRenderableInstance();
+        //desc- Fragment 退出时 RenderableInstance 的动画列表会先被清空，属性动画可能仍有一帧更新回调。
+        if (instance == null || index < 0 || index >= instance.getAnimationCount()) {
+            return;
+        }
         ModelAnimation animation = instance.getAnimation(index);
         if (animation != null){
             //若动画存在，则更新百分比进度
