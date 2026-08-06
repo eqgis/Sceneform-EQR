@@ -87,4 +87,21 @@ public class ARAnimationModel extends ARAnimation {
     public void setCurrentIndex(int index){
         this.index = index;
     }
+
+    /**
+     * 获取当前索引对应的 GLTF 源动画时长
+     * @return 源动画时长，单位毫秒；实例或索引不可用时返回 0
+     */
+    public long getSourceDurationMillis() {
+        Node node = getNode();
+        if (node == null) {
+            return 0L;
+        }
+        RenderableInstance instance = node.getRenderableInstance();
+        if (instance == null || index < 0 || index >= instance.getAnimationCount()) {
+            return 0L;
+        }
+        return instance.getAnimation(index).getDurationMillis();
+    }
+
 }
