@@ -170,14 +170,14 @@ public abstract class BaseAnimationLessonFragment extends BaseTutorialFragment {
     }
 
     /**
-     * 异步加载带内置动画的蜜蜂 GLB 模型
+     * 异步加载带内置动画的模型
      * @param position 节点局部坐标
      * @param scale 单位尺寸缩放后的附加比例
      * @param consumer 节点创建成功回调
      */
-    protected final void loadAnimatedBee(Vector3 position, float scale, Consumer<Node> consumer) {
+    protected final void loadAnimatedGlb(Vector3 position, float scale, Consumer<Node> consumer) {
         ModelRenderable.builder()
-                .setSource(requireContext(), Uri.parse("gltf/bee.glb"))
+                .setSource(requireContext(), Uri.parse("gltf/Fox.glb"))
                 .setIsFilamentGltf(true)
                 .build()
                 .thenAccept(renderable -> {
@@ -190,7 +190,7 @@ public abstract class BaseAnimationLessonFragment extends BaseTutorialFragment {
                     consumer.accept(node);
                 })
                 .exceptionally(error -> {
-                    Log.e(TAG, "加载动画蜜蜂模型失败", error);
+                    Log.e(TAG, "加载动画模型失败", error);
                     return null;
                 });
     }

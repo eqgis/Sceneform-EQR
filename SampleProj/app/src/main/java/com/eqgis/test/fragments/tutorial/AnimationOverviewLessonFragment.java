@@ -1,8 +1,11 @@
 package com.eqgis.test.fragments.tutorial;
 
 import android.animation.ObjectAnimator;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -18,6 +21,7 @@ import com.google.sceneform.rendering.Color;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 动画篇总览教程
@@ -30,7 +34,13 @@ public class AnimationOverviewLessonFragment extends BaseAnimationLessonFragment
     private static final int MIN_DURATION_SECONDS = 2;
     private static final int DEFAULT_DURATION_SECONDS = 4;
     private static final int MAX_DURATION_SECONDS = 8;
+    private static final int MODEL_ANIMATION_INDEX = 2;
     private final List<ObjectAnimator> demoAnimators = new ArrayList<>();
+    private ARAnimationModel modelAnimation;
+    private ObjectAnimator modelAnimator;
+    private boolean useSourceModelDuration;
+    private TextView modelDurationLabel;
+    private TextView customDurationLabel;
     private boolean playing = true;
     private long duration = DEFAULT_DURATION_SECONDS * 1000L;
 
@@ -41,7 +51,7 @@ public class AnimationOverviewLessonFragment extends BaseAnimationLessonFragment
 
     @Override
     protected String getLessonDescription() {
-        return "同时观察模型内置动画、节点旋转、直线位移与曲线路径，拖动周期滑杆可统一改变播放速度。";
+        return "比较四种动画，并让模型动画选择自定义周期或 GLB 源动画时长。";
     }
 
     /**
@@ -64,22 +74,46 @@ public class AnimationOverviewLessonFragment extends BaseAnimationLessonFragment
     @SuppressWarnings("deprecation")
     @Override
     protected void onActionsReady(LinearLayout actionContainer) {
+        Spinner durationModeSpinner = new Spinner(requireContext());
+        String[] durationModes = {"自定义周期", "源动画时长"};
+        configureTutorialSpinner(durationModeSpinner);
+        durationModeSpinner.setAdapter(createTutorialSpinnerAdapter(durationModes));
+        durationModeSpinner.setSelection(0, false);
+        durationModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                useSourceModelDuration = position == 1;
+                applyModelAnimatorDuration();
+                updateDurationLabels();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        modelDurationLabel = addControlRow(actionContainer, "模型周期：自定义", durationModeSpinner);
+
         SeekBar durationSeekBar = new SeekBar(requireContext());
         durationSeekBar.setMax(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS);
         durationSeekBar.setProgress(DEFAULT_DURATION_SECONDS - MIN_DURATION_SECONDS);
-        TextView durationLabel = addControlRow(
+        customDurationLabel = addControlRow(
                 actionContainer,
-                "统一周期：" + DEFAULT_DURATION_SECONDS + "s",
+                "统一自定义周期：" + DEFAULT_DURATION_SECONDS + "s",
                 durationSeekBar);
         durationSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int seconds = MIN_DURATION_SECONDS + progress;
                 duration = seconds * 1000L;
-                durationLabel.setText("统一周期：" + seconds + "s");
                 for (ObjectAnimator animator : demoAnimators) {
-                    animator.setDuration(duration);
+                    if (animator != modelAnimator) {
+                        animator.setDuration(duration);
+                    }
                 }
+                if (!useSourceModelDuration) {
+                    applyModelAnimatorDuration();
+                }
+                updateDurationLabels();
             }
 
             @Override
@@ -90,6 +124,7 @@ public class AnimationOverviewLessonFragment extends BaseAnimationLessonFragment
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
+        updateDurationLabels();
 
         Switch playSwitch = new Switch(requireContext());
         playSwitch.setText("播放");
@@ -104,17 +139,37 @@ public class AnimationOverviewLessonFragment extends BaseAnimationLessonFragment
     }
 
     private void createModelDemo() {
-        loadAnimatedBee(new Vector3(-1.15f, -0.05f, -4.0f), 0.45f, node -> {
+        loadAnimatedGlb(new Vector3(-1.f, -0.1f, -2.0f), 1.0f, node -> {
             if (node.getRenderableInstance() == null
                     || node.getRenderableInstance().getAnimationCount() == 0) {
                 return;
             }
             ARAnimationParameter parameter = createLoopParameter();
             ARAnimationModel animation = new ARAnimationModel(node);
+            int animationIndex = Math.min(
+                    MODEL_ANIMATION_INDEX,
+                    node.getRenderableInstance().getAnimationCount() - 1);
+            animation.setCurrentIndex(animationIndex);
             animation.createAnimation(parameter);
-            animation.setCurrentIndex(Math.min(1, node.getRenderableInstance().getAnimationCount() - 1));
-            registerDemoAnimator(animation.getObjectAnimator());
+            //desc- Fox 的索引 2 动作幅度清晰，适合在总览缩小展示中观察。
+            registerModelDemoAnimator(animation);
         });
+    }
+
+    /**
+     * 注册并通过 ARAnimationModel 公开接口启动模型内置动画
+     * @param animation Fox 模型动画
+     */
+    private void registerModelDemoAnimator(ARAnimationModel animation) {
+        modelAnimation = animation;
+        modelAnimator = animation.getObjectAnimator();
+        applyModelAnimatorDuration();
+        trackAnimator(modelAnimator);
+        demoAnimators.add(modelAnimator);
+        updateDurationLabels();
+        if (playing) {
+            animation.play();
+        }
     }
 
     private void createRotationDemo() {
@@ -185,5 +240,59 @@ public class AnimationOverviewLessonFragment extends BaseAnimationLessonFragment
         } else if (animator.isStarted() && !animator.isPaused()) {
             animator.pause();
         }
+    }
+
+    /**
+     * 刷新模型和其他动画当前使用的周期文案
+     */
+    private void updateDurationLabels() {
+        if (customDurationLabel != null) {
+            customDurationLabel.setText(!useSourceModelDuration
+                    ? "统一自定义周期：" + formatDuration(duration)
+                    : "其他动画周期：" + formatDuration(duration));
+        }
+        if (modelDurationLabel == null) {
+            return;
+        }
+        if (!useSourceModelDuration) {
+            modelDurationLabel.setText("模型周期：自定义 " + formatDuration(duration));
+            return;
+        }
+        long sourceDuration = modelAnimation == null
+                ? 0L
+                : modelAnimation.getSourceDurationMillis();
+        modelDurationLabel.setText(sourceDuration > 0L
+                ? "模型周期：源动画 " + formatDuration(sourceDuration)
+                : "模型周期：源动画（等待模型）");
+    }
+
+    /**
+     * 在应用层按当前模式设置模型属性动画周期
+     */
+    private void applyModelAnimatorDuration() {
+        if (modelAnimator == null) {
+            return;
+        }
+        long appliedDuration = duration;
+        if (useSourceModelDuration && modelAnimation != null) {
+            long sourceDuration = modelAnimation.getSourceDurationMillis();
+            if (sourceDuration > 0L) {
+                appliedDuration = sourceDuration;
+            }
+        }
+        modelAnimator.setDuration(appliedDuration);
+    }
+
+    /**
+     * 将毫秒周期格式化为秒
+     * @param durationMillis 周期，单位毫秒
+     * @return 最多保留两位小数的秒数文案
+     */
+    private String formatDuration(long durationMillis) {
+        float seconds = durationMillis / 1000.0f;
+        if (durationMillis % 1000L == 0L) {
+            return String.format(Locale.getDefault(), "%.0fs", seconds);
+        }
+        return String.format(Locale.getDefault(), "%.2fs", seconds);
     }
 }
