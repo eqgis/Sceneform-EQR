@@ -10,6 +10,7 @@ import com.eqgis.test.fragments.tutorial.AndroidTextViewLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidWebViewLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment;
 import com.eqgis.test.fragments.tutorial.AnimationOverviewLessonFragment;
+import com.eqgis.test.fragments.tutorial.AsyncResourceCacheLessonFragment;
 import com.eqgis.test.fragments.tutorial.ArEngineLessonFragment;
 import com.eqgis.test.fragments.tutorial.ArPlaneDetectionLessonFragment;
 import com.eqgis.test.fragments.tutorial.ArThreeDofLessonFragment;
@@ -19,6 +20,8 @@ import com.eqgis.test.fragments.tutorial.CameraGestureLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraStreamLessonFragment;
 import com.eqgis.test.fragments.tutorial.CollisionClickLessonFragment;
 import com.eqgis.test.fragments.tutorial.CubeLessonFragment;
+import com.eqgis.test.fragments.tutorial.CustomFilamentMaterialLessonFragment;
+import com.eqgis.test.fragments.tutorial.DynamicMeshLineLessonFragment;
 import com.eqgis.test.fragments.tutorial.GltfLessonFragment;
 import com.eqgis.test.fragments.tutorial.IblLessonFragment;
 import com.eqgis.test.fragments.tutorial.LightTypesLessonFragment;
@@ -32,6 +35,10 @@ import com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlyLessonFragment;
 import com.eqgis.test.fragments.tutorial.RotationAnimationLessonFragment;
+import com.eqgis.test.fragments.tutorial.RenderPerformanceLessonFragment;
+import com.eqgis.test.fragments.tutorial.ResourceLifecycleLessonFragment;
+import com.eqgis.test.fragments.tutorial.SceneCaptureExportLessonFragment;
+import com.eqgis.test.fragments.tutorial.ScreenRayMeasureLessonFragment;
 import com.eqgis.test.fragments.tutorial.ShadowLessonFragment;
 import com.eqgis.test.fragments.tutorial.SkyboxLessonFragment;
 import com.eqgis.test.fragments.tutorial.TranslationAnimationLessonFragment;
@@ -132,6 +139,20 @@ public class SampleFragmentFactory {
                 return new VrThreeDofLessonFragment();
             case "xr_orb_slam3":
                 return new OrbSlam3LessonFragment();
+            case "advanced_lifecycle":
+                return new ResourceLifecycleLessonFragment();
+            case "advanced_async_cache":
+                return new AsyncResourceCacheLessonFragment();
+            case "advanced_performance":
+                return new RenderPerformanceLessonFragment();
+            case "advanced_custom_material":
+                return new CustomFilamentMaterialLessonFragment();
+            case "advanced_dynamic_mesh":
+                return new DynamicMeshLineLessonFragment();
+            case "advanced_capture_export":
+                return new SceneCaptureExportLessonFragment();
+            case "advanced_screen_ray_measure":
+                return new ScreenRayMeasureLessonFragment();
             default:
                 return BaseInfoFragment.newInstance(lesson.getTitle(), lesson.getDescription(), lesson.getCodeLocation());
         }

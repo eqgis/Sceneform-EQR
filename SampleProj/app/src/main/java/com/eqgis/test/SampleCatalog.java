@@ -138,7 +138,7 @@ public class SampleCatalog {
                 new SampleTopic(TOPIC_INTERACTION, "交互篇", "学习相机与节点手势、碰撞点击、ViewNode 和三维节点射线拾取。", interactionLessons()),
                 new SampleTopic(TOPIC_VIDEO_CAMERA, "视频、相机与外部纹理", "学习二维视频背景、三维视频贴图、全景视频与实时相机流。", videoCameraLessons()),
                 new SampleTopic(TOPIC_XR, "XR 篇", "ARCore、AREngine、平面识别、3DoF AR/VR 与 ORB-SLAM3 集成说明。", xrLessons()),
-                new SampleTopic(TOPIC_ADVANCED, "进阶专题", "生命周期、性能优化、Native 加载和 Filament 材质工作流。", placeholderLessons("advanced", "进阶专题"))
+                new SampleTopic(TOPIC_ADVANCED, "进阶专题", "深入生命周期、异步资源、性能、Filament 材质、动态 Mesh、截图和空间测量。", advancedLessons())
         );
     }
 
@@ -256,14 +256,18 @@ public class SampleCatalog {
     }
 
     /**
-     * 创建暂未实现主题的占位功能
-     * @param prefix 主题 id 前缀
-     * @param title 主题标题
-     * @return 占位功能列表
+     * 获取进阶专题教程功能。
+     * @return 进阶专题教程功能列表
      */
-    private static List<SampleLesson> placeholderLessons(String prefix, String title) {
+    private static List<SampleLesson> advancedLessons() {
         return Arrays.asList(
-                new SampleLesson(prefix + "_overview", "主题导览", "本主题教程已规划，后续按一个 Fragment 一个功能逐步补齐。", title + "：待新增 Fragment")
+                new SampleLesson("advanced_lifecycle", "生命周期与资源释放", "明确 Node、Renderable、SceneLayout 与 Filament 全局资源的安全释放顺序。", "com.eqgis.test.fragments.tutorial.ResourceLifecycleLessonFragment"),
+                new SampleLesson("advanced_async_cache", "异步加载与资源缓存", "比较同步/异步 GLB 加载与 registryId 缓存，并处理晚到回调。", "com.eqgis.test.fragments.tutorial.AsyncResourceCacheLessonFragment"),
+                new SampleLesson("advanced_performance", "渲染性能诊断", "实时观察 FPS、实例数量、Java Heap、阴影与 SceneView 内部耗时日志。", "com.eqgis.test.fragments.tutorial.RenderPerformanceLessonFragment"),
+                new SampleLesson("advanced_custom_material", "自定义 Filament 材质", "加载编译后的 filamat，并实时调节 color、metallic、roughness 与 reflectance。", "com.eqgis.test.fragments.tutorial.CustomFilamentMaterialLessonFragment"),
+                new SampleLesson("advanced_dynamic_mesh", "动态 Mesh 与 Line3D", "运行时生成顶点和索引，并原位刷新 Line3D 管线几何。", "com.eqgis.test.fragments.tutorial.DynamicMeshLineLessonFragment"),
+                new SampleLesson("advanced_capture_export", "场景截图与导出", "通过 PixelCopy 截取 SceneView，并使用应用缓存和 FileProvider 导出 JPEG。", "com.eqgis.test.fragments.tutorial.SceneCaptureExportLessonFragment"),
+                new SampleLesson("advanced_screen_ray_measure", "屏幕坐标、射线与空间测量", "完成屏幕像素、Camera Ray、碰撞世界坐标与两点距离的转换链。", "com.eqgis.test.fragments.tutorial.ScreenRayMeasureLessonFragment")
         );
     }
 
