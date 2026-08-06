@@ -520,6 +520,66 @@ public class GeometryUtils {
     }
 
     /**
+     * 创建竖直四边形
+     * <p>
+     *     Quad 位于 XY 平面，宽度使用 {@code size.x}，高度使用 {@code size.y}，
+     *     {@code size.z} 不参与尺寸计算。正面法向为 {@link Vector3#back()}，即 Z 轴正方向。
+     *     UV 从左下角 {@code (0, 0)} 到右上角 {@code (1, 1)}，适合直接显示普通纹理或外部视频纹理。
+     * </p>
+     * @param size Quad 尺寸，x 为宽度、y 为高度
+     * @param center Quad 中心点
+     * @param material 材质
+     * @return 法向朝 Z 轴正方向的竖直 Quad 渲染对象
+     */
+    public static ModelRenderable makeQuad(Vector3 size, Vector3 center, Material material) {
+        AndroidPreconditions.checkMinAndroidApiLevel();
+        Vector3 extents = size.scaled(0.5f);
+
+        Vector3 p0 = Vector3.add(center, new Vector3(-extents.x, -extents.y, 0));
+        Vector3 p1 = Vector3.add(center, new Vector3(extents.x, -extents.y, 0));
+        Vector3 p2 = Vector3.add(center, new Vector3(extents.x, extents.y, 0));
+        Vector3 p3 = Vector3.add(center, new Vector3(-extents.x, extents.y, 0));
+
+        Vector3 back = Vector3.back();
+        Vertex.UvCoordinate uv00 = new Vertex.UvCoordinate(0.0f, 0.0f);
+        Vertex.UvCoordinate uv10 = new Vertex.UvCoordinate(1.0f, 0.0f);
+        Vertex.UvCoordinate uv11 = new Vertex.UvCoordinate(1.0f, 1.0f);
+        Vertex.UvCoordinate uv01 = new Vertex.UvCoordinate(0.0f, 1.0f);
+
+        ArrayList<Vertex> vertices = new ArrayList<>(Arrays.asList(
+                Vertex.builder().setPosition(p0).setNormal(back).setUvCoordinate(uv00).build(),
+                Vertex.builder().setPosition(p1).setNormal(back).setUvCoordinate(uv10).build(),
+                Vertex.builder().setPosition(p2).setNormal(back).setUvCoordinate(uv11).build(),
+                Vertex.builder().setPosition(p3).setNormal(back).setUvCoordinate(uv01).build()));
+
+        //desc- 逆时针绕序使几何正面与顶点法向一致，均朝向 Z 轴正方向。
+        List<Integer> triangleIndices = Arrays.asList(0, 1, 2, 2, 3, 0);
+        RenderableDefinition.Submesh submesh = RenderableDefinition.Submesh.builder()
+                .setTriangleIndices(triangleIndices)
+                .setMaterial(material)
+                .build();
+        RenderableDefinition renderableDefinition = RenderableDefinition.builder()
+                .setVertices(vertices)
+                .setSubmeshes(Arrays.asList(submesh))
+                .build();
+
+        CompletableFuture<ModelRenderable> future = ModelRenderable.builder()
+                .setSource(renderableDefinition)
+                .build();
+        ModelRenderable result;
+        try {
+            result = future.get();
+        } catch (ExecutionException | InterruptedException ex) {
+            throw new AssertionError("Error creating renderable.", ex);
+        }
+
+        if (result == null) {
+            throw new AssertionError("Error creating renderable.");
+        }
+        return result;
+    }
+
+    /**
      * 创建平面
      * <p>法向量向上</p>
      * @param size 尺寸
