@@ -34,6 +34,7 @@ import java.util.function.Function;
 public abstract class Renderable {
     // Renderable之间共享的数据，这是由于scenefrom中常用的copy机制，虽可共享数据，但不恰当的调用，容易导致内存泄漏
     private final IRenderableInternalData renderableData;
+    private final SharedRenderableData sharedRenderableData;
 
     protected boolean asyncLoadEnabled;
 
@@ -66,24 +67,27 @@ public abstract class Renderable {
     @SuppressWarnings("initialization") // Suppress @UnderInitialization warning.
     protected Renderable(Builder<? extends Renderable, ? extends Builder<?, ?>> builder) {
         Preconditions.checkNotNull(builder, "Parameter \"builder\" was null.");
+        IRenderableInternalData data;
         switch (builder.dataFormat){
             case GLTF2_0:
-                renderableData = new RenderableInternalFilamentAssetData();
+                data = new RenderableInternalFilamentAssetData();
                 break;
             case PLY:
-                renderableData = new RenderableInternalPlyData();
+                data = new RenderableInternalPlyData();
                 break;
             case PLY_3DGS:
-                renderableData = new RenderableInternalGS3dData();
+                data = new RenderableInternalGS3dData();
                 break;
             case PLY_SPLAT:
-                renderableData = new RenderableInternalSplatData();
+                data = new RenderableInternalSplatData();
                 break;
             case DEFAULT_INTERNAL:
             default:
-                renderableData = new RenderableInternalData();
+                data = new RenderableInternalData();
                 break;
         }
+        renderableData = data;
+        sharedRenderableData = new SharedRenderableData(data);
 
         if (builder.definition != null) {
             updateFromDefinition(builder.definition);
@@ -91,6 +95,7 @@ public abstract class Renderable {
         registryId = builder.registryId;
         asyncLoadEnabled = builder.asyncLoadEnabled;
         animationFrameRate = builder.animationFrameRate;
+        registerRenderableCleanup();
     }
 
     @SuppressWarnings("initialization")
@@ -100,7 +105,9 @@ public abstract class Renderable {
         }
 
         // 从other获取数据
-        renderableData = other.renderableData;
+        sharedRenderableData = other.sharedRenderableData;
+        sharedRenderableData.retain();
+        renderableData = sharedRenderableData.renderableData;
         registryId = other.registryId;
 
         //cp材质
@@ -124,6 +131,41 @@ public abstract class Renderable {
         animationFrameRate = other.animationFrameRate;
 
         changeId.update();
+        registerRenderableCleanup();
+    }
+
+    private void registerRenderableCleanup() {
+        ResourceManager.getInstance()
+                .getRenderableCleanupRegistry()
+                .register(this, sharedRenderableData::release);
+    }
+
+    /**
+     * Renderable 副本共享的底层 Mesh/GLTF 数据引用。
+     * <p>只有最后一个 Renderable 包装对象被回收后才释放底层数据，避免仍有实例渲染时销毁 Buffer。</p>
+     */
+    private static final class SharedRenderableData {
+        private final IRenderableInternalData renderableData;
+        private int referenceCount = 1;
+        private boolean disposed;
+
+        SharedRenderableData(IRenderableInternalData renderableData) {
+            this.renderableData = renderableData;
+        }
+
+        synchronized void retain() {
+            if (!disposed) {
+                referenceCount++;
+            }
+        }
+
+        synchronized void release() {
+            if (disposed || --referenceCount > 0) {
+                return;
+            }
+            disposed = true;
+            renderableData.dispose();
+        }
     }
 
     /**

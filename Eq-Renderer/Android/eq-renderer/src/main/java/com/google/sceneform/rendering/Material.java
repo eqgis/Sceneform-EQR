@@ -233,7 +233,10 @@ public class Material {
 
         ResourceManager.getInstance()
                 .getMaterialCleanupRegistry()
-                .register(this, new CleanupCallback(internalMaterialInstance, materialData));
+                .register(
+                        this,
+                        new CleanupCallback(
+                                internalMaterialInstance, materialData, materialParameters));
     }
 
     void updateGltfMaterialInstance(MaterialInstance instance) {
@@ -279,7 +282,10 @@ public class Material {
 
         ResourceManager.getInstance()
                 .getMaterialCleanupRegistry()
-                .register(this, new CleanupCallback(internalMaterialInstance, materialData));
+                .register(
+                        this,
+                        new CleanupCallback(
+                                internalMaterialInstance, materialData, materialParameters));
     }
     //</editor-fold>
 
@@ -629,12 +635,16 @@ public class Material {
         private final MaterialInternalData materialInternalData;
         @Nullable
         private final IMaterialInstance materialInstance;
+        private final MaterialParameters retainedParameters;
 
         CleanupCallback(
                 @Nullable IMaterialInstance materialInstance,
-                @Nullable MaterialInternalData materialInternalData) {
+                @Nullable MaterialInternalData materialInternalData,
+                MaterialParameters retainedParameters) {
             this.materialInstance = materialInstance;
             this.materialInternalData = materialInternalData;
+            //desc- 材质实例销毁前保留纹理参数，避免 ExternalTexture 被其他清理队列提前销毁
+            this.retainedParameters = retainedParameters;
         }
 
         @Override
@@ -647,6 +657,9 @@ public class Material {
             if (materialInternalData != null) {
                 materialInternalData.release();
             }
+
+            //desc- 清理回调执行结束前保持参数可达，随后由清理注册表一并释放引用
+            retainedParameters.getClass();
         }
     }
 }

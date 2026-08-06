@@ -43,6 +43,8 @@ public class RenderableInstance implements AnimatableModel {
     private int entity = 0;
     @Entity
     private int childEntity = 0;
+    private final InstanceCleanupData cleanupData;
+    private boolean destroyed;
     int renderableId = ChangeId.EMPTY_ID;
 
     @Nullable
@@ -78,9 +80,10 @@ public class RenderableInstance implements AnimatableModel {
             handleFilamentAsset(Objects.requireNonNull(getFilamentAsset()));
         }
 
+        cleanupData = new InstanceCleanupData(entity, childEntity);
         ResourceManager.getInstance()
                 .getRenderableInstanceCleanupRegistry()
-                .register(this, new CleanupCallback(entity, childEntity));
+                .register(this, new CleanupCallback(cleanupData));
     }
 
     private void handleFilamentAsset(FilamentAsset filamentAsset) {
@@ -455,41 +458,20 @@ public class RenderableInstance implements AnimatableModel {
      * @author Ikkyu
      */
     public void destroy() {
-        EntityManager entityManager = EntityManager.get();
-
-        if (attachedRenderer != null) {
-            //desc- ikkyu （对于gltf模型，直接执行destroyGltfAsset();即可释放所有关联的对象）
-            {
-                FilamentAsset filamentAsset = getFilamentAsset();
-                if (filamentAsset != null) {
-                    int[] entities = filamentAsset.getEntities();
-                    attachedRenderer.scene.removeEntities(entities);
-                    entityManager.destroy(entities);
-
-                    int root = filamentAsset.getRoot();
-                    attachedRenderer.scene.removeEntity(root);
-                    entityManager.destroy(root);
-                }
-            }
-            attachedRenderer.removeInstance(this);
-            renderable.detatchFromRenderer();//as View
+        if (destroyed) {
+            return;
         }
+        destroyed = true;
 
-        //注意：需Entity需要在Material之前销毁
-        if (childEntity != 0) {
-            entityManager.destroy(childEntity);
-        }
-        if (entity != 0) {
-            entityManager.destroy(entity);
-        }
-
-        renderable.getRenderableData().dispose();//Other RenderableData dispose
-
-        for (Material material : renderable.getMaterialBindings()) {
-            material.internalMaterialInstance.disposeInstance();
-        }
-
-        //</editor-fold>
+        //desc- 先从 Scene 解绑，再销毁实例自身 Entity；共享 Material 和 Mesh 由 Renderable 生命周期统一回收。
+        detachFromRenderer();
+        cleanupData.destroyEntity();
+        entity = 0;
+        childEntity = 0;
+        filamentAnimator = null;
+        animations.clear();
+        materialBindings.clear();
+        materialNames.clear();
     }
 
     /**
@@ -499,10 +481,9 @@ public class RenderableInstance implements AnimatableModel {
         Renderer rendererToDetach = attachedRenderer;
         if (rendererToDetach != null) {
             detachFilamentAssetFromRenderer();
-            //todo
-            renderable.getRenderableData().dispose();
             rendererToDetach.removeInstance(this);
             renderable.detatchFromRenderer();
+            attachedRenderer = null;
         }
     }
 
@@ -559,32 +540,48 @@ public class RenderableInstance implements AnimatableModel {
      * Cleanup回调
      */
     private static final class CleanupCallback implements Runnable {
-        private final int childEntity;
-        private final int entity;
+        private final InstanceCleanupData cleanupData;
 
-        CleanupCallback(int childEntity, int entity) {
-            this.childEntity = childEntity;
-            this.entity = entity;
+        CleanupCallback(InstanceCleanupData cleanupData) {
+            this.cleanupData = cleanupData;
         }
 
         @Override
         public void run() {
             AndroidPreconditions.checkUiThread();
 
-            IEngine engine = EngineInstance.getEngine();
+            cleanupData.destroyEntity();
+        }
+    }
 
-            if (engine == null || !engine.isValid()) {
+    /**
+     * RenderableInstance 显式销毁与 GC 回收共享的幂等清理状态。
+     * <p>防止显式 destroy 后 CleanupRegistry 再次使用已复用的 Entity id。</p>
+     */
+    private static final class InstanceCleanupData {
+        private int entity;
+        private int childEntity;
+
+        InstanceCleanupData(int entity, int childEntity) {
+            this.entity = entity;
+            this.childEntity = childEntity;
+        }
+
+        synchronized void destroyEntity() {
+            if (entity == 0 && childEntity == 0) {
                 return;
             }
-
-            RenderableManager renderableManager = engine.getRenderableManager();
-
-            if (childEntity != 0) {
-                renderableManager.destroy(childEntity);
+            IEngine engine = EngineInstance.getEngine();
+            if (engine != null && engine.isValid()) {
+                if (childEntity != 0) {
+                    engine.destroyEntity(childEntity);
+                }
+                if (entity != 0) {
+                    engine.destroyEntity(entity);
+                }
             }
-            if (entity != 0) {
-                renderableManager.destroy(entity);
-            }
+            childEntity = 0;
+            entity = 0;
         }
     }
 }

@@ -31,6 +31,7 @@ public class ResourceManager {
     private final CleanupRegistry<ExternalTexture> externalTextureCleanupRegistry = new CleanupRegistry<>();
     private final CleanupRegistry<DepthTexture> depthTextureCleanupRegistry = new CleanupRegistry<>();
     private final CleanupRegistry<Material> materialCleanupRegistry = new CleanupRegistry<>();
+    private final CleanupRegistry<Renderable> renderableCleanupRegistry = new CleanupRegistry<>();
     private final CleanupRegistry<RenderableInstance> renderableInstanceCleanupRegistry =
             new CleanupRegistry<>();
     private final CleanupRegistry<Texture> textureCleanupRegistry = new CleanupRegistry<>();
@@ -66,6 +67,10 @@ public class ResourceManager {
 
     CleanupRegistry<Material> getMaterialCleanupRegistry() {
         return materialCleanupRegistry;
+    }
+
+    CleanupRegistry<Renderable> getRenderableCleanupRegistry() {
+        return renderableCleanupRegistry;
     }
 
     CleanupRegistry<RenderableInstance> getRenderableInstanceCleanupRegistry() {
@@ -111,6 +116,8 @@ public class ResourceManager {
         addResourceHolder(textureRegistry);
         addResourceHolder(materialRegistry);
         addResourceHolder(renderableInstanceCleanupRegistry);
+        //desc- Renderable 数据持有 VertexBuffer/IndexBuffer，必须在 Entity 之后、MaterialInstance 之前释放。
+        addResourceHolder(renderableCleanupRegistry);
         addResourceHolder(cameraStreamCleanupRegistry);
         addResourceHolder(materialCleanupRegistry);
         addResourceHolder(externalTextureCleanupRegistry);
