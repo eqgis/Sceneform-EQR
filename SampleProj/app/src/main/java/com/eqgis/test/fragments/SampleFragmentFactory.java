@@ -12,12 +12,16 @@ import com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment;
 import com.eqgis.test.fragments.tutorial.AnimationOverviewLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraClipLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraFovLessonFragment;
+import com.eqgis.test.fragments.tutorial.CameraGestureLessonFragment;
+import com.eqgis.test.fragments.tutorial.CollisionClickLessonFragment;
 import com.eqgis.test.fragments.tutorial.CubeLessonFragment;
 import com.eqgis.test.fragments.tutorial.GltfLessonFragment;
 import com.eqgis.test.fragments.tutorial.IblLessonFragment;
 import com.eqgis.test.fragments.tutorial.LightTypesLessonFragment;
 import com.eqgis.test.fragments.tutorial.MaterialPropertiesLessonFragment;
 import com.eqgis.test.fragments.tutorial.ModelAnimationLessonFragment;
+import com.eqgis.test.fragments.tutorial.NodeGestureLessonFragment;
+import com.eqgis.test.fragments.tutorial.NodePickingLessonFragment;
 import com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlyLessonFragment;
@@ -26,6 +30,7 @@ import com.eqgis.test.fragments.tutorial.ShadowLessonFragment;
 import com.eqgis.test.fragments.tutorial.SkyboxLessonFragment;
 import com.eqgis.test.fragments.tutorial.TranslationAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.TriangleLessonFragment;
+import com.eqgis.test.fragments.tutorial.ViewPickingLessonFragment;
 
 /**
  * 示例 Fragment 工厂
@@ -90,6 +95,16 @@ public class SampleFragmentFactory {
                 return new TranslationAnimationLessonFragment();
             case "animation_path":
                 return new PathAnimationLessonFragment();
+            case "interaction_camera_gesture":
+                return new CameraGestureLessonFragment();
+            case "interaction_node_gesture":
+                return new NodeGestureLessonFragment();
+            case "interaction_collision_click":
+                return new CollisionClickLessonFragment();
+            case "interaction_view_picking":
+                return new ViewPickingLessonFragment();
+            case "interaction_node_picking":
+                return new NodePickingLessonFragment();
             default:
                 return BaseInfoFragment.newInstance(lesson.getTitle(), lesson.getDescription(), lesson.getCodeLocation());
         }

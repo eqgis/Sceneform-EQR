@@ -21,6 +21,24 @@ public abstract class BaseTutorialFragment extends BaseSampleFragment {
     private CameraGestureController cameraGestureController;
 
     /**
+     * 当前教程是否启用默认相机手势
+     * <p>节点手势等需要独占单指/双指事件的页面可覆盖并返回 false。</p>
+     * @return true 表示自动绑定相机手势
+     */
+    protected boolean isCameraGestureEnabled() {
+        return true;
+    }
+
+    /**
+     * 将相机恢复到当前教程创建手势控制器时的初始位置与姿态
+     */
+    protected final void resetTutorialCamera() {
+        if (cameraGestureController != null) {
+            cameraGestureController.resetCamera();
+        }
+    }
+
+    /**
      * 教程操作控件统一悬浮在三维场景左上角
      * @return 始终返回 true
      */
@@ -37,7 +55,10 @@ public abstract class BaseTutorialFragment extends BaseSampleFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (sceneLayout == null || sceneLayout.getSceneView() == null || sceneLayout.getCamera() == null) {
+        if (!isCameraGestureEnabled()
+                || sceneLayout == null
+                || sceneLayout.getSceneView() == null
+                || sceneLayout.getCamera() == null) {
             return;
         }
         cameraGestureController = new CameraGestureController(sceneLayout.getCamera());

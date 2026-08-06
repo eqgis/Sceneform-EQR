@@ -135,7 +135,7 @@ public class SampleCatalog {
                 new SampleTopic(TOPIC_ANDROID_VIEW, "Android View 渲染到 3D", "将 TextView、ImageView、WebView、常用控件和 XML Layout 渲染到三维空间。", androidViewLessons()),
                 new SampleTopic(TOPIC_MATERIAL_CAMERA, "材质、光照与相机", "学习材质、IBL、天空盒、FOV、裁剪面和阴影。", materialCameraLessons()),
                 new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", animationLessons()),
-                new SampleTopic(TOPIC_INTERACTION, "交互篇", "点击、触摸、AABB、碰撞体和射线拾取。", placeholderLessons("interaction", "交互篇")),
+                new SampleTopic(TOPIC_INTERACTION, "交互篇", "学习相机与节点手势、碰撞点击、ViewNode 和三维节点射线拾取。", interactionLessons()),
                 new SampleTopic(TOPIC_VIDEO_CAMERA, "视频、相机与外部纹理", "视频贴图、相机流、截图和 PixelCopy。", placeholderLessons("video_camera", "视频、相机与外部纹理")),
                 new SampleTopic(TOPIC_XR, "XR 篇", "ARCore、AREngine、3DoF AR、VR 和跟踪状态。", placeholderLessons("xr", "XR 篇")),
                 new SampleTopic(TOPIC_ADVANCED, "进阶专题", "生命周期、性能优化、Native 加载和 Filament 材质工作流。", placeholderLessons("advanced", "进阶专题"))
@@ -211,6 +211,20 @@ public class SampleCatalog {
                 new SampleLesson("animation_rotation", "旋转动画", "使用 ARAnimationRotation 调整旋转轴、角度、方向和周期。", "com.eqgis.test.fragments.tutorial.RotationAnimationLessonFragment"),
                 new SampleLesson("animation_translation", "位移动画", "使用 Android 属性动画在两个 Vector3 坐标之间移动节点。", "com.eqgis.test.fragments.tutorial.TranslationAnimationLessonFragment"),
                 new SampleLesson("animation_path", "曲线路径动画", "使用 Bézier 估值器和 Android 属性动画沿曲线路径移动节点。", "com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment")
+        );
+    }
+
+    /**
+     * 获取交互篇教程功能
+     * @return 交互篇教程功能列表
+     */
+    private static List<SampleLesson> interactionLessons() {
+        return Arrays.asList(
+                new SampleLesson("interaction_camera_gesture", "相机手势控制", "单指旋转、双指平移，并通过双指缩放让相机前后移动。", "com.eqgis.test.fragments.tutorial.CameraGestureLessonFragment"),
+                new SampleLesson("interaction_node_gesture", "节点手势控制", "点击选中模型后，使用单指旋转、双指平移和双指缩放控制节点。", "com.eqgis.test.fragments.tutorial.NodeGestureLessonFragment"),
+                new SampleLesson("interaction_collision_click", "碰撞检测点击", "点击三维物体并读取射线与碰撞体相交的世界坐标。", "com.eqgis.test.fragments.tutorial.CollisionClickLessonFragment"),
+                new SampleLesson("interaction_view_picking", "Android View 交互", "通过 Ray-picked ViewNode 操作 Button、Switch 与 CheckBox。", "com.eqgis.test.fragments.tutorial.ViewPickingLessonFragment"),
+                new SampleLesson("interaction_node_picking", "3D Node 交互", "通过 Ray hit-test 拾取多个 Node（Renderable），点击后切换材质颜色。", "com.eqgis.test.fragments.tutorial.NodePickingLessonFragment")
         );
     }
 
