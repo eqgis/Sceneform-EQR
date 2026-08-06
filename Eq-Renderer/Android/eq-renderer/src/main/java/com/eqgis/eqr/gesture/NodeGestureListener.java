@@ -53,12 +53,18 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         animation.setOnUpdateListener(new ValueAnimation.OnUpdateListener() {
             @Override
             public void onValueUpdate(float current, boolean running) {
-                if (mIsFling){
+                //desc- ValueAnimation 在结束/取消时仍会回调，running=false 时不能再访问可能已解绑的节点。
+                if (!running) {
+                    mIsFling = false;
+                    return;
+                }
+                Node currentTarget = target;
+                if (mIsFling && currentTarget != null && currentTarget.getScene() != null){
                     Quaternion quaternion = Quaternion.axisAngle(lastRotationAxis, current);
-                    Quaternion localRotation = target.getLocalRotation();
-                    target.setLocalRotation(Quaternion.multiply(quaternion,localRotation));
+                    Quaternion localRotation = currentTarget.getLocalRotation();
+                    currentTarget.setLocalRotation(Quaternion.multiply(quaternion,localRotation));
                 }else {
-                    animation.pause();
+                    setFling(false);
                 }
             }
         });
@@ -78,6 +84,10 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
      * @param distance
      */
     public void updateValue(Node node,float distance){
+        if (target != node) {
+            //desc- 切换或清空目标前先停止惯性，避免动画帧继续持有旧节点。
+            setFling(false);
+        }
         this.target = node;
         this.distance = distance;
         if (node == null){
@@ -117,8 +127,17 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
         return mIsFling;
     }
 
+    /**
+     * 设置节点惯性旋转状态
+     * @param enabled true 表示允许当前惯性动画继续更新节点
+     */
     public void setFling(boolean enabled) {
         this.mIsFling = enabled;
+        if (!enabled
+                && animation.getAnimator() != null
+                && animation.getAnimator().isStarted()) {
+            animation.pause();
+        }
     }
 
     @Override
@@ -218,7 +237,10 @@ class NodeGestureListener extends GestureDetector.SimpleOnGestureListener  imple
     }
 
     private void onFling(float xVelocity, float yVelocity) {
-        if (isDoubleFingerScroll)return;
+        if (isDoubleFingerScroll || target == null || target.getScene() == null) {
+            setFling(false);
+            return;
+        }
         mIsFling = true;//状态更新
 
         float vDistance = (float) Math.min(5000f,Math.sqrt((xVelocity * xVelocity + yVelocity * yVelocity)));

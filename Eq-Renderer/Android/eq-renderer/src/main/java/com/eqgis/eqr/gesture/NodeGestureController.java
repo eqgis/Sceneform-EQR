@@ -102,10 +102,17 @@ public class NodeGestureController {
 
     /**
      * 设置启用状态
+     * <p>禁用时同步停止节点惯性动画并重置当前手势状态。</p>
      * @param enabled 启用状态
+     * @return 当前控制器
      */
     public NodeGestureController setEnabled(boolean enabled) {
         this.enabled = enabled;
+        if (!enabled) {
+            //desc- 禁用控制器属于生命周期边界，必须同步停止惯性并清除本轮双指手势状态。
+            nodeGestureListener.setFling(false);
+            nodeGestureListener.resetStatus();
+        }
         return this;
     }
 
