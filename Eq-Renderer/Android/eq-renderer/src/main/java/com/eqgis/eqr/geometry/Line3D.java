@@ -9,6 +9,7 @@ import com.google.sceneform.rendering.ModelRenderable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -37,9 +38,12 @@ public class Line3D extends Node{
 
     private boolean init = false;
 
+    //desc- 首次 Renderable 构建为异步任务，终止后必须忽略晚到回调。
+    private volatile boolean disposed = false;
+
     private int textureMode = 1;
 
-    private int pipePointMode = 1;
+    private Line3DPipePointMode pipePointMode = Line3DPipePointMode.ORIGINAL;
     //debug
 //    public Vector3[] meshPoint;
 
@@ -116,6 +120,9 @@ public class Line3D extends Node{
      * @return 渲染对象
      */
     public void refresh(){
+        if (disposed) {
+            return;
+        }
         Vector3[] ps;
         synchronized (this){
             ps = new Vector3[points.size()];
@@ -133,12 +140,12 @@ public class Line3D extends Node{
         //更新mesh的顶点（包含对应索引）
         ArrayList<PipePoint> pipePoints;
         switch (pipePointMode){
-            case 1:
+            case SIN_RESAMPLE:
                 //采用Sin的方式对两端顶点的半径进行优化
                 pipePoints = line3dNative.genPipePoint_1(ps, radius);
 //                addStartAndEnd = false;
                 break;
-            case 0:
+            case ORIGINAL:
             default:
                 //不对管线两端接近端点的顶点部分的管线半径进行优化
                 pipePoints = line3dNative.genPipePoint_0(ps, radius);
@@ -172,6 +179,9 @@ public class Line3D extends Node{
                 renderableCompletableFuture.thenAccept(new Consumer<ModelRenderable>() {
                     @Override
                     public void accept(ModelRenderable e) {
+                        if (disposed) {
+                            return;
+                        }
                         e.setShadowCaster(false);
                         e.setShadowReceiver(false);
                         Line3D.this.setRenderable(e);
@@ -241,14 +251,14 @@ public class Line3D extends Node{
     /**
      * 设置管线顶点计算模式
      * <pre>
-     *     0：不修改端点半径
-     *     1：端点半径经过Math.Sin方法重采样（默认）
+     *     {@link Line3DPipePointMode#ORIGINAL}：不修改端点半径（默认）
+     *     {@link Line3DPipePointMode#SIN_RESAMPLE}：端点半径经过 Math.sin 方法重采样
      * </pre>
-     * @param pipePointMode
-     * @return
+     * @param pipePointMode 管线顶点计算模式，不允许为 null
+     * @return 当前 Line3D
      */
-    public Line3D setPipePointMode(int pipePointMode) {
-        this.pipePointMode = pipePointMode;
+    public Line3D setPipePointMode(Line3DPipePointMode pipePointMode) {
+        this.pipePointMode = Objects.requireNonNull(pipePointMode, "pipePointMode");
         return this;
     }
 
@@ -258,6 +268,22 @@ public class Line3D extends Node{
      */
     public float getRadius() {
         return radius;
+    }
+
+    /**
+     * 终止 Line3D 的异步构建并解除场景与渲染资源引用。
+     * <p>该方法用于页面或 SceneLayout 销毁前的最终释放，调用后不再支持 refresh。</p>
+     */
+    public void dispose() {
+        disposed = true;
+        synchronized (this) {
+            points.clear();
+        }
+        setRenderable(null);
+        setParent(null);
+        lastRenderable = null;
+        material = null;
+        line3dNative = null;
     }
 
     //</editor-fold>
