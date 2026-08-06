@@ -22,6 +22,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication"
         tools:targetApi="31">
+        <!-- desc- XR 教程允许不支持 ARCore 的设备安装，并在运行时切换到 Camera 3DoF。 -->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional"
+            tools:replace="android:value" />
         <activity
             android:name=".TutorialTopicActivity"
             android:exported="false" />

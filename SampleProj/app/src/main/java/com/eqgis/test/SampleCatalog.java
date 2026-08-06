@@ -137,7 +137,7 @@ public class SampleCatalog {
                 new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", animationLessons()),
                 new SampleTopic(TOPIC_INTERACTION, "交互篇", "学习相机与节点手势、碰撞点击、ViewNode 和三维节点射线拾取。", interactionLessons()),
                 new SampleTopic(TOPIC_VIDEO_CAMERA, "视频、相机与外部纹理", "学习二维视频背景、三维视频贴图、全景视频与实时相机流。", videoCameraLessons()),
-                new SampleTopic(TOPIC_XR, "XR 篇", "ARCore、AREngine、3DoF AR、VR 和跟踪状态。", placeholderLessons("xr", "XR 篇")),
+                new SampleTopic(TOPIC_XR, "XR 篇", "ARCore、AREngine、平面识别、3DoF AR/VR 与 ORB-SLAM3 集成说明。", xrLessons()),
                 new SampleTopic(TOPIC_ADVANCED, "进阶专题", "生命周期、性能优化、Native 加载和 Filament 材质工作流。", placeholderLessons("advanced", "进阶专题"))
         );
     }
@@ -238,6 +238,20 @@ public class SampleCatalog {
                 new SampleLesson("video_camera_texture", "视频纹理", "通过 ExternalTexture 将循环视频同时贴到 Cube 和 Quad。", "com.eqgis.test.fragments.tutorial.VideoTextureLessonFragment"),
                 new SampleLesson("video_camera_panorama", "全景视频", "将 360° 视频贴到内球面，在球体内部观看全景画面。", "com.eqgis.test.fragments.tutorial.PanoramaVideoLessonFragment"),
                 new SampleLesson("video_camera_stream", "实时相机流", "使用 CameraSceneView 把 Camera2 预览作为场景背景，并叠加三维物体。", "com.eqgis.test.fragments.tutorial.CameraStreamLessonFragment")
+        );
+    }
+
+    /**
+     * 获取 XR 教程功能
+     * @return XR 教程功能列表
+     */
+    private static List<SampleLesson> xrLessons() {
+        return Arrays.asList(
+                new SampleLesson("xr_ar_engine", "ARCore / AREngine", "优先使用原生 6DoF AR；设备或服务不支持时明确说明原因并降级为 Camera 3DoF。", "com.eqgis.test.fragments.tutorial.ArEngineLessonFragment"),
+                new SampleLesson("xr_plane_detection", "AR 平面识别", "识别水平平面并点击创建锚点；设备不支持时提示该能力无法使用 3DoF 降级。", "com.eqgis.test.fragments.tutorial.ArPlaneDetectionLessonFragment"),
+                new SampleLesson("xr_ar_3dof", "AR 3DoF", "使用 Camera2 相机背景与方向传感器提供不依赖 AR 服务的旋转跟踪方案。", "com.eqgis.test.fragments.tutorial.ArThreeDofLessonFragment"),
+                new SampleLesson("xr_vr_3dof", "VR 场景 3DoF", "使用 VrSceneView、方向传感器和天空盒构建纯虚拟沉浸场景。", "com.eqgis.test.fragments.tutorial.VrThreeDofLessonFragment"),
+                new SampleLesson("xr_orb_slam3", "ORB-SLAM3 集成", "说明 GPL 许可边界，并提供 EqSlamSceneLayout、eq-slam AAR 与源码地址。", "com.eqgis.test.fragments.tutorial.OrbSlam3LessonFragment")
         );
     }
 

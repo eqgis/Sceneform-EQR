@@ -10,6 +10,9 @@ import com.eqgis.test.fragments.tutorial.AndroidTextViewLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidWebViewLessonFragment;
 import com.eqgis.test.fragments.tutorial.AndroidWidgetLessonFragment;
 import com.eqgis.test.fragments.tutorial.AnimationOverviewLessonFragment;
+import com.eqgis.test.fragments.tutorial.ArEngineLessonFragment;
+import com.eqgis.test.fragments.tutorial.ArPlaneDetectionLessonFragment;
+import com.eqgis.test.fragments.tutorial.ArThreeDofLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraClipLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraFovLessonFragment;
 import com.eqgis.test.fragments.tutorial.CameraGestureLessonFragment;
@@ -23,6 +26,7 @@ import com.eqgis.test.fragments.tutorial.MaterialPropertiesLessonFragment;
 import com.eqgis.test.fragments.tutorial.ModelAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.NodeGestureLessonFragment;
 import com.eqgis.test.fragments.tutorial.NodePickingLessonFragment;
+import com.eqgis.test.fragments.tutorial.OrbSlam3LessonFragment;
 import com.eqgis.test.fragments.tutorial.PanoramaVideoLessonFragment;
 import com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
@@ -35,6 +39,7 @@ import com.eqgis.test.fragments.tutorial.TriangleLessonFragment;
 import com.eqgis.test.fragments.tutorial.ViewPickingLessonFragment;
 import com.eqgis.test.fragments.tutorial.VideoBackgroundLessonFragment;
 import com.eqgis.test.fragments.tutorial.VideoTextureLessonFragment;
+import com.eqgis.test.fragments.tutorial.VrThreeDofLessonFragment;
 
 /**
  * 示例 Fragment 工厂
@@ -117,6 +122,16 @@ public class SampleFragmentFactory {
                 return new PanoramaVideoLessonFragment();
             case "video_camera_stream":
                 return new CameraStreamLessonFragment();
+            case "xr_ar_engine":
+                return new ArEngineLessonFragment();
+            case "xr_plane_detection":
+                return new ArPlaneDetectionLessonFragment();
+            case "xr_ar_3dof":
+                return new ArThreeDofLessonFragment();
+            case "xr_vr_3dof":
+                return new VrThreeDofLessonFragment();
+            case "xr_orb_slam3":
+                return new OrbSlam3LessonFragment();
             default:
                 return BaseInfoFragment.newInstance(lesson.getTitle(), lesson.getDescription(), lesson.getCodeLocation());
         }

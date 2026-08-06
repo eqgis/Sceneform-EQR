@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F7"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:overScrollMode="ifContentScrolls"
+    android:paddingBottom="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ORB-SLAM3 集成"
+            android:textColor="#1D1D1F"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:lineSpacingExtra="2dp"
+            android:text="了解 GPL 分支中的视觉 SLAM 布局、二进制依赖和 eq-slam 源码位置。当前页面仅提供集成说明，不加载相机与 Native SLAM。"
+            android:textColor="#55555A"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="代码位置：com.eqgis.test.fragments.tutorial.OrbSlam3LessonFragment"
+            android:textColor="#6E6E73"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_xr_document_notice"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="GPL 许可说明"
+                android:textColor="#6A3B00"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="3dp"
+                android:text="由于 ORB-SLAM3 采用 GPL 协议，当前主线 Demo 不直接集成或分发其运行实现，仅提供 GPLv3 分支中的参考代码、AAR 与源码地址。集成到实际项目之前，请根据项目分发方式评估并遵守相应许可证义务。"
+                android:textColor="#5A3A12"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_tutorial_floating_panel"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1. SceneLayout 实现参考"
+                android:textColor="#1D1D1F"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:lineSpacingExtra="2dp"
+                android:text="参考 GPLv3 分支中的 EqSlamSceneLayout，了解 SLAM 相机帧、位姿结果与三维渲染场景的连接方式。"
+                android:textColor="#55555A"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/orbSlamLayoutLink"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:autoLink="web"
+                android:lineSpacingExtra="2dp"
+                android:linksClickable="true"
+                android:text="https://github.com/eqgis/Sceneform-EQR/blob/main-GPLv3/SampleProj/app/src/main/java/com/eqgis/eqr/layout/EqSlamSceneLayout.java"
+                android:textColor="#007AFF"
+                android:textColorLink="#007AFF"
+                android:textIsSelectable="true"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_tutorial_floating_panel"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="2. eq-slam AAR"
+                android:textColor="#1D1D1F"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:lineSpacingExtra="2dp"
+                android:text="GPL 分支示例使用 eq-slam-1.0.2.aar。下载后可放入 app/libs，并根据目标设备确认 ABI、相机权限和 Native 依赖配置。"
+                android:textColor="#55555A"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/orbSlamAarLink"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:autoLink="web"
+                android:lineSpacingExtra="2dp"
+                android:linksClickable="true"
+                android:text="https://github.com/eqgis/Sceneform-EQR/blob/main-GPLv3/SampleProj/app/libs/eq-slam-1.0.2.aar"
+                android:textColor="#007AFF"
+                android:textColorLink="#007AFF"
+                android:textIsSelectable="true"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_tutorial_floating_panel"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="3. eq-slam 源码"
+                android:textColor="#1D1D1F"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:lineSpacingExtra="2dp"
+                android:text="eq-slam 的源码来自 EQ-Renderer 仓库 Android/eq-slam 目录。需要修改算法、JNI 或构建配置时，应以该源码目录为起点。"
+                android:textColor="#55555A"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/orbSlamSourceLink"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:autoLink="web"
+                android:lineSpacingExtra="2dp"
+                android:linksClickable="true"
+                android:text="https://github.com/eqgis/EQ-Renderer/tree/main/Android/eq-slam"
+                android:textColor="#007AFF"
+                android:textColorLink="#007AFF"
+                android:textIsSelectable="true"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:lineSpacingExtra="2dp"
+            android:text="建议集成顺序：先确认许可证与分发范围，再接入 AAR 和 ABI，最后参考 EqSlamSceneLayout 对接相机生命周期、位姿更新及渲染线程。"
+            android:textColor="#6E6E73"
+            android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>
