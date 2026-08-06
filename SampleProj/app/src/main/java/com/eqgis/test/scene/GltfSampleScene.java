@@ -24,7 +24,7 @@ import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Light;
 import com.google.sceneform.rendering.ModelRenderable;
 
-import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * GLTF示例场景
@@ -45,9 +45,14 @@ public class GltfSampleScene implements ISampleScene{
      */
     private Node lightNode;
     private SceneView sceneView;
+    private ARAnimationModel animationModel;
+    private CompletableFuture<Void> modelLoadTask;
+    private Runnable modelPositionTask;
+    private boolean destroyed;
 
     @Override
     public void create(Context context, NodeParent rootNode) {
+        destroyed = false;
         addGltf(context, rootNode);
 
         //添加光源
@@ -56,15 +61,36 @@ public class GltfSampleScene implements ISampleScene{
 
     @Override
     public void destroy(Context context) {
-        if (modelNode.getRenderableInstance() != null){
-            //销毁模型渲染实例
-            modelNode.getRenderableInstance().destroy();
+        destroyed = true;
+
+        //desc- 必须先停止 ObjectAnimator，再清空 GLB RenderableInstance 中的动画列表。
+        if (animationModel != null) {
+            animationModel.stop();
+            animationModel = null;
         }
-        //断开节点
-        modelNode.setParent(null);
-        if (lightNode != null){
+        if (modelLoadTask != null) {
+            modelLoadTask.cancel(false);
+            modelLoadTask = null;
+        }
+        if (sceneView != null && modelPositionTask != null && sceneView.getHandler() != null) {
+            sceneView.getHandler().removeCallbacks(modelPositionTask);
+        }
+        modelPositionTask = null;
+        NodeGestureController.getInstance().unSelect();
+
+        if (modelNode != null) {
+            modelNode.setOnTapListener(null);
+            //desc- 通过 Node API 清空实例引用，避免节点残留一个已 destroy、动画数为 0 的实例。
+            modelNode.setRenderable(null);
+            modelNode.setParent(null);
+            modelNode = null;
+        }
+        if (lightNode != null) {
+            lightNode.setLight(null);
             lightNode.setParent(null);
+            lightNode = null;
         }
+        sceneView = null;
     }
 
     @Override
@@ -78,41 +104,51 @@ public class GltfSampleScene implements ISampleScene{
     public void addGltf(Context context, NodeParent rootNode) {
         modelNode = new Node();
         modelNode.setEnabled(false);
-        ModelRenderable
+        Node loadingNode = modelNode;
+        modelLoadTask = ModelRenderable
                 .builder()
                 .setSource(context, Uri.parse(modelPath))
                 .setIsFilamentGltf(true)
                 .build()
-                .thenApply(new Function<ModelRenderable, Object>() {
-                    @Override
-                    public Object apply(ModelRenderable modelRenderable) {
-                        modelNode.setRenderable(modelRenderable);
-                        //缩放成单位尺寸
-                        modelNode.setLocalScale(Vector3.one()
-                                .scaled(ScaleTool.calculateUnitsScale(modelRenderable)));
-
-                        //当sceneView不为null时，则将在sceneView的中心作射线，在距离distance的位置加载模型
-                        if (sceneView != null){
-                            //这里需要短暂延时，避免width和height为0
-                            sceneView.getHandler().postDelayed(()->{
-                                int centerX = sceneView.getMeasuredWidth() / 2;
-                                int centerY = sceneView.getMeasuredHeight() / 2;
-                                Ray ray = sceneView.getScene().getCamera().screenPointToRay(centerX, centerY);
-                                Vector3 point = ray.getPoint(distance);
-
-                                modelNode.setLocalPosition(point);
-                                modelNode.setEnabled(true);
-                            },1000);
-                        }else {
-                            modelNode.setLocalPosition(new Vector3(0f, 0, -distance));
-                            modelNode.setEnabled(true);
-                        }
-                        modelNode.setParent(rootNode);
-
-                        //创建模型动画
-                        createAnimation(modelNode);
-                        return null;
+                .thenAccept(modelRenderable -> {
+                    if (destroyed || modelNode != loadingNode) {
+                        return;
                     }
+                    loadingNode.setRenderable(modelRenderable);
+                    //缩放成单位尺寸
+                    loadingNode.setLocalScale(Vector3.one()
+                            .scaled(ScaleTool.calculateUnitsScale(modelRenderable)));
+
+                    //当sceneView不为null时，则将在sceneView的中心作射线，在距离distance的位置加载模型
+                    if (sceneView != null){
+                        //这里需要短暂延时，避免width和height为0
+                        SceneView loadingSceneView = sceneView;
+                        modelPositionTask = () -> {
+                            if (destroyed
+                                    || sceneView != loadingSceneView
+                                    || modelNode != loadingNode) {
+                                return;
+                            }
+                            int centerX = loadingSceneView.getMeasuredWidth() / 2;
+                            int centerY = loadingSceneView.getMeasuredHeight() / 2;
+                            Ray ray = loadingSceneView.getScene().getCamera()
+                                    .screenPointToRay(centerX, centerY);
+                            Vector3 point = ray.getPoint(distance);
+
+                            loadingNode.setLocalPosition(point);
+                            loadingNode.setEnabled(true);
+                        };
+                        if (loadingSceneView.getHandler() != null) {
+                            loadingSceneView.getHandler().postDelayed(modelPositionTask, 1000);
+                        }
+                    }else {
+                        loadingNode.setLocalPosition(new Vector3(0f, 0, -distance));
+                        loadingNode.setEnabled(true);
+                    }
+                    loadingNode.setParent(rootNode);
+
+                    //创建模型动画
+                    createAnimation(loadingNode);
                 });
 
 
@@ -158,7 +194,7 @@ public class GltfSampleScene implements ISampleScene{
     /**
      * */
     public void createAnimation(Node node){
-        if (node.getRenderableInstance() == null) {
+        if (destroyed || node == null || node.getRenderableInstance() == null) {
             return;
         }
         int animationCount = node.getRenderableInstance().getAnimationCount();
@@ -168,7 +204,10 @@ public class GltfSampleScene implements ISampleScene{
             parameter.setDuration(6000L);//设置播放周期
             parameter.setRepeatMode(ARAnimationRepeatMode.INFINITE);//设置循环方式
             //创建默认动画
-            ARAnimationModel animationModel = new ARAnimationModel(node);
+            if (animationModel != null) {
+                animationModel.stop();
+            }
+            animationModel = new ARAnimationModel(node);
             animationModel.createAnimation(parameter);
             //默认播放第一个索引的动画
             animationModel.setCurrentIndex(0);

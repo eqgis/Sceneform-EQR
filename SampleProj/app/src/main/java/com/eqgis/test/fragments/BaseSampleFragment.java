@@ -317,7 +317,7 @@ public abstract class BaseSampleFragment extends Fragment {
         header.addView(headerIcon, headerIconParams);
 
         TextView panelTitle = new TextView(requireContext());
-        panelTitle.setText("参数设置");
+        panelTitle.setText("详情");
         panelTitle.setTextColor(0xff1d1d1f);
         panelTitle.setTextSize(15);
         panelTitle.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -418,7 +418,7 @@ public abstract class BaseSampleFragment extends Fragment {
     private ImageButton createSettingsButton() {
         ImageButton button = new ImageButton(requireContext());
         button.setImageResource(R.drawable.ic_tutorial_settings);
-        button.setContentDescription("打开参数设置");
+        button.setContentDescription("打开详情");
         button.setScaleType(ImageView.ScaleType.CENTER);
         button.setPadding(dp(12), dp(12), dp(12), dp(12));
         button.setBackgroundResource(R.drawable.bg_tutorial_settings_button);
