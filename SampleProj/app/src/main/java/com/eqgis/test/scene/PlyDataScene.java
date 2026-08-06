@@ -112,7 +112,7 @@ public class PlyDataScene implements ISampleScene{
         modelNode.setOnTapListener(new Node.OnTapListener() {
             @Override
             public void onTap(HitTestResult hitTestResult, MotionEvent motionEvent) {
-                Toast.makeText(context, "点击测试", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "点击测试", Toast.LENGTH_SHORT).show();
             }
         });
 
