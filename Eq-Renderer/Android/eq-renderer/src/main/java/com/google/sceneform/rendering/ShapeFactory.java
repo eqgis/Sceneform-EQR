@@ -13,8 +13,11 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-/** Shape工厂 */
+/** Shape工厂
+ * 使用{@link com.eqgis.eqr.geometry.GeometryUtils}替代
+ * */
 @RequiresApi(api = Build.VERSION_CODES.N)
+@Deprecated
 public final class ShapeFactory {
   private static final String TAG = ShapeFactory.class.getSimpleName();
   private static final int COORDS_PER_TRIANGLE = 3;
