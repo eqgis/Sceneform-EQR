@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.view.Window;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -49,8 +51,9 @@ public class MainActivity extends AppCompatActivity implements SampleAdapter.OnS
         setupRecyclerView();
         loadSamples();
 
+        TextView versionInfo = findViewById(R.id.versionInfo);
         if (Eqr.getCoreStatus()) {
-            Toast.makeText(this, "当前版本：" + Eqr.getCoreVersion(), Toast.LENGTH_SHORT).show();
+            versionInfo.setText("Sceneform-EQR：" + Eqr.getCoreVersion());
         } else {
             Toast.makeText(this, "渲染器不可用", Toast.LENGTH_SHORT).show();
         }
