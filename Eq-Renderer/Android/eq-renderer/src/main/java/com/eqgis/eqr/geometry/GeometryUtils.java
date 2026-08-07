@@ -5,7 +5,9 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.google.android.filament.RenderableManager;
 import com.google.sceneform.math.Vector3;
+import com.google.sceneform.rendering.Color;
 import com.google.sceneform.rendering.Material;
 import com.google.sceneform.rendering.ModelRenderable;
 import com.google.sceneform.rendering.RenderableDefinition;
@@ -14,18 +16,22 @@ import com.google.sceneform.utilities.AndroidPreconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /**
- * 绘制立方体/圆柱/球
+ * 创建基本图元、立方体、圆柱、球体和平面等动态几何体。
  * @author tanyunxiu
  * @date 2020年9月28日
  */
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class GeometryUtils {
+    private static final float DEGENERATE_EPSILON = 1.0e-12f;
+    private static final Color WHITE_VERTEX_COLOR = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+
     /**
      * 创建圆柱
      * @param radius
@@ -634,4 +640,369 @@ public class GeometryUtils {
 
         return result;
     }
+
+
+    /**
+     * 根据空间坐标创建独立点图元。
+     * <p>坐标列表中的每个元素对应一个点，材质应使用
+     * {@link com.google.sceneform.rendering.MaterialFactory#makePointsWithColor} 创建。</p>
+     * <pre>{@code
+     * List<Vector3> points = Arrays.asList(
+     *         new Vector3(-0.5f, 0.0f, -3.0f),
+     *         new Vector3(0.0f, 0.5f, -3.0f),
+     *         new Vector3(0.5f, 0.0f, -3.0f));
+     * ModelRenderable renderable = GeometryUtils.makePoints(points, pointMaterial);
+     * }</pre>
+     *
+     * @param vertexPositions 点的空间坐标，至少包含一个坐标
+     * @param material 点图元材质
+     * @return 使用 {@link RenderableManager.PrimitiveType#POINTS} 绘制的渲染对象
+     * @throws IllegalArgumentException 当坐标列表为空或包含空元素时抛出
+     */
+    public static ModelRenderable makePoints(List<Vector3> vertexPositions, Material material) {
+        validateVertexPositions(vertexPositions, 1, "POINTS");
+        return buildPrimitiveRenderable(
+                createPositionVertices(vertexPositions),
+                createSequentialIndices(vertexPositions.size()),
+                RenderableManager.PrimitiveType.POINTS,
+                material);
+    }
+
+    /**
+     * 根据空间坐标创建多条相互独立的宽线段。
+     * <p>每两个连续坐标定义一条线段。内部会把每条线展开为两个三角形，并自动写入
+     * {@code CUSTOM0} 顶点属性；材质应使用
+     * {@link com.google.sceneform.rendering.MaterialFactory#makeLinesWithColor} 创建。</p>
+     * <pre>{@code
+     * List<Vector3> lines = Arrays.asList(
+     *         new Vector3(-1.0f, 0.0f, -3.0f),
+     *         new Vector3(0.0f, 1.0f, -3.0f),  // 第一条线
+     *         new Vector3(0.0f, -1.0f, -3.0f),
+     *         new Vector3(1.0f, 0.0f, -3.0f)); // 第二条线
+     * ModelRenderable renderable = GeometryUtils.makeLines(lines, lineMaterial);
+     * }</pre>
+     *
+     * @param vertexPositions 线段端点坐标，数量必须为不小于 2 的偶数
+     * @param material 屏幕空间宽线材质
+     * @return 实际使用三角形拓扑绘制的宽线渲染对象
+     * @throws IllegalArgumentException 当坐标数量不符合 LINES 拓扑或包含零长度线段时抛出
+     */
+    public static ModelRenderable makeLines(List<Vector3> vertexPositions, Material material) {
+        validateVertexPositions(vertexPositions, 2, "LINES");
+        if ((vertexPositions.size() & 1) != 0) {
+            throw new IllegalArgumentException("LINES requires an even number of vertex positions.");
+        }
+        PrimitiveGeometryData geometry = new PrimitiveGeometryData();
+        for (int index = 0; index < vertexPositions.size(); index += 2) {
+            addWideLineSegment(
+                    geometry, vertexPositions.get(index), vertexPositions.get(index + 1));
+        }
+        return buildPrimitiveRenderable(
+                geometry.vertices,
+                geometry.indices,
+                RenderableManager.PrimitiveType.TRIANGLES,
+                material);
+    }
+
+    /**
+     * 根据空间坐标创建一条连续宽折线。
+     * <p>相邻坐标依次组成线段，例如 4 个坐标会生成 3 条线段。内部会自动完成三角形
+     * 展开与 {@code CUSTOM0} 顶点属性填充；材质应使用
+     * {@link com.google.sceneform.rendering.MaterialFactory#makeLinesWithColor} 创建。</p>
+     * <pre>{@code
+     * List<Vector3> lineStrip = Arrays.asList(
+     *         new Vector3(-1.0f, -0.5f, -3.0f),
+     *         new Vector3(-0.3f, 0.5f, -3.0f),
+     *         new Vector3(0.3f, -0.5f, -3.0f),
+     *         new Vector3(1.0f, 0.5f, -3.0f));
+     * ModelRenderable renderable = GeometryUtils.makeLineStrip(lineStrip, lineMaterial);
+     * }</pre>
+     *
+     * @param vertexPositions 连续折线坐标，至少包含两个坐标
+     * @param material 屏幕空间宽线材质
+     * @return 实际使用三角形拓扑绘制的连续宽线渲染对象
+     * @throws IllegalArgumentException 当坐标不足或包含零长度线段时抛出
+     */
+    public static ModelRenderable makeLineStrip(
+            List<Vector3> vertexPositions, Material material) {
+        validateVertexPositions(vertexPositions, 2, "LINE_STRIP");
+        PrimitiveGeometryData geometry = new PrimitiveGeometryData();
+        for (int index = 0; index + 1 < vertexPositions.size(); index++) {
+            addWideLineSegment(
+                    geometry, vertexPositions.get(index), vertexPositions.get(index + 1));
+        }
+        return buildPrimitiveRenderable(
+                geometry.vertices,
+                geometry.indices,
+                RenderableManager.PrimitiveType.TRIANGLES,
+                material);
+    }
+
+    /**
+     * 根据空间坐标创建多个相互独立的三角形。
+     * <p>每三个连续坐标定义一个三角形，顶点绕序决定正面方向。工具类会自动计算面法线，
+     * 并根据坐标跨度最大的两个轴生成 0 到 1 范围的平面 UV。</p>
+     * <pre>{@code
+     * List<Vector3> triangles = Arrays.asList(
+     *         new Vector3(-0.8f, -0.5f, -3.0f),
+     *         new Vector3(0.8f, -0.5f, -3.0f),
+     *         new Vector3(0.0f, 0.7f, -3.0f));
+     * ModelRenderable renderable = GeometryUtils.makeTriangles(triangles, material);
+     * }</pre>
+     *
+     * @param vertexPositions 三角形顶点坐标，数量必须为不小于 3 的 3 的倍数
+     * @param material 三角形材质
+     * @return 使用 {@link RenderableManager.PrimitiveType#TRIANGLES} 绘制的渲染对象
+     * @throws IllegalArgumentException 当坐标数量不符合 TRIANGLES 拓扑或三角形退化时抛出
+     */
+    public static ModelRenderable makeTriangles(
+            List<Vector3> vertexPositions, Material material) {
+        validateVertexPositions(vertexPositions, 3, "TRIANGLES");
+        if (vertexPositions.size() % 3 != 0) {
+            throw new IllegalArgumentException(
+                    "TRIANGLES requires a multiple of three vertex positions.");
+        }
+        List<Vector3> normals = createTriangleNormals(vertexPositions, false);
+        return buildPrimitiveRenderable(
+                createSurfaceVertices(vertexPositions, normals),
+                createSequentialIndices(vertexPositions.size()),
+                RenderableManager.PrimitiveType.TRIANGLES,
+                material);
+    }
+
+    /**
+     * 根据空间坐标创建连续三角带。
+     * <p>前三个坐标组成第一个三角形，之后每增加一个坐标生成一个新三角形。工具类会按
+     * TRIANGLE_STRIP 的奇偶绕序累计平滑法线，并生成平面 UV。</p>
+     * <pre>{@code
+     * List<Vector3> triangleStrip = Arrays.asList(
+     *         new Vector3(-1.0f, 0.5f, -3.0f),
+     *         new Vector3(-1.0f, -0.5f, -3.0f),
+     *         new Vector3(0.0f, 0.5f, -3.0f),
+     *         new Vector3(0.0f, -0.5f, -3.0f),
+     *         new Vector3(1.0f, 0.5f, -3.0f),
+     *         new Vector3(1.0f, -0.5f, -3.0f));
+     * ModelRenderable renderable = GeometryUtils.makeTriangleStrip(triangleStrip, material);
+     * }</pre>
+     *
+     * @param vertexPositions 三角带顶点坐标，至少包含三个坐标
+     * @param material 三角带材质
+     * @return 使用 {@link RenderableManager.PrimitiveType#TRIANGLE_STRIP} 绘制的渲染对象
+     * @throws IllegalArgumentException 当坐标不足或三角带包含退化三角形时抛出
+     */
+    public static ModelRenderable makeTriangleStrip(
+            List<Vector3> vertexPositions, Material material) {
+        validateVertexPositions(vertexPositions, 3, "TRIANGLE_STRIP");
+        List<Vector3> normals = createTriangleNormals(vertexPositions, true);
+        return buildPrimitiveRenderable(
+                createSurfaceVertices(vertexPositions, normals),
+                createSequentialIndices(vertexPositions.size()),
+                RenderableManager.PrimitiveType.TRIANGLE_STRIP,
+                material);
+    }
+
+    /** 校验基本图元坐标列表。 */
+    private static void validateVertexPositions(
+            List<Vector3> vertexPositions, int minimumSize, String primitiveName) {
+        if (vertexPositions == null || vertexPositions.size() < minimumSize) {
+            throw new IllegalArgumentException(
+                    primitiveName + " requires at least " + minimumSize + " vertex positions.");
+        }
+        for (int index = 0; index < vertexPositions.size(); index++) {
+            if (vertexPositions.get(index) == null) {
+                throw new IllegalArgumentException(
+                        primitiveName + " vertex position at index " + index + " is null.");
+            }
+        }
+    }
+
+    /** 将空间坐标转换为仅包含位置属性的顶点。 */
+    private static List<Vertex> createPositionVertices(List<Vector3> vertexPositions) {
+        List<Vertex> vertices = new ArrayList<>(vertexPositions.size());
+        for (Vector3 position : vertexPositions) {
+            vertices.add(Vertex.builder().setPosition(position).build());
+        }
+        return vertices;
+    }
+
+    /** 为顶点创建从 0 开始的一一对应索引。 */
+    private static List<Integer> createSequentialIndices(int vertexCount) {
+        List<Integer> indices = new ArrayList<>(vertexCount);
+        for (int index = 0; index < vertexCount; index++) {
+            indices.add(index);
+        }
+        return indices;
+    }
+
+    /** 添加一条由两个三角形组成的屏幕空间宽线段。 */
+    private static void addWideLineSegment(
+            PrimitiveGeometryData geometry, Vector3 start, Vector3 end) {
+        if (Vector3.subtract(end, start).lengthSquared() <= DEGENERATE_EPSILON) {
+            //"Line segment endpoints must not overlap."
+            return;
+        }
+        int baseIndex = geometry.vertices.size();
+        addWideLineVertex(geometry, start, end, 1.0f);
+        addWideLineVertex(geometry, start, end, -1.0f);
+        addWideLineVertex(geometry, end, start, -1.0f);
+        addWideLineVertex(geometry, end, start, 1.0f);
+
+        geometry.indices.add(baseIndex);
+        geometry.indices.add(baseIndex + 1);
+        geometry.indices.add(baseIndex + 2);
+        geometry.indices.add(baseIndex + 2);
+        geometry.indices.add(baseIndex + 1);
+        geometry.indices.add(baseIndex + 3);
+    }
+
+    /** 添加宽线材质要求的位置、颜色和 CUSTOM0 顶点属性。 */
+    private static void addWideLineVertex(
+            PrimitiveGeometryData geometry,
+            Vector3 position,
+            Vector3 otherEndpoint,
+            float side) {
+        geometry.vertices.add(Vertex.builder()
+                .setPosition(position)
+                .setColor(WHITE_VERTEX_COLOR)
+                .setCustom0(new Vertex.Float4(
+                        otherEndpoint.x, otherEndpoint.y, otherEndpoint.z, side))
+                .build());
+    }
+
+    /** 计算独立三角形或三角带的逐顶点法线。 */
+    private static List<Vector3> createTriangleNormals(
+            List<Vector3> positions, boolean triangleStrip) {
+        List<Vector3> normals = new ArrayList<>(positions.size());
+        for (int index = 0; index < positions.size(); index++) {
+            normals.add(Vector3.zero());
+        }
+
+        int triangleCount = triangleStrip ? positions.size() - 2 : positions.size() / 3;
+        for (int triangle = 0; triangle < triangleCount; triangle++) {
+            int first = triangleStrip ? triangle : triangle * 3;
+            int second = first + 1;
+            int third = first + 2;
+            //desc- TRIANGLE_STRIP 会交替顶点绕序，交换奇数三角形的前两个顶点以保持法线方向一致。
+            if (triangleStrip && (triangle & 1) != 0) {
+                int swap = first;
+                first = second;
+                second = swap;
+            }
+            Vector3 edge1 = Vector3.subtract(positions.get(second), positions.get(first));
+            Vector3 edge2 = Vector3.subtract(positions.get(third), positions.get(first));
+            Vector3 faceNormal = Vector3.cross(edge1, edge2);
+            if (faceNormal.lengthSquared() <= DEGENERATE_EPSILON) {
+                continue;
+            }
+            normals.set(first, Vector3.add(normals.get(first), faceNormal));
+            normals.set(second, Vector3.add(normals.get(second), faceNormal));
+            normals.set(third, Vector3.add(normals.get(third), faceNormal));
+        }
+
+        for (int index = 0; index < normals.size(); index++) {
+            normals.set(index, normals.get(index).normalized());
+        }
+        return normals;
+    }
+
+    /** 创建带自动法线和平面 UV 的表面顶点。 */
+    private static List<Vertex> createSurfaceVertices(
+            List<Vector3> positions, List<Vector3> normals) {
+        List<Vertex.UvCoordinate> uvCoordinates = createPlanarUvCoordinates(positions);
+        List<Vertex> vertices = new ArrayList<>(positions.size());
+        for (int index = 0; index < positions.size(); index++) {
+            vertices.add(Vertex.builder()
+                    .setPosition(positions.get(index))
+                    .setNormal(normals.get(index))
+                    .setUvCoordinate(uvCoordinates.get(index))
+                    .build());
+        }
+        return vertices;
+    }
+
+    /** 根据坐标跨度最大的两个轴生成平面 UV。 */
+    private static List<Vertex.UvCoordinate> createPlanarUvCoordinates(List<Vector3> positions) {
+        float[] minimum = {Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY};
+        float[] maximum = {Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY};
+        for (Vector3 position : positions) {
+            float[] values = {position.x, position.y, position.z};
+            for (int axis = 0; axis < 3; axis++) {
+                minimum[axis] = Math.min(minimum[axis], values[axis]);
+                maximum[axis] = Math.max(maximum[axis], values[axis]);
+            }
+        }
+        float[] ranges = {
+                maximum[0] - minimum[0],
+                maximum[1] - minimum[1],
+                maximum[2] - minimum[2]
+        };
+        int uAxis = 0;
+        for (int axis = 1; axis < 3; axis++) {
+            if (ranges[axis] > ranges[uAxis]) {
+                uAxis = axis;
+            }
+        }
+        int vAxis = uAxis == 0 ? 1 : 0;
+        for (int axis = 0; axis < 3; axis++) {
+            if (axis != uAxis && ranges[axis] > ranges[vAxis]) {
+                vAxis = axis;
+            }
+        }
+
+        List<Vertex.UvCoordinate> result = new ArrayList<>(positions.size());
+        for (Vector3 position : positions) {
+            float[] values = {position.x, position.y, position.z};
+            float u = ranges[uAxis] > 0.0f
+                    ? (values[uAxis] - minimum[uAxis]) / ranges[uAxis]
+                    : 0.5f;
+            float v = ranges[vAxis] > 0.0f
+                    ? (values[vAxis] - minimum[vAxis]) / ranges[vAxis]
+                    : 0.5f;
+            result.add(new Vertex.UvCoordinate(u, v));
+        }
+        return result;
+    }
+
+    /** 构建指定拓扑的动态 ModelRenderable。 */
+    private static ModelRenderable buildPrimitiveRenderable(
+            List<Vertex> vertices,
+            List<Integer> indices,
+            RenderableManager.PrimitiveType primitiveType,
+            Material material) {
+        AndroidPreconditions.checkMinAndroidApiLevel();
+        if (material == null) {
+            throw new IllegalArgumentException("Primitive material must not be null.");
+        }
+        RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
+                .setTriangleIndices(indices)
+                .setMaterial(material)
+                .build();
+        RenderableDefinition definition = RenderableDefinition.builder()
+                .setVertices(vertices)
+                .setSubGeometries(Collections.singletonList(subGeometry))
+                .setPrimitiveType(primitiveType)
+                .build();
+        CompletableFuture<ModelRenderable> future = ModelRenderable.builder()
+                .setSource(definition)
+                .build();
+        try {
+            ModelRenderable renderable = future.get();
+            if (renderable == null) {
+                throw new AssertionError("Error creating primitive renderable.");
+            }
+            return renderable;
+        } catch (ExecutionException exception) {
+            throw new AssertionError("Error creating primitive renderable.", exception);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted while creating primitive renderable.", exception);
+        }
+    }
+
+    /** 基本图元构建过程使用的顶点与索引容器。 */
+    private static final class PrimitiveGeometryData {
+        final List<Vertex> vertices = new ArrayList<>();
+        final List<Integer> indices = new ArrayList<>();
+    }
+
 }
