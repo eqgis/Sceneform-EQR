@@ -1,192 +1,240 @@
->Sceneform-EQR is an extension for Google's Sceneform Android SDK, designed for applications in graphics, video, augmented reality (AR), and virtual reality (VR). It currently integrates ARCore, AREngine, and ORB-SLAM, and offers multiple scene options—including AR scenes, VR scenes, and custom background scenes—to support a wide range of native 3D development needs.
+# Sceneform-EQR
 
+[中文文档](./README_CN.md)
 
-- Readme.md[中文](./README_CN.md)
+Sceneform-EQR is an Android-native 3D/XR rendering library extended from Google Sceneform and powered by Filament. It provides reusable scene layouts, model and geometry rendering, animation, interaction, Android View rendering, video/external textures, ARCore/AREngine integration, VR, PLY point clouds, and 3D Gaussian Splatting support.
 
-# Sceneform - EQR
+The Apache-2.0 `main` branch supports ARCore and AREngine but does not contain the GPL-licensed eq-slam implementation. ORB-SLAM3 integration code and binaries are documented in the [GPLv3 branch](https://github.com/eqgis/Sceneform-EQR/tree/main-GPLv3).
 
-> The **EQ-Renderer** module is now open-source. It includes integrations with **AREngine**, **ORB-SLAM**, and other extensions based on Google's Sceneform SDK.
-
----
-
-**GitHub**：[eqgis/Sceneform-EQR](https://github.com/eqgis/Sceneform-EQR)   [![GitHub stars](https://img.shields.io/github/stars/eqgis/Sceneform-EQR?style=flat-square)](https://github.com/eqgis/Sceneform-EQR)
-
-**GitCode**：[EQXR/Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)   [![Sceneform - EQR](https://gitcode.com/EQXR/Sceneform-EQR/star/badge.svg)](https://gitcode.com/EQXR/Sceneform-EQR)
-
----
-
+[![GitHub stars](https://img.shields.io/github/stars/eqgis/Sceneform-EQR?style=flat-square)](https://github.com/eqgis/Sceneform-EQR)
 [![Filament](https://img.shields.io/badge/Filament-v1.75.0-8bb903)](https://github.com/google/filament)
-
 [![ARCore](https://img.shields.io/badge/ARCore-v1.45.0-8bb903)](https://github.com/google-ar/arcore-android-sdk)
-
 [![AREngine](https://img.shields.io/badge/AREngine-v4.0.0.5-8bb903)](https://developer.huawei.com/consumer/cn/doc/graphics-References/ar-engine-java-api-0000001064060313)
+[![License](https://img.shields.io/badge/main-Apache--2.0-blue)](./LICENSE)
 
----
+Mirrors: [GitHub](https://github.com/eqgis/Sceneform-EQR) · [GitCode](https://gitcode.com/EQXR/Sceneform-EQR)
 
-## Introduction
+## Capabilities
 
-**Sceneform** is a 3D framework featuring a physically-based renderer optimized for mobile devices. It allows you to easily build augmented reality (AR) applications without directly using OpenGL.
+| Area | Included capabilities |
+| --- | --- |
+| Scene containers | Standard 3D `SceneLayout`, AR `ARSceneLayout`, mirrored display `MirrorSceneLayout`, camera-background, extended-background, and VR SceneView variants |
+| Models and geometry | GLTF/GLB, PLY point clouds/Mesh,  dynamic Mesh, `Line3D`, and point/line/triangle primitives |
+| Materials and lighting | PBR parameters, custom Filament `.filamat`, IBL, skyboxes, shadows, external textures, point-size materials, and screen-space wide-line materials |
+| Animation | GLTF model clips, node rotation, translation, path animation, repeat parameters, and access to the model animation source duration |
+| Interaction | Node tap/touch, ray hit-test, collision coordinates, Android View picking, node gestures, and camera rotate/pan/zoom gestures |
+| Android UI in 3D | `ViewRenderable` support for `TextView`, `ImageView`, `WebView`, common widgets, XML layouts, and scrollable layouts |
+| Video and XR | 2D video backgrounds, video-textured Cube/Quad, 360° video, live Camera2 streams, ARCore, Huawei AREngine, AR plane detection, and 3DoF AR/VR fallbacks |
+| Utilities | Screen/world coordinate conversion, camera rays, spatial measurement, scene capture/export, async resource caching, and performance diagnostics |
 
-**(Sceneform) EQ-Renderer** is an Android-native 3D renderer built as an extension of Sceneform. It currently supports **ARCore**, **AREngine**, and **ORB-SLAM**, making it a fast and flexible tool for AR development.
+## Repository Layout
 
----
+```text
+.
+├─ Eq-Renderer/
+│  └─ Android/eq-renderer/   # Android rendering library and native Filament integration
+├─ SampleProj/               # Runnable Android sample and tutorial application
+├─ Tool/                     # Filament tools, material sources, IBL assets, and build scripts
+└─ doc/
+   ├─ javadoc/               # Generated API documentation
+   └─ img/                   # README screenshots and animations
+```
+
+The library code belongs in `Eq-Renderer`, integration examples belong in `SampleProj`, and material/asset compilation inputs belong in `Tool`.
+
+## Requirements
+
+| Item | Current repository setting |
+| --- | --- |
+| Android | min SDK 24; compile/target SDK 34 |
+| Build toolchain | JDK 17, Gradle 8.5, Android Gradle Plugin 8.1.0 |
+| Native toolchain | NDK 27.3.x and CMake 3.22.1 when building the library from source |
+| Java/Kotlin bytecode | Java 8 / JVM 1.8 target |
+| ABI | `arm64-v8a` is enabled by the current library and sample configuration |
+| Optional AR services | ARCore 1.45.0 and/or Huawei AREngine 4.0.0.5 |
+
+AR features still depend on the device, camera permission, and the installed AR service. The XR tutorial shows the detected reason and uses Camera2 3DoF where a fallback is possible.
 
 ## Getting Started
 
-### Directory Structure
+### Run the sample from source
 
-* `Eq-Renderer`: A rendering library for Android, extended from Sceneform (based on Filament)
-* `SampleProj`: Sample application project
+1. Clone the repository.
+2. Open the `SampleProj` directory in Android Studio.
+3. Allow Gradle to sync the local `:eq-renderer` module.
+4. Connect an `arm64-v8a` Android 7.0+ device and run the `app` configuration.
 
+Command-line build on Windows:
+
+```powershell
+cd SampleProj
+.\gradlew.bat assembleDebug
 ```
-├─Eq-Renderer
-│  └─Android
-│      └─eq-renderer
-└─SampleProj
-    └─app
-```
 
-### Run the Sample
+### Use the published AAR
 
-1. Open **Android Studio**
-2. Go to **File > Open**, select `SampleProj`, and click **OK**
-3. Click **Run 'app'** to launch the `app` module
-
----
-
-## API Documentation
-
-> **sceneform-eqr** is an extension of Sceneform. Its APIs are largely consistent with those of the original Sceneform.
-
-You can refer to the following official documents for more information on Sceneform usage:
-
-> Note:
-> Sceneform versions **1.15 and earlier** use `.sfa` and `.sfb` formats for loading models.
-> Starting from **version 1.16**, only **GLTF 2.0** models are supported via `gltfio`. See [Filament](https://github.com/google/filament) for details.
-
-* Google Sceneform 1.16: [GitHub source archive](https://github.com/google-ar/sceneform-android-sdk)
-* Sceneform 1.15 Docs: [Google Developer Guide (Chinese)](https://developers.google.cn/sceneform/develop/getting-started?hl=zh-cn)
-
----
-
-## Blog Series
-
-**EQ-Renderer** is an Android-native rendering engine based on Google's Sceneform (Filament). The blog series below walks through how to use it with Android Studio for efficient development.
-
-**CSDN Blog**
-[Sceneform-EQR: Android Native 3D Rendering Engine](https://blog.csdn.net/qq_41140324/category_12571725.html)
-
-**CnBlogs**
-[Android Native AR Development](https://www.cnblogs.com/eqgis/tag/%E5%AE%89%E5%8D%93%E5%8E%9F%E7%94%9FAR%E5%BC%80%E5%8F%91/)
-
----
-
-## Feature Preview
-
-* Load **GLTF** models in standard 3D scenes 
-
-<img src="./doc/img/a3.png" style="zoom:33%;" />
-
-* Load **GLTF** models in AR scenes 
-
-<img src="./doc/img/a4.png" style="zoom:33%;" />
-
-* Render a sphere (using an equirectangular projection map as the texture)
-
-<img src="./doc/img/earth.gif" style="zoom:80%;" />
-
-* Support for **GLTF model animation**
-
-<img src="./doc/img/g3.gif" style="zoom:100%;" />
-
-* Tap gesture interaction
-
-<img src="./doc/img/a1.gif" style="zoom:60%;" />
-
-* Gesture-based model manipulation:
-  (One-finger rotate, two-finger pan, two-finger zoom)
-  
-
-<img src="./doc/img/g4.gif" style="zoom:67%;" />
-
-* **Example: AR Launcher**
-
-  > Render native Android Views in AR
-  >
-  > <img src="./doc/img/g1.gif" style="zoom:67%;" />
-
-  > Dual-screen display support, useful for XR glasses
-  >
-  > <img src="./doc/img/a2.png" style="zoom:67%;" />
-
-* **Example: AR Graffiti** (Custom textures, animated textures, video textures, displacement mapping)
-
-  > Breathing effect using custom materials compiled with Filament's `matc` tool
-  >
-  > <img src="./doc/img/g5.gif" style="zoom:67%;" />
-
-  > Flowing texture using a video as texture map
-  >
-  > <img src="./doc/img/g6.gif" style="zoom:67%;" />
-
----
-
-## Repository
-
-> You don't need to compile the Eq-Renderer source. Just use the **AAR**.
-
-Repository:
-[http://repo.eqgis.cn/com/eqgis/eq-renderer](https://repo.eqgis.cn/com/eqgis/eq-renderer)
+The current source declares the Maven coordinates `com.eqgis:eq-renderer:1.2.1`. Add the EQGIS repository in `settings.gradle`:
 
 ```groovy
-maven {
-    allowInsecureProtocol = true
-    url "http://repo.eqgis.cn"
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            allowInsecureProtocol = true
+            url "http://repo.eqgis.cn"
+        }
+    }
 }
 ```
 
----
+Then add the dependency:
 
-## License Notice
+```groovy
+dependencies {
+    implementation "com.eqgis:eq-renderer:1.2.1"
 
-This repository contains multiple branches with different licensing policies:
+    // Add only the XR runtime used by your application.
+    implementation "com.google.ar:core:1.45.0"
+    // implementation "com.huawei.hms:arenginesdk:4.0.0.5"
+}
+```
 
-- **Branches that include or depend on eq-slam**
-   ORB-SLAM3 is licensed under **GPLv3**, a strong copyleft license, and the eq-slam library incorporates ORB-SLAM3.
-   Therefore, any branch that **includes eq-slam, modifies eq-slam, or directly links to eq-slam via JNI**
-   **must be distributed under the GPLv3 license**.
-- **Branches that do not include eq-slam**
-   The `main` branch is released under the **Apache License 2.0** by default and is **not affected by GPLv3**.
+Repository browser: [repo.eqgis.cn/com/eqgis/eq-renderer](https://repo.eqgis.cn/com/eqgis/eq-renderer)
 
-### Why This Structure?
+### Create a basic 3D scene
 
-GPLv3 requires that derivative works be distributed under GPLv3.
- To avoid imposing GPLv3 on the entire repository, we separate GPL-affected code into dedicated branches.
- Other branches that do not include GPL-related components remain Apache-licensed.
+Add `SceneLayout` to an XML layout:
 
-### Important Notes
+```xml
+<com.eqgis.eqr.layout.SceneLayout
+    android:id="@+id/scene_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+```
 
-- If you create a new branch based on a GPL branch, the new branch **must also remain GPLv3**.
-- If you remove all GPL-related code and dependencies, you may switch that branch back to **Apache 2.0**.
-- The licensing difference applies at a **branch level**, not the entire repository.
+Initialize it and forward the host lifecycle:
 
-For full license text, refer to:
+```java
+private SceneLayout sceneLayout;
 
-- `LICENSE-GPLv3` (for GPLv3 branches)
-- `LICENSE` (Apache 2.0 for other branches)
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.your_scene);
+    sceneLayout = findViewById(R.id.scene_layout);
+    sceneLayout.init(this)
+            .addIndirectLight("enviroments/light/lightroom_ibl.ktx", 50);
+}
 
----
+@Override
+protected void onResume() {
+    super.onResume();
+    sceneLayout.resume();
+}
 
-## 📣 Latest Project Updates
+@Override
+protected void onPause() {
+    sceneLayout.pause();
+    super.onPause();
+}
 
-> This section records the latest promotional activities, community engagement, and multi-platform development progress of the project.
+@Override
+protected void onDestroy() {
+    sceneLayout.destroy();
+    super.onDestroy();
+}
+```
 
-- ✅ **Multi-Platform Collaboration Progress**:  
-  - GitHub: [eqgis/Sceneform-EQR](https://github.com/eqgis/Sceneform-EQR)  
-  -  GitCode: [EQXR/Sceneform-EQR](https://gitcode.com/EQXR/Sceneform-EQR)  
-  
-- ✅ **July 2025 Update**:  
-  The project has completed **bi-directional synchronization between GitHub and GitCode**, ensuring smooth collaboration and access for users worldwide.
+See [`BaseSceneActivity.java`](./SampleProj/app/src/main/java/com/eqgis/test/samples/BaseSceneActivity.java) for model loading, lighting, camera configuration, and node interaction.
 
-📌 *This section will be continuously updated. If you discover promotional content or media coverage about this project on other platforms, feel free to let us know via an Issue. Let's build a better open-source ecosystem together!*
+### Camera gestures
 
+```java
+CameraGestureController cameraController =
+        new CameraGestureController(sceneLayout.getCamera())
+                .attachTo(sceneLayout.getSceneView());
+
+// Detach before the host view is destroyed.
+cameraController.detach();
+```
+
+### Create Cube
+
+```java
+MaterialFactory.makeOpaqueWithColor(requireContext(), new Color(1.0f, 0.55f, 0.1f))
+    .thenAccept(material -> {
+        cubeNode = new Node();
+        cubeNode.setRenderable(GeometryUtils.makeCube(
+            new Vector3(0.8f, 0.8f, 0.8f),
+            Vector3.zero(),
+            material));
+        cubeNode.setWorldPosition(new Vector3(0, 0, -2.8f));
+        cubeNode.setParent(sceneLayout.getRootNode());
+    });
+```
+
+## Tutorial Catalog
+
+The sample app contains one Fragment per lesson and destroys the previous Fragment when switching tabs so scene, model, media, and AR lifecycles can complete correctly.
+
+| Topic | Lessons |
+| --- | --- |
+| Basic Geometry and Mesh | Five primitive topologies, triangle, plane, Cube, GLTF/GLB, and PLY |
+| Android View Rendering in 3D | TextView, ImageView, WebView, common widgets, XML Layout/ScrollView |
+| Materials, Lighting, and Camera | PBR parameters, light types, IBL, skybox, FOV, clipping planes, shadows |
+| Animation | Overview, GLTF model clips, rotation, translation, and Bézier path animation |
+| Interaction | Camera gestures, node gestures, collision coordinates, ViewNode picking, Node hit-test |
+| Video, Camera, and External Textures | 2D video background, Cube/Quad video texture, panorama video, Camera2 stream |
+| XR | ARCore/AREngine detection, AR plane detection, AR 3DoF, VR 3DoF, ORB-SLAM3 integration guide |
+| Advanced Topics | Lifecycle, async/cache, performance, custom Filament material, dynamic Mesh/Line3D, capture/export, ray measurement |
+
+The legacy/common samples also demonstrate standard 3D scenes, PLY/3DGS, interaction, video, AR, VR, 360° VR, textured Earth rendering, and coordinate conversion.
+
+## API and Tooling
+
+- [Generated Javadoc](./doc/javadoc/index.html)
+- [Sceneform 1.16 source archive](https://github.com/google-ar/sceneform-android-sdk)
+- [Sceneform 1.15 developer guide](https://developers.google.cn/sceneform/develop/getting-started?hl=en)
+- [Filament documentation](https://google.github.io/filament/)
+
+Sceneform 1.15 and earlier used `.sfa`/`.sfb`. This repository uses Filament `gltfio` and GLTF 2.0 (`.gltf`/`.glb`) for model loading.
+
+`Tool` contains Windows builds of `matc`, `cmgen`, `gltf_viewer`, and `resgen`, along with the source `.mat` files used by the renderer. Run `Tool/genfilamat-mobile.bat` after editing a bundled material, then update the corresponding Android raw resource.
+
+## Lifecycle Rules
+
+- Forward `resume()`, `pause()`, and `destroy()` to every `SceneLayout`/`ARSceneLayout` host.
+- Remove scene-owned nodes and stop animators before releasing renderables or materials.
+- In asynchronous model/material callbacks, verify that the Fragment view and scene are still alive before attaching resources.
+- For `ExternalTexture`, detach the texture from every material/renderable before releasing the player, surface, or texture.
+- Do not destroy engine-wide shared GLTF/material resources during a tab switch. `SceneLayout` and `SceneView` coordinate global cleanup after the last active scene exits.
+- Release `MediaPlayer`/Media3 players, camera sessions, gesture controllers, and listeners in the matching host lifecycle.
+
+These rules are demonstrated in the lifecycle, async/cache, and video tutorial Fragments.
+
+## Preview
+
+| GLTF in a 3D scene | GLTF in an AR scene |
+| --- | --- |
+| <img src="./doc/img/a3.png" width="320" alt="GLTF model in a 3D scene" /> | <img src="./doc/img/a4.png" width="320" alt="GLTF model in an AR scene" /> |
+
+| Model animation | Gesture interaction |
+| --- | --- |
+| <img src="./doc/img/g3.gif" width="320" alt="GLTF model animation" /> | <img src="./doc/img/g4.gif" width="320" alt="Model gesture interaction" /> |
+
+More examples include [Android View rendering](./doc/img/g1.gif), [textured sphere rendering](./doc/img/earth.gif), and [video textures](./doc/img/g6.gif).
+
+## Blog Series
+
+- CSDN: [Sceneform-EQR: Android Native 3D Rendering Engine](https://blog.csdn.net/qq_41140324/category_12571725.html)
+- CnBlogs: [Android Native AR Development](https://www.cnblogs.com/eqgis/tag/%E5%AE%89%E5%8D%93%E5%8E%9F%E7%94%9FAR%E5%BC%80%E5%8F%91/)
+- Self-hosted archive (no longer updated since January 1, 2025): [eqgis.cn/tags/EQ-R](https://www.eqgis.cn/tags/EQ-R)
+
+## License
+
+The `main` branch is licensed under [Apache License 2.0](./LICENSE) and does not include eq-slam.
+
+ORB-SLAM3 is GPLv3. Any branch that includes, modifies, or directly links eq-slam/ORB-SLAM3 must remain GPLv3. The GPL implementation is isolated in the [main-GPLv3 branch](https://github.com/eqgis/Sceneform-EQR/tree/main-GPLv3); its related AAR and source links are listed in the sample app's ORB-SLAM3 tutorial.
+
+Third-party components and bundled assets may retain their own licenses. Review the corresponding source directories before redistribution.
