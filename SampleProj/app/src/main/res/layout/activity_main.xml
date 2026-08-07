@@ -19,6 +19,79 @@
             app:title="Sceneform-EQR 示例与教程"
             app:titleTextColor="@color/sample_text_primary" />
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardRepository"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:contentDescription="@string/git_repository_content_description"
+            android:focusable="true"
+            android:minHeight="72dp"
+            app:cardBackgroundColor="@color/sample_surface"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:rippleColor="@color/sample_accent_soft"
+            app:strokeColor="@color/sample_separator"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="72dp"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/git_repository_title"
+                        android:textColor="@color/sample_text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/git_repository_summary"
+                        android:textColor="@color/sample_text_secondary"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="12dp"
+                    android:gravity="center"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="4dp"
+                    android:text="@string/git_repository_action"
+                    android:textColor="@color/sample_accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

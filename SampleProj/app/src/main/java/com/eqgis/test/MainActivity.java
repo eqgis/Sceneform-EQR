@@ -1,8 +1,10 @@
 package com.eqgis.test;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Window;
 import android.widget.Toast;
@@ -15,6 +17,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.eqgis.eqr.core.Eqr;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +31,7 @@ import java.util.List;
  * @author tanyx
  */
 public class MainActivity extends AppCompatActivity implements SampleAdapter.OnSampleClickListener {
+    private static final String REPOSITORY_URL = "https://github.com/eqgis/Sceneform-EQR";
 
     private RecyclerView recyclerView;
     private SampleAdapter adapter;
@@ -71,14 +75,26 @@ public class MainActivity extends AppCompatActivity implements SampleAdapter.OnS
      */
     private void initViews() {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        MaterialCardView repositoryCard = findViewById(R.id.cardRepository);
         recyclerView = findViewById(R.id.recyclerView);
         swipeRefresh = findViewById(R.id.swipeRefresh);
 
         setSupportActionBar(toolbar);
+        repositoryCard.setOnClickListener(view -> openRepository());
         swipeRefresh.setOnRefreshListener(() -> {
             loadSamples();
             swipeRefresh.setRefreshing(false);
         });
+    }
+
+    /** 打开当前示例工程对应的 GitHub 仓库。 */
+    private void openRepository() {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(REPOSITORY_URL));
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException exception) {
+            Toast.makeText(this, "未找到可打开 GitHub 链接的应用", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**

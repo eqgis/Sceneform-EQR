@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Sceneform-EQR</string>
+    <string name="git_repository_title">GitHub 仓库</string>
+    <string name="git_repository_summary">eqgis/Sceneform-EQR · 默认分支 main</string>
+    <string name="git_repository_action">查看源码 ›</string>
+    <string name="git_repository_content_description">打开 eqgis Sceneform-EQR GitHub 仓库</string>
 </resources>
