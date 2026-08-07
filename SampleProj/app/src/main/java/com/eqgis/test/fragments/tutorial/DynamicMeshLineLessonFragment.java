@@ -172,13 +172,13 @@ public class DynamicMeshLineLessonFragment extends BaseAdvancedLessonFragment {
     private ModelRenderable buildWaveRenderable() {
         ArrayList<Vertex> vertices = buildWaveVertices();
         ArrayList<Integer> indices = buildWaveIndices();
-        RenderableDefinition.Submesh submesh = RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
                 .setTriangleIndices(indices)
                 .setMaterial(meshMaterial)
                 .build();
         waveDefinition = RenderableDefinition.builder()
                 .setVertices(vertices)
-                .setSubmeshes(Arrays.asList(submesh))
+                .setSubGeometries(Arrays.asList(subGeometry))
                 .build();
         ModelRenderable renderable = MeshUtils.makeRenderableByCustomMesh(
                 meshMaterial, vertices, indices);

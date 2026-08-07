@@ -131,7 +131,7 @@ public class SampleCatalog {
      */
     public static List<SampleTopic> tutorialTopics() {
         return Arrays.asList(
-                new SampleTopic(TOPIC_GEOMETRY, "基础几何与 Mesh", "从三角形、平面、立方体 到 GLTF/PLY格式 模型加载。", geometryLessons()),
+                new SampleTopic(TOPIC_GEOMETRY, "基础几何与 Mesh", "从基本图元、三角形、平面、立方体到 GLTF/PLY 格式模型加载。", geometryLessons()),
                 new SampleTopic(TOPIC_ANDROID_VIEW, "Android View 渲染到 3D", "将 TextView、ImageView、WebView、常用控件和 XML Layout 渲染到三维空间。", androidViewLessons()),
                 new SampleTopic(TOPIC_MATERIAL_CAMERA, "材质、光照与相机", "学习材质、IBL、天空盒、FOV、裁剪面和阴影。", materialCameraLessons()),
                 new SampleTopic(TOPIC_ANIMATION, "动画篇", "节点旋转、位移、曲线路径和 GLTF 模型动画。", animationLessons()),
@@ -162,6 +162,7 @@ public class SampleCatalog {
      */
     private static List<SampleLesson> geometryLessons() {
         return Arrays.asList(
+                new SampleLesson("lesson_primitives", "绘制基本图元", "切换五种基本图元，观察顶点与索引的不同组合方式。", "com.eqgis.test.fragments.tutorial.PrimitiveLessonFragment"),
                 new SampleLesson("lesson_triangle", "绘制三角形", "手动构建顶点、索引和 RenderableDefinition。", "com.eqgis.test.fragments.tutorial.TriangleLessonFragment"),
                 new SampleLesson("lesson_plane", "创建平面", "理解平面顶点、UV、法线和材质。", "com.eqgis.test.fragments.tutorial.PlaneLessonFragment"),
                 new SampleLesson("lesson_cube", "绘制 Cube", "使用几何工具生成立方体并调整位置。", "com.eqgis.test.fragments.tutorial.CubeLessonFragment"),

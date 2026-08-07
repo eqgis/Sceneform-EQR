@@ -3,7 +3,6 @@ package com.eqgis.test.scene;
 import android.content.Context;
 import android.net.Uri;
 import android.view.MotionEvent;
-import android.widget.Toast;
 
 import com.eqgis.eqr.gesture.NodeGestureController;
 import com.eqgis.eqr.utils.ScaleTool;
@@ -30,7 +29,7 @@ public class PlyDataScene implements ISampleScene{
 //    private String plyPath = "temp/test_color.ply";
 //    private String plyPath = "temp/test_sh_0.ply";
 //    private String plyPath = "temp/cactus_splat3_30kSteps_142k_splats.ply";
-    private String plyPath = "sofa.ply";
+    private String plyPath = "ply/sofa.ply";
     public float distance = 3.6f;
     /**
      * 模型节点

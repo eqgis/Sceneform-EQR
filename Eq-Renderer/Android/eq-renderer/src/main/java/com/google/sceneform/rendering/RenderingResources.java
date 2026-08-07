@@ -53,7 +53,7 @@ public final class RenderingResources {
             case VIEW_RENDERABLE_MATERIAL:
                 return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_view_material");
             case PRIMITIVE_POINTS_MATERIAL:
-                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_primitive_points");
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_primitive_point");
             case PLY_BASE_MATERIAL:
                 return LoadHelper.rawResourceNameToIdentifier(context,"sceneform_ply_base_material");
             case PLY_GAUSSIAN_SPLAT_MATERIAL:

@@ -34,6 +34,7 @@ import com.eqgis.test.fragments.tutorial.PanoramaVideoLessonFragment;
 import com.eqgis.test.fragments.tutorial.PathAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlaneLessonFragment;
 import com.eqgis.test.fragments.tutorial.PlyLessonFragment;
+import com.eqgis.test.fragments.tutorial.PrimitiveLessonFragment;
 import com.eqgis.test.fragments.tutorial.RotationAnimationLessonFragment;
 import com.eqgis.test.fragments.tutorial.RenderPerformanceLessonFragment;
 import com.eqgis.test.fragments.tutorial.ResourceLifecycleLessonFragment;
@@ -67,6 +68,8 @@ public class SampleFragmentFactory {
             return CommonSampleLaunchFragment.newInstance(lesson);
         }
         switch (lesson.getId()) {
+            case "lesson_primitives":
+                return new PrimitiveLessonFragment();
             case "lesson_triangle":
                 return new TriangleLessonFragment();
             case "lesson_plane":

@@ -141,13 +141,13 @@ public class GeometryTopicFragment extends BaseTutorialFragment implements Lesso
                             .setNormal(Vector3.back())
                             .setUvCoordinate(new Vertex.UvCoordinate(0.5f, 1))
                             .build();
-                    RenderableDefinition.Submesh submesh = RenderableDefinition.Submesh.builder()
+                    RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
                             .setTriangleIndices(Arrays.asList(0, 1, 2))
                             .setMaterial(material)
                             .build();
                     RenderableDefinition definition = RenderableDefinition.builder()
                             .setVertices(Arrays.asList(v0, v1, v2))
-                            .setSubmeshes(Collections.singletonList(submesh))
+                            .setSubGeometries(Collections.singletonList(subGeometry))
                             .build();
                     ModelRenderable.builder()
                             .setSource(definition)
@@ -204,7 +204,7 @@ public class GeometryTopicFragment extends BaseTutorialFragment implements Lesso
     private void showPly() {
         Node node = new Node();
         ModelRenderable.builder()
-                .setSource(requireContext(), Uri.parse("sofa.ply"))
+                .setSource(requireContext(), Uri.parse("ply/sofa.ply"))
                 .setDataFormat(Renderable.RenderableDataFormat.PLY)
                 .build()
                 .thenAccept(renderable -> {

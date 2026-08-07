@@ -72,14 +72,14 @@ public class TriangleLessonFragment extends BaseTutorialFragment {
                             .setNormal(Vector3.back())
                             .setUvCoordinate(new Vertex.UvCoordinate(0.5f, 1))
                             .build();
-                    //desc- Submesh 负责把三角面索引和材质绑定到同一组几何数据上。
-                    RenderableDefinition.Submesh submesh = RenderableDefinition.Submesh.builder()
+                    //desc- SubGeometry 负责把三角面索引和材质绑定到同一组几何数据上。
+                    RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
                             .setTriangleIndices(Arrays.asList(0, 1, 2))
                             .setMaterial(material)
                             .build();
                     RenderableDefinition definition = RenderableDefinition.builder()
                             .setVertices(Arrays.asList(v0, v1, v2))
-                            .setSubmeshes(Collections.singletonList(submesh))
+                            .setSubGeometries(Collections.singletonList(subGeometry))
                             .build();
                     ModelRenderable.builder()
                             .setSource(definition)
