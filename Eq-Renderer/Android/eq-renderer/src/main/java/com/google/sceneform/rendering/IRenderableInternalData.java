@@ -74,6 +74,13 @@ public interface IRenderableInternalData {
     @Nullable
     FloatBuffer getRawColorBuffer();
 
+    /** 设置动态 Renderable 的 Filament CUSTOM0 原始顶点缓冲。 */
+    void setRawCustom0Buffer(@Nullable FloatBuffer rawCustom0Buffer);
+
+    /** @return 动态 Renderable 的 Filament CUSTOM0 原始顶点缓冲 */
+    @Nullable
+    FloatBuffer getRawCustom0Buffer();
+
     void buildInstanceData(RenderableInstance instance, @Entity int renderedEntity);
 
     void changePrimitiveType(RenderableInstance instance, RenderableManager.PrimitiveType type);

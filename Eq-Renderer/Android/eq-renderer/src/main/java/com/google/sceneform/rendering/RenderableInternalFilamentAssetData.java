@@ -263,6 +263,18 @@ public class RenderableInternalFilamentAssetData implements IRenderableInternalD
     }
 
     @Override
+    public void setRawCustom0Buffer(@Nullable FloatBuffer rawCustom0Buffer) {
+        // Not Implemented
+    }
+
+    @Nullable
+    @Override
+    public FloatBuffer getRawCustom0Buffer() {
+        // Not Implemented
+        return null;
+    }
+
+    @Override
     public void buildInstanceData(RenderableInstance instance, int renderedEntity) {
         TransformManager transformManager = EngineInstance.getEngine().getTransformManager();
         @EntityInstance int rootInstance = transformManager.getInstance(filamentAsset.getRoot());

@@ -50,6 +50,7 @@ class RenderableInternalData implements IRenderableInternalData {
     @Nullable private FloatBuffer rawTangentsBuffer;
     @Nullable private FloatBuffer rawUvBuffer;
     @Nullable private FloatBuffer rawColorBuffer;
+    @Nullable private FloatBuffer rawCustom0Buffer;
 
     // Filament Geometry buffers.
     @Nullable private IndexBuffer indexBuffer;
@@ -183,6 +184,17 @@ class RenderableInternalData implements IRenderableInternalData {
     @Nullable
     public FloatBuffer getRawColorBuffer() {
         return rawColorBuffer;
+    }
+
+    @Override
+    public void setRawCustom0Buffer(@Nullable FloatBuffer rawCustom0Buffer) {
+        this.rawCustom0Buffer = rawCustom0Buffer;
+    }
+
+    @Override
+    @Nullable
+    public FloatBuffer getRawCustom0Buffer() {
+        return rawCustom0Buffer;
     }
 
 

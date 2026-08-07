@@ -37,6 +37,19 @@ public final class MaterialFactory {
   public static final String VERTEX_POINT_SIZE = "pointSize";
 
   /**
+   * 线图元材质中的屏幕像素宽度参数名称
+   *
+   * @see Material#setFloat(String, float)
+   */
+  public static final String LINE_WIDTH = "lineWidth";
+
+  /** 线图元材质中的基础颜色参数名称。 */
+  public static final String LINE_BASE_COLOR = "baseColor";
+
+  /** 线图元材质中的自发光颜色参数名称。 */
+  public static final String LINE_EMISSIVE_COLOR = "emissiveColor";
+
+  /**
    * 材质文件中的金属度参数名称
    *
    * @see Material#setFloat(String, float)
@@ -87,6 +100,41 @@ public final class MaterialFactory {
         material -> {
           material.setFloat3(MATERIAL_COLOR, color);
           material.setFloat(VERTEX_POINT_SIZE, pointSize);
+          return material;
+        });
+  }
+
+  /**
+   * 根据颜色和屏幕像素宽度创建线图元材质对象。
+   * <p>
+   * 该材质要求顶点同时提供 {@code COLOR} 与 {@code CUSTOM0} 属性。{@code CUSTOM0.xyz}
+   * 保存线段另一端点，{@code CUSTOM0.w} 保存左右偏移符号，渲染拓扑必须使用三角形。
+   * </p>
+   *
+   * @param context 上下文
+   * @param color 线图元颜色
+   * @param lineWidth 线图元的屏幕像素宽度，必须大于 0
+   * @return 线图元材质对象
+   */
+  @SuppressWarnings("AndroidApiChecker")
+  public static CompletableFuture<Material> makeLinesWithColor(
+      Context context, Color color, float lineWidth) {
+    if (lineWidth <= 0.0f) {
+      throw new IllegalArgumentException("Line width must be greater than zero.");
+    }
+    CompletableFuture<Material> materialFuture =
+        Material.builder()
+            .setSource(
+                context,
+                RenderingResources.GetSceneformResource(
+                    context, RenderingResources.Resource.PRIMITIVE_LINES_MATERIAL))
+            .build();
+
+    return materialFuture.thenApply(
+        material -> {
+          material.setFloat4(LINE_BASE_COLOR, color);
+          material.setFloat4(LINE_EMISSIVE_COLOR, 0.0f, 0.0f, 0.0f, 0.0f);
+          material.setFloat(LINE_WIDTH, lineWidth);
           return material;
         });
   }

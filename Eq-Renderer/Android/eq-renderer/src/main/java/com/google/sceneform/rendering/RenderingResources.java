@@ -25,6 +25,7 @@ public final class RenderingResources {
         PLANE,
         VIEW_RENDERABLE_MATERIAL,
         PRIMITIVE_POINTS_MATERIAL,
+        PRIMITIVE_LINES_MATERIAL,
         PLY_BASE_MATERIAL,
         PLY_GAUSSIAN_SPLAT_MATERIAL
     };
@@ -54,6 +55,8 @@ public final class RenderingResources {
                 return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_view_material");
             case PRIMITIVE_POINTS_MATERIAL:
                 return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_primitive_point");
+            case PRIMITIVE_LINES_MATERIAL:
+                return LoadHelper.rawResourceNameToIdentifier(context, "sceneform_primitive_line");
             case PLY_BASE_MATERIAL:
                 return LoadHelper.rawResourceNameToIdentifier(context,"sceneform_ply_base_material");
             case PLY_GAUSSIAN_SPLAT_MATERIAL:

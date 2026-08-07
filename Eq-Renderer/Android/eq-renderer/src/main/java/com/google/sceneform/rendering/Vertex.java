@@ -22,6 +22,25 @@ public class Vertex {
     }
   }
 
+  /** 表示一个可上传到 Filament CUSTOM 顶点属性的四维浮点值。 */
+  public static final class Float4 {
+    public float x;
+    public float y;
+    public float z;
+    public float w;
+
+    public Float4(float x, float y, float z, float w) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+      this.w = w;
+    }
+
+    private Float4(Float4 value) {
+      this(value.x, value.y, value.z, value.w);
+    }
+  }
+
   // Required.
   private final Vector3 position = Vector3.zero();
 
@@ -29,6 +48,7 @@ public class Vertex {
   @Nullable private Vector3 normal;
   @Nullable private UvCoordinate uvCoordinate;
   @Nullable private Color color;
+  @Nullable private Float4 custom0;
 
   public void setPosition(Vector3 position) {
     this.position.set(position);
@@ -65,11 +85,27 @@ public class Vertex {
     return color;
   }
 
+  /**
+   * 设置 Filament CUSTOM0 顶点属性。
+   *
+   * @param custom0 四维自定义顶点数据，传入 {@code null} 表示不提供该属性
+   */
+  public void setCustom0(@Nullable Float4 custom0) {
+    this.custom0 = custom0 != null ? new Float4(custom0) : null;
+  }
+
+  /** @return Filament CUSTOM0 顶点属性，未设置时返回 {@code null} */
+  @Nullable
+  public Float4 getCustom0() {
+    return custom0;
+  }
+
   private Vertex(Builder builder) {
     position.set(builder.position);
     normal = builder.normal;
     uvCoordinate = builder.uvCoordinate;
     color = builder.color;
+    custom0 = builder.custom0 != null ? new Float4(builder.custom0) : null;
   }
 
   public static Builder builder() {
@@ -85,6 +121,7 @@ public class Vertex {
     @Nullable private Vector3 normal;
     @Nullable private UvCoordinate uvCoordinate;
     @Nullable private Color color;
+    @Nullable private Float4 custom0;
 
     public Builder setPosition(Vector3 position) {
       this.position.set(position);
@@ -103,6 +140,17 @@ public class Vertex {
 
     public Builder setColor(@Nullable Color color) {
       this.color = color;
+      return this;
+    }
+
+    /**
+     * 设置 Filament CUSTOM0 顶点属性。
+     *
+     * @param custom0 四维自定义顶点数据
+     * @return 当前 Builder
+     */
+    public Builder setCustom0(@Nullable Float4 custom0) {
+      this.custom0 = custom0;
       return this;
     }
 

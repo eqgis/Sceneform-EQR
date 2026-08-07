@@ -161,6 +161,7 @@ public class RenderableDefinition implements IRenderableDefinition{
   private static final int UV_SIZE = 2;
   private static final int TANGENTS_SIZE = 4; // quaternion
   private static final int COLOR_SIZE = 4; // RGBA
+  private static final int CUSTOM0_SIZE = 4; // Float4
 
   public void setVertices(List<Vertex> vertices) {
     this.vertices = vertices;
@@ -334,6 +335,9 @@ public class RenderableDefinition implements IRenderableDefinition{
     if (firstVertex.getColor() != null) {
       descriptionAttributes.add(VertexAttribute.COLOR);
     }
+    if (firstVertex.getCustom0() != null) {
+      descriptionAttributes.add(VertexAttribute.CUSTOM0);
+    }
 
     //计算vertexBuffer
     VertexBuffer vertexBuffer = data.getVertexBuffer();
@@ -348,6 +352,9 @@ public class RenderableDefinition implements IRenderableDefinition{
       }
       if (data.getRawColorBuffer() != null) {
         oldAttributes.add(VertexAttribute.COLOR);
+      }
+      if (data.getRawCustom0Buffer() != null) {
+        oldAttributes.add(VertexAttribute.CUSTOM0);
       }
 
       createVertexBuffer =
@@ -401,6 +408,19 @@ public class RenderableDefinition implements IRenderableDefinition{
       data.setRawColorBuffer(colorBuffer);
     } else if (colorBuffer != null) {
       colorBuffer.rewind();
+    }
+
+    //创建 CUSTOM0 Buffer
+    FloatBuffer custom0Buffer = data.getRawCustom0Buffer();
+    if (descriptionAttributes.contains(VertexAttribute.CUSTOM0)
+        && (custom0Buffer == null || custom0Buffer.capacity() < numVertices * CUSTOM0_SIZE)) {
+      custom0Buffer = FloatBuffer.allocate(numVertices * CUSTOM0_SIZE);
+      data.setRawCustom0Buffer(custom0Buffer);
+    } else if (descriptionAttributes.contains(VertexAttribute.CUSTOM0)) {
+      custom0Buffer.rewind();
+    } else {
+      data.setRawCustom0Buffer(null);
+      custom0Buffer = null;
     }
 
     //计算AABB包围盒
@@ -458,6 +478,18 @@ public class RenderableDefinition implements IRenderableDefinition{
 
         addColorToBuffer(color, colorBuffer);
       }
+
+      // CUSTOM0
+      if (custom0Buffer != null) {
+        Vertex.Float4 custom0 = vertex.getCustom0();
+        if (custom0 == null) {
+          throw new IllegalArgumentException(
+              "Missing CUSTOM0: If any Vertex in a "
+                  + "RenderableDescription has CUSTOM0, all vertices must have one.");
+        }
+
+        addFloat4ToBuffer(custom0, custom0Buffer);
+      }
     }
 
     // 在可渲染数据中设置Aabb
@@ -495,6 +527,13 @@ public class RenderableDefinition implements IRenderableDefinition{
       bufferIndex++;
       vertexBuffer.setBufferAt(
           engine.getFilamentEngine(), bufferIndex, colorBuffer, 0, numVertices * COLOR_SIZE);
+    }
+
+    if (custom0Buffer != null) {
+      custom0Buffer.rewind();
+      bufferIndex++;
+      vertexBuffer.setBufferAt(
+          engine.getFilamentEngine(), bufferIndex, custom0Buffer, 0, numVertices * CUSTOM0_SIZE);
     }
   }
 
@@ -556,6 +595,17 @@ public class RenderableDefinition implements IRenderableDefinition{
           COLOR_SIZE * BYTES_PER_FLOAT);
     }
 
+    // CUSTOM0
+    if (attributes.contains(VertexAttribute.CUSTOM0)) {
+      bufferIndex++;
+      builder.attribute(
+          VertexAttribute.CUSTOM0,
+          bufferIndex,
+          VertexBuffer.AttributeType.FLOAT4,
+          0,
+          CUSTOM0_SIZE * BYTES_PER_FLOAT);
+    }
+
     return builder.build(EngineInstance.getEngine().getFilamentEngine());
   }
 
@@ -582,6 +632,13 @@ public class RenderableDefinition implements IRenderableDefinition{
     buffer.put(color.g);
     buffer.put(color.b);
     buffer.put(color.a);
+  }
+
+  private static void addFloat4ToBuffer(Vertex.Float4 value, FloatBuffer buffer) {
+    buffer.put(value.x);
+    buffer.put(value.y);
+    buffer.put(value.z);
+    buffer.put(value.w);
   }
 
   private static Quaternion normalToTangent(Vector3 normal) {
