@@ -251,13 +251,13 @@ public class MeshUtils {
      * @return
      */
     public static ModelRenderable makeRenderableByCustomMesh(Material material, ArrayList<Vertex> vertices, ArrayList<Integer> triangleIndices) {
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         RenderableDefinition renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
 
         CompletableFuture<ModelRenderable> future =

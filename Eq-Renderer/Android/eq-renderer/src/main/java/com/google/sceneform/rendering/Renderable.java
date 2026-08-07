@@ -185,53 +185,71 @@ public abstract class Renderable {
     }
 
     /**
-     * 返回绑定到第一个子网格的材质
+     * 返回绑定到第一个子几何的材质
      */
     public Material getMaterial() {
         return getMaterial(0);
     }
 
     /**
-     * 返回指定子索引的网格的材质
+     * 返回指定子几何绑定的材质
+     * @param subGeometryIndex 子几何索引
+     * @return 子几何绑定的材质
      */
-    public Material getMaterial(int submeshIndex) {
-        if (submeshIndex < materialBindings.size()) {
-            return materialBindings.get(submeshIndex);
+    public Material getMaterial(int subGeometryIndex) {
+        if (subGeometryIndex < materialBindings.size()) {
+            return materialBindings.get(subGeometryIndex);
         }
 
-        throw makeSubmeshOutOfRangeException(submeshIndex);
+        throw makeSubGeometryOutOfRangeException(subGeometryIndex);
     }
 
     /**
-     * 给第一个子网格设置材质
+     * 给第一个子几何设置材质
+     * @param material 目标材质
      */
     public void setMaterial(Material material) {
         setMaterial(0, material);
     }
 
     /**
-     * 设置绑定到子网格的材质
+     * 设置绑定到指定子几何的材质
+     * @param subGeometryIndex 子几何索引
+     * @param material 目标材质
      */
-    public void setMaterial(int submeshIndex, Material material) {
-        if (submeshIndex < materialBindings.size()) {
-            materialBindings.set(submeshIndex, material);
+    public void setMaterial(int subGeometryIndex, Material material) {
+        if (subGeometryIndex < materialBindings.size()) {
+            materialBindings.set(subGeometryIndex, material);
             changeId.update();
         } else {
-            throw makeSubmeshOutOfRangeException(submeshIndex);
+            throw makeSubGeometryOutOfRangeException(subGeometryIndex);
         }
     }
 
     /**
-     * 返回与指定子网格关联的名称
+     * 返回与指定子几何关联的名称
+     * @param subGeometryIndex 子几何索引
+     * @return 子几何名称
      * @throws IllegalArgumentException 若索引不正确，则抛出此异常
      */
-    public String getSubmeshName(int submeshIndex) {
+    public String getSubGeometryName(int subGeometryIndex) {
         Preconditions.checkState(materialNames.size() == materialBindings.size());
-        if (submeshIndex >= 0 && submeshIndex < materialNames.size()) {
-            return materialNames.get(submeshIndex);
+        if (subGeometryIndex >= 0 && subGeometryIndex < materialNames.size()) {
+            return materialNames.get(subGeometryIndex);
         }
 
-        throw makeSubmeshOutOfRangeException(submeshIndex);
+        throw makeSubGeometryOutOfRangeException(subGeometryIndex);
+    }
+
+    /**
+     * 返回与指定旧版子网格关联的名称。
+     * @param submeshIndex 旧版子网格索引
+     * @return 子几何名称
+     * @deprecated 请使用 {@link #getSubGeometryName(int)}。
+     */
+    @Deprecated
+    public String getSubmeshName(int submeshIndex) {
+        return getSubGeometryName(submeshIndex);
     }
 
     /**
@@ -292,11 +310,22 @@ public abstract class Renderable {
     }
 
     /**
-     * 返回子网格数量
+     * 返回子几何数量
      * <p>至少有1个</p>
+     * @return 子几何数量
      */
-    public int getSubmeshCount() {
+    public int getSubGeometryCount() {
         return renderableData.getMeshes().size();
+    }
+
+    /**
+     * 返回旧版子网格数量。
+     * @return 子几何数量
+     * @deprecated 请使用 {@link #getSubGeometryCount()}。
+     */
+    @Deprecated
+    public int getSubmeshCount() {
+        return getSubGeometryCount();
     }
 
     /**
@@ -314,7 +343,7 @@ public abstract class Renderable {
     }
 
     public void updateFromDefinition(IRenderableDefinition definition) {
-        Preconditions.checkState(!definition.getSubmeshes().isEmpty());
+        Preconditions.checkState(!definition.getSubGeometries().isEmpty());
 
         changeId.update();
 
@@ -372,12 +401,12 @@ public abstract class Renderable {
         return originalMatrix;
     }
 
-    private IllegalArgumentException makeSubmeshOutOfRangeException(int submeshIndex) {
+    private IllegalArgumentException makeSubGeometryOutOfRangeException(int subGeometryIndex) {
         return new IllegalArgumentException(
-                "submeshIndex ("
-                        + submeshIndex
-                        + ") is out of range. It must be less than the submeshCount ("
-                        + getSubmeshCount()
+                "subGeometryIndex ("
+                        + subGeometryIndex
+                        + ") is out of range. It must be less than the subGeometryCount ("
+                        + getSubGeometryCount()
                         + ").");
     }
 

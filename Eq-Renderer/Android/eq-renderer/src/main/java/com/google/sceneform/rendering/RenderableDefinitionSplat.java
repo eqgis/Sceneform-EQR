@@ -26,7 +26,7 @@ import java.util.List;
 public class RenderableDefinitionSplat implements IRenderableDefinition{
 
     private List<Vertex> vertices;
-    private List<RenderableDefinition.Submesh> submeshes;
+    private List<RenderableDefinition.SubGeometry> subGeometries;
 
     private static final int BYTES_PER_FLOAT = Float.SIZE / 8;
     private static final int POSITION_SIZE = 3; // x, y, z
@@ -42,12 +42,34 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
         return vertices;
     }
 
-    public void setSubmeshes(List<RenderableDefinition.Submesh> submeshes) {
-        this.submeshes = submeshes;
+    public void setSubGeometries(List<RenderableDefinition.SubGeometry> subGeometries) {
+        this.subGeometries = subGeometries;
     }
 
+    public List<RenderableDefinition.SubGeometry> getSubGeometries() {
+        return subGeometries;
+    }
+
+    /**
+     * 设置旧版子网格列表。
+     * @param submeshes 旧版子网格列表
+     * @deprecated 请使用 {@link #setSubGeometries(List)}。
+     */
+    @Override
+    @Deprecated
+    public void setSubmeshes(List<RenderableDefinition.Submesh> submeshes) {
+        IRenderableDefinition.super.setSubmeshes(submeshes);
+    }
+
+    /**
+     * 获取旧版子网格列表。
+     * @return 旧版子网格列表
+     * @deprecated 请使用 {@link #getSubGeometries()}。
+     */
+    @Override
+    @Deprecated
     public List<RenderableDefinition.Submesh> getSubmeshes() {
-        return submeshes;
+        return IRenderableDefinition.super.getSubmeshes();
     }
 
     public void applyDefinitionToData(
@@ -63,8 +85,8 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
         int indexStart = 0;
         materialBindings.clear();
         materialNames.clear();
-        for (int i = 0; i < submeshes.size(); i++) {
-            RenderableDefinition.Submesh submesh = submeshes.get(i);
+        for (int i = 0; i < subGeometries.size(); i++) {
+            RenderableDefinition.SubGeometry subGeometry = subGeometries.get(i);
 
             RenderableInternalData.MeshData meshData;
             if (i < data.getMeshes().size()) {
@@ -75,15 +97,15 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
             }
 
             meshData.indexStart = indexStart;
-            meshData.indexEnd = indexStart + submesh.getTriangleIndices().size();
+            meshData.indexEnd = indexStart + subGeometry.getTriangleIndices().size();
             indexStart = meshData.indexEnd;
-            materialBindings.add(submesh.getMaterial());
-            final String name = submesh.getName();
+            materialBindings.add(subGeometry.getMaterial());
+            final String name = subGeometry.getName();
             materialNames.add(name != null ? name : "");
         }
 
         // 移除旧数据
-        while (data.getMeshes().size() > submeshes.size()) {
+        while (data.getMeshes().size() > subGeometries.size()) {
             data.getMeshes().remove(data.getMeshes().size() - 1);
         }
     }
@@ -91,9 +113,9 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
     private void applyDefinitionToDataIndexBuffer(IRenderableInternalData data) {
         // 计算顶点索引
         int numIndices = 0;
-        for (int i = 0; i < submeshes.size(); i++) {
-            RenderableDefinition.Submesh submesh = submeshes.get(i);
-            numIndices += submesh.getTriangleIndices().size();
+        for (int i = 0; i < subGeometries.size(); i++) {
+            RenderableDefinition.SubGeometry subGeometry = subGeometries.get(i);
+            numIndices += subGeometry.getTriangleIndices().size();
         }
 
         // 创建原始IndexBuffer
@@ -106,9 +128,9 @@ public class RenderableDefinitionSplat implements IRenderableDefinition{
         }
 
         //填充索引数据
-        for (int i = 0; i < submeshes.size(); i++) {
-            RenderableDefinition.Submesh submesh = submeshes.get(i);
-            List<Integer> triangleIndices = submesh.getTriangleIndices();
+        for (int i = 0; i < subGeometries.size(); i++) {
+            RenderableDefinition.SubGeometry subGeometry = subGeometries.get(i);
+            List<Integer> triangleIndices = subGeometry.getTriangleIndices();
             for (int j = 0; j < triangleIndices.size(); j++) {
                 rawIndexBuffer.put(triangleIndices.get(j));
             }

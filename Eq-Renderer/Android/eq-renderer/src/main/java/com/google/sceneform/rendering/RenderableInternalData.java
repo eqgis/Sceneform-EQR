@@ -21,7 +21,12 @@ import java.util.ArrayList;
  */
 class RenderableInternalData implements IRenderableInternalData {
     private static final String TAG = RenderableInternalData.class.getSimpleName();
-    protected RenderableManager.PrimitiveType primitiveType = RenderableManager.PrimitiveType.TRIANGLES;;
+    protected RenderableManager.PrimitiveType primitiveType = RenderableManager.PrimitiveType.TRIANGLES;
+
+    /** 设置后续实例构建时使用的默认图元类型。 */
+    void setPrimitiveType(RenderableManager.PrimitiveType primitiveType) {
+        this.primitiveType = primitiveType;
+    }
 
     /** 表示用于渲染可渲染对象的每个网格的数据。 */
     static class MeshData {

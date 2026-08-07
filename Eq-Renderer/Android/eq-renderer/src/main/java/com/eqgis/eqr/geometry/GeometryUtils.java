@@ -155,13 +155,13 @@ public class GeometryUtils {
             triangleIndices.add(upperCenterIndex + side + 1);
         }
 
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         RenderableDefinition renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
 
         CompletableFuture<ModelRenderable> future =
@@ -273,13 +273,13 @@ public class GeometryUtils {
             triangleIndices.add(triangleIndices.get(i));
         }
 
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         RenderableDefinition renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
 
         CompletableFuture<ModelRenderable> future =
@@ -379,12 +379,12 @@ public class GeometryUtils {
             v += slices + 1;
         }
 
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
         RenderableDefinition renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
 
         CompletableFuture<ModelRenderable> future =
@@ -489,15 +489,15 @@ public class GeometryUtils {
         for (int i = triangleIndices.size() - 1; i > 0 ; i--) {
             innerTriangleIndices.add(triangleIndices.get(i));
         }
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder()
                         .setTriangleIndices(/*triangleIndices*/innerTriangleIndices)
                         .setMaterial(material)
                         .build();
         RenderableDefinition renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
 
         CompletableFuture<ModelRenderable> future =
@@ -554,13 +554,13 @@ public class GeometryUtils {
 
         //desc- 逆时针绕序使几何正面与顶点法向一致，均朝向 Z 轴正方向。
         List<Integer> triangleIndices = Arrays.asList(0, 1, 2, 2, 3, 0);
-        RenderableDefinition.Submesh submesh = RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
                 .setTriangleIndices(triangleIndices)
                 .setMaterial(material)
                 .build();
         RenderableDefinition renderableDefinition = RenderableDefinition.builder()
                 .setVertices(vertices)
-                .setSubmeshes(Arrays.asList(submesh))
+                .setSubGeometries(Arrays.asList(subGeometry))
                 .build();
 
         CompletableFuture<ModelRenderable> future = ModelRenderable.builder()
@@ -610,13 +610,13 @@ public class GeometryUtils {
                                 Vertex.builder().setPosition(p3).setNormal(up).setUvCoordinate(uv00).build()));
 
         List<Integer> triangleIndices = Arrays.asList(0, 1, 2, 2, 3, 0);
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         RenderableDefinition renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
         CompletableFuture<ModelRenderable> future =
                 ModelRenderable.builder().setSource(renderableDefinition).build();

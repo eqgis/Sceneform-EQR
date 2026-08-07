@@ -460,12 +460,12 @@ public class ViewRenderable extends Renderable {
                           triangleIndices.add(1);
                           triangleIndices.add(3);
                           triangleIndices.add(2);
-                          RenderableDefinition.Submesh submesh =
-                                  RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+                          RenderableDefinition.SubGeometry subGeometry =
+                                  RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
                           setSource(
                                   RenderableDefinition.builder()
                                           .setVertices(vertices)
-                                          .setSubmeshes(Arrays.asList(submesh))
+                                          .setSubGeometries(Arrays.asList(subGeometry))
                                           .build()
                           );
                         }

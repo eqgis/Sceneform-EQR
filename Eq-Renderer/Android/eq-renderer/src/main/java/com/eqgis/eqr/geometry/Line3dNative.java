@@ -24,7 +24,7 @@ class Line3dNative {
 //    private boolean doubleSide = false;
     private ArrayList<Vertex> m_Vertices;
     private ArrayList<Integer> m_Triangles;
-    private RenderableDefinition.Submesh submesh;
+    private RenderableDefinition.SubGeometry subGeometry;
     private RenderableDefinition renderableDefinition;
 
 
@@ -556,13 +556,13 @@ class Line3dNative {
      * @return
      */
     CompletableFuture<ModelRenderable> makeRenderable(Material material){
-        submesh =
-                RenderableDefinition.Submesh.builder().setTriangleIndices(m_Triangles).setMaterial(material).build();
+        subGeometry =
+                RenderableDefinition.SubGeometry.builder().setTriangleIndices(m_Triangles).setMaterial(material).build();
 
         renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(m_Vertices)
-                        .setSubmeshes(Arrays.asList(submesh))
+                        .setSubGeometries(Arrays.asList(subGeometry))
                         .build();
 
         CompletableFuture<ModelRenderable> future =
@@ -576,10 +576,10 @@ class Line3dNative {
      */
     void refreshMesh(ModelRenderable modelRenderable){
         if (modelRenderable == null)return;
-        submesh.setTriangleIndices(m_Triangles);
+        subGeometry.setTriangleIndices(m_Triangles);
 
         renderableDefinition.setVertices(m_Vertices);
-        renderableDefinition.setSubmeshes(Arrays.asList(submesh));
+        renderableDefinition.setSubGeometries(Arrays.asList(subGeometry));
 
         modelRenderable.updateFromDefinition(renderableDefinition);
     }

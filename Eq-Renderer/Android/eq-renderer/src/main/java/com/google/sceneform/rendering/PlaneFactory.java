@@ -65,14 +65,14 @@ public class PlaneFactory {
         triangleIndices.add(2);
         triangleIndices.add(1);
 
-        RenderableDefinition.Submesh submesh = RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
                 .setTriangleIndices(triangleIndices)
                 .setMaterial(material)
                 .build();
 
         RenderableDefinition renderableDefinition = RenderableDefinition.builder()
                 .setVertices(vertices)
-                .setSubmeshes(Arrays.asList(submesh))
+                .setSubGeometries(Arrays.asList(subGeometry))
                 .build();
 
         CompletableFuture<ModelRenderable> future = ModelRenderable.builder()

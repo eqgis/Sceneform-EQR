@@ -33,8 +33,8 @@ class PlaneVisualizer implements TransformProvider {
   private final ArrayList<Vertex> vertices = new ArrayList<>();
   private final ArrayList<Integer> triangleIndices = new ArrayList<>();
   private final RenderableDefinition renderableDefinition;
-  @Nullable private RenderableDefinition.Submesh planeSubmesh;
-  @Nullable private RenderableDefinition.Submesh shadowSubmesh;
+  @Nullable private RenderableDefinition.SubGeometry planeSubGeometry;
+  @Nullable private RenderableDefinition.SubGeometry shadowSubGeometry;
 
   private static final int VERTS_PER_BOUNDARY_VERT = 2;
 
@@ -77,11 +77,11 @@ class PlaneVisualizer implements TransformProvider {
   }
 
   void setShadowMaterial(Material material) {
-    if (shadowSubmesh == null) {
-      shadowSubmesh =
-              RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+    if (shadowSubGeometry == null) {
+      shadowSubGeometry =
+              RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
     } else {
-      shadowSubmesh.setMaterial(material);
+      shadowSubGeometry.setMaterial(material);
     }
 
     if (planeRenderable != null) {
@@ -90,11 +90,11 @@ class PlaneVisualizer implements TransformProvider {
   }
 
   void setPlaneMaterial(Material material) {
-    if (planeSubmesh == null) {
-      planeSubmesh =
-              RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+    if (planeSubGeometry == null) {
+      planeSubGeometry =
+              RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
     } else {
-      planeSubmesh.setMaterial(material);
+      planeSubGeometry.setMaterial(material);
     }
 
     if (planeRenderable != null) {
@@ -134,20 +134,20 @@ class PlaneVisualizer implements TransformProvider {
 
   @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
   void updateRenderable() {
-    List<RenderableDefinition.Submesh> submeshes = renderableDefinition.getSubmeshes();
-    submeshes.clear();
+    List<RenderableDefinition.SubGeometry> subGeometries = renderableDefinition.getSubGeometries();
+    subGeometries.clear();
 
     // the order of the meshes is important here, because we set the blendOrder based on
     // the index below.
-    if (isVisible && (planeSubmesh != null)) {
-      submeshes.add(planeSubmesh);
+    if (isVisible && (planeSubGeometry != null)) {
+      subGeometries.add(planeSubGeometry);
     }
 
-    if (isShadowReceiver && (shadowSubmesh != null)) {
-      submeshes.add(shadowSubmesh);
+    if (isShadowReceiver && (shadowSubGeometry != null)) {
+      subGeometries.add(shadowSubGeometry);
     }
 
-    if (submeshes.isEmpty()) {
+    if (subGeometries.isEmpty()) {
       removePlaneFromScene();
       return;
     }
@@ -169,7 +169,7 @@ class PlaneVisualizer implements TransformProvider {
     // this works because both sub-meshes will be sorted at the same distance from the camera
     // since they're part of the same renderable. The blendOrder, determines the sorting in
     // that situation.
-    if (planeRenderableInstance != null && submeshes.size() > 1) {
+    if (planeRenderableInstance != null && subGeometries.size() > 1) {
       planeRenderableInstance.setBlendOrderAt(0, 0); // plane
       planeRenderableInstance.setBlendOrderAt(1, 1); // shadow
     }

@@ -30,6 +30,13 @@ public final class MaterialFactory {
   public static final String MATERIAL_TEXTURE = "texture";
 
   /**
+   * 点图元材质中的屏幕像素尺寸参数名称
+   *
+   * @see Material#setFloat(String, float)
+   */
+  public static final String VERTEX_POINT_SIZE = "pointSize";
+
+  /**
    * 材质文件中的金属度参数名称
    *
    * @see Material#setFloat(String, float)
@@ -53,6 +60,36 @@ public final class MaterialFactory {
   private static final float DEFAULT_METALLIC_PROPERTY = 0.0f;
   private static final float DEFAULT_ROUGHNESS_PROPERTY = 0.4f;
   private static final float DEFAULT_REFLECTANCE_PROPERTY = 0.5f;
+
+  /**
+   * 根据颜色和屏幕像素尺寸创建点图元材质对象
+   *
+   * @param context 上下文
+   * @param color 点图元颜色
+   * @param pointSize 点图元的屏幕像素尺寸，必须大于 0
+   * @return 点图元材质对象
+   */
+  @SuppressWarnings("AndroidApiChecker")
+  public static CompletableFuture<Material> makePointsWithColor(
+      Context context, Color color, float pointSize) {
+    if (pointSize <= 0.0f) {
+      throw new IllegalArgumentException("Point size must be greater than zero.");
+    }
+    CompletableFuture<Material> materialFuture =
+        Material.builder()
+            .setSource(
+                context,
+                RenderingResources.GetSceneformResource(
+                    context, RenderingResources.Resource.PRIMITIVE_POINTS_MATERIAL))
+            .build();
+
+    return materialFuture.thenApply(
+        material -> {
+          material.setFloat3(MATERIAL_COLOR, color);
+          material.setFloat(VERTEX_POINT_SIZE, pointSize);
+          return material;
+        });
+  }
 
   /**
    * 根据颜色值使用不透明材质文件创建材质对象

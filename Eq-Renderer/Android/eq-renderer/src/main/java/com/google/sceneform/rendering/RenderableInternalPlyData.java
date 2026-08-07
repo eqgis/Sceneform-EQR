@@ -103,14 +103,14 @@ public class RenderableInternalPlyData extends RenderableInternalData implements
         ArrayList<Integer> triangleIndices = getIndices(vertexCount);
         ArrayList<Vertex> vertices = getVertices(vertexCount);
 
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder()
                         .setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         renderableDefinition =
                 RenderableDefinition.builder()
                         .setVertices(vertices)
-                        .setSubmeshes(Collections.singletonList(submesh))
+                        .setSubGeometries(Collections.singletonList(subGeometry))
                         .build();
         instance.getRenderable().updateFromDefinition(renderableDefinition);
     }

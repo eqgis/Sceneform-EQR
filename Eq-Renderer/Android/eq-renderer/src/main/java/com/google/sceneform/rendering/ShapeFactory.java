@@ -106,13 +106,13 @@ public final class ShapeFactory {
       triangleIndices.add(1 + verticesPerSide * i);
     }
 
-    RenderableDefinition.Submesh submesh =
-        RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+    RenderableDefinition.SubGeometry subGeometry =
+        RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
 
     RenderableDefinition renderableDefinition =
         RenderableDefinition.builder()
             .setVertices(vertices)
-            .setSubmeshes(Arrays.asList(submesh))
+            .setSubGeometries(Arrays.asList(subGeometry))
             .build();
 
     CompletableFuture<ModelRenderable> future =
@@ -210,12 +210,12 @@ public final class ShapeFactory {
       v += slices + 1;
     }
 
-    RenderableDefinition.Submesh submesh =
-        RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+    RenderableDefinition.SubGeometry subGeometry =
+        RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
     RenderableDefinition renderableDefinition =
         RenderableDefinition.builder()
             .setVertices(vertices)
-            .setSubmeshes(Arrays.asList(submesh))
+            .setSubGeometries(Arrays.asList(subGeometry))
             .build();
 
     CompletableFuture<ModelRenderable> future =
@@ -365,13 +365,13 @@ public final class ShapeFactory {
       triangleIndices.add(upperCenterIndex + side + 1);
     }
 
-    RenderableDefinition.Submesh submesh =
-        RenderableDefinition.Submesh.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
+    RenderableDefinition.SubGeometry subGeometry =
+        RenderableDefinition.SubGeometry.builder().setTriangleIndices(triangleIndices).setMaterial(material).build();
 
     RenderableDefinition renderableDefinition =
         RenderableDefinition.builder()
             .setVertices(vertices)
-            .setSubmeshes(Arrays.asList(submesh))
+            .setSubGeometries(Arrays.asList(subGeometry))
             .build();
 
     CompletableFuture<ModelRenderable> future =

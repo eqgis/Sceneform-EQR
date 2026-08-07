@@ -194,7 +194,7 @@ public class Line3D extends Node{
             line3dNative.refreshMesh(lastRenderable);
         }
 
-//        Log.d("IKKYU", "build: " +lastRenderable.toString() + " getSubmeshCount: " + lastRenderable.getSubmeshCount());
+//        Log.d("IKKYU", "build: " +lastRenderable.toString() + " getSubGeometryCount: " + lastRenderable.getSubGeometryCount());
     }
 
     //<editor-fold> set and get方法

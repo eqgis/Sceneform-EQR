@@ -10,6 +10,7 @@ import com.google.sceneform.utilities.AndroidPreconditions;
 import com.google.sceneform.utilities.Preconditions;
 import com.google.android.filament.IndexBuffer;
 import com.google.android.filament.IndexBuffer.Builder.IndexType;
+import com.google.android.filament.RenderableManager;
 import com.google.android.filament.VertexBuffer;
 import com.google.android.filament.VertexBuffer.VertexAttribute;
 
@@ -32,8 +33,12 @@ public class RenderableDefinition implements IRenderableDefinition{
   private static final Matrix scratchMatrix = new Matrix();
 
   /**
-   * 表示RenderableDefinition的子网格。每个RenderableDefinition可以有多个Submeshes。
+   * 旧版子网格数据类型。
+   *
+   * @deprecated 请使用 {@link SubGeometry}。旧 Builder 会实际创建 {@link SubGeometry}，
+   *     仅用于兼容既有源码和二进制调用。
    */
+  @Deprecated
   public static class Submesh {
     private List<Integer> triangleIndices;
     private Material material;
@@ -74,8 +79,13 @@ public class RenderableDefinition implements IRenderableDefinition{
       return new Builder();
     }
 
-    /** Factory class for {@link Submesh}. */
-    public static final class Builder {
+    /**
+     * 旧版子网格 Builder。
+     *
+     * @deprecated 请使用 {@link SubGeometry.Builder}。
+     */
+    @Deprecated
+    public static class Builder {
       @Nullable private List<Integer> triangleIndices;
       @Nullable private Material material;
       @Nullable private String name;
@@ -96,13 +106,55 @@ public class RenderableDefinition implements IRenderableDefinition{
       }
 
       public Submesh build() {
-        return new Submesh(this);
+        //desc- 旧 Builder 返回类型保持 Submesh，但实例统一使用 SubGeometry，保证新旧列表转换安全。
+        return new SubGeometry(this);
+      }
+    }
+  }
+
+  /**
+   * 表示 {@link RenderableDefinition} 中一组独立的子几何数据。
+   * <p>每个子几何通过索引范围绑定一个材质，一个定义可以包含多个子几何。</p>
+   */
+  public static class SubGeometry extends Submesh {
+    private SubGeometry(Submesh.Builder builder) {
+      super(builder);
+    }
+
+    public static Builder builder() {
+      return new Builder();
+    }
+
+    /** Factory class for {@link SubGeometry}. */
+    public static final class Builder extends Submesh.Builder {
+      @Override
+      public Builder setTriangleIndices(List<Integer> triangleIndices) {
+        super.setTriangleIndices(triangleIndices);
+        return this;
+      }
+
+      @Override
+      public Builder setName(String name) {
+        super.setName(name);
+        return this;
+      }
+
+      @Override
+      public Builder setMaterial(Material material) {
+        super.setMaterial(material);
+        return this;
+      }
+
+      @Override
+      public SubGeometry build() {
+        return new SubGeometry(this);
       }
     }
   }
 
   private List<Vertex> vertices;
-  private List<Submesh> submeshes;
+  private List<SubGeometry> subGeometries;
+  private RenderableManager.PrimitiveType primitiveType;
 
   private static final int BYTES_PER_FLOAT = Float.SIZE / 8;
   private static final int POSITION_SIZE = 3; // x, y, z
@@ -118,12 +170,61 @@ public class RenderableDefinition implements IRenderableDefinition{
     return vertices;
   }
 
-  public void setSubmeshes(List<Submesh> submeshes) {
-    this.submeshes = submeshes;
+  /**
+   * 设置当前定义包含的全部子几何。
+   *
+   * @param subGeometries 子几何列表，不能为空
+   */
+  public void setSubGeometries(List<SubGeometry> subGeometries) {
+    this.subGeometries = subGeometries;
   }
 
+  /**
+   * 获取当前定义包含的全部子几何。
+   *
+   * @return 子几何列表
+   */
+  public List<SubGeometry> getSubGeometries() {
+    return subGeometries;
+  }
+
+  /**
+   * 设置当前定义包含的旧版子网格列表。
+   *
+   * @param submeshes 旧版子网格列表
+   * @deprecated 请使用 {@link #setSubGeometries(List)}。
+   */
+  @Deprecated
+  @SuppressWarnings("unchecked")
+  public void setSubmeshes(List<Submesh> submeshes) {
+    //desc- Submesh.Builder 实际构建 SubGeometry，因此此处可保留原列表的可变语义并安全转换。
+    subGeometries = (List<SubGeometry>) (List<?>) submeshes;
+  }
+
+  /**
+   * 获取当前定义包含的旧版子网格列表。
+   *
+   * @return 旧版子网格列表
+   * @deprecated 请使用 {@link #getSubGeometries()}。
+   */
+  @Deprecated
+  @SuppressWarnings("unchecked")
   public List<Submesh> getSubmeshes() {
-    return submeshes;
+    return (List<Submesh>) (List<?>) subGeometries;
+  }
+
+  /**
+   * 设置此定义构建实例时使用的图元类型。
+   *
+   * @param primitiveType Filament 图元类型
+   */
+  public void setPrimitiveType(RenderableManager.PrimitiveType primitiveType) {
+    this.primitiveType = Preconditions.checkNotNull(primitiveType);
+  }
+
+  /** @return 此定义构建实例时使用的图元类型 */
+  public RenderableManager.PrimitiveType getPrimitiveType() {
+    return primitiveType;
   }
 
   public void applyDefinitionToData(
@@ -132,6 +233,10 @@ public class RenderableDefinition implements IRenderableDefinition{
       ArrayList<String> materialNames) {
     AndroidPreconditions.checkUiThread();
 
+    if (data instanceof RenderableInternalData) {
+      ((RenderableInternalData) data).setPrimitiveType(primitiveType);
+    }
+
     applyDefinitionToDataIndexBuffer(data);
     applyDefinitionToDataVertexBuffer(data);
 
@@ -139,8 +244,8 @@ public class RenderableDefinition implements IRenderableDefinition{
     int indexStart = 0;
     materialBindings.clear();
     materialNames.clear();
-    for (int i = 0; i < submeshes.size(); i++) {
-      Submesh submesh = submeshes.get(i);
+    for (int i = 0; i < subGeometries.size(); i++) {
+      SubGeometry subGeometry = subGeometries.get(i);
 
       RenderableInternalData.MeshData meshData;
       if (i < data.getMeshes().size()) {
@@ -151,15 +256,15 @@ public class RenderableDefinition implements IRenderableDefinition{
       }
 
       meshData.indexStart = indexStart;
-      meshData.indexEnd = indexStart + submesh.getTriangleIndices().size();
+      meshData.indexEnd = indexStart + subGeometry.getTriangleIndices().size();
       indexStart = meshData.indexEnd;
-      materialBindings.add(submesh.getMaterial());
-      final String name = submesh.getName();
+      materialBindings.add(subGeometry.getMaterial());
+      final String name = subGeometry.getName();
       materialNames.add(name != null ? name : "");
     }
 
     // 移除旧数据
-    while (data.getMeshes().size() > submeshes.size()) {
+    while (data.getMeshes().size() > subGeometries.size()) {
       data.getMeshes().remove(data.getMeshes().size() - 1);
     }
   }
@@ -167,9 +272,9 @@ public class RenderableDefinition implements IRenderableDefinition{
   private void applyDefinitionToDataIndexBuffer(IRenderableInternalData data) {
     // 计算顶点索引
     int numIndices = 0;
-    for (int i = 0; i < submeshes.size(); i++) {
-      Submesh submesh = submeshes.get(i);
-      numIndices += submesh.getTriangleIndices().size();
+    for (int i = 0; i < subGeometries.size(); i++) {
+      SubGeometry subGeometry = subGeometries.get(i);
+      numIndices += subGeometry.getTriangleIndices().size();
     }
 
     // 创建原始IndexBuffer
@@ -182,9 +287,9 @@ public class RenderableDefinition implements IRenderableDefinition{
     }
 
     //填充索引数据
-    for (int i = 0; i < submeshes.size(); i++) {
-      Submesh submesh = submeshes.get(i);
-      List<Integer> triangleIndices = submesh.getTriangleIndices();
+    for (int i = 0; i < subGeometries.size(); i++) {
+      SubGeometry subGeometry = subGeometries.get(i);
+      List<Integer> triangleIndices = subGeometry.getTriangleIndices();
       for (int j = 0; j < triangleIndices.size(); j++) {
         rawIndexBuffer.put(triangleIndices.get(j));
       }
@@ -395,7 +500,8 @@ public class RenderableDefinition implements IRenderableDefinition{
 
   private RenderableDefinition(Builder builder) {
     vertices = Preconditions.checkNotNull(builder.vertices);
-    submeshes = Preconditions.checkNotNull(builder.submeshes);
+    subGeometries = Preconditions.checkNotNull(builder.subGeometries);
+    primitiveType = Preconditions.checkNotNull(builder.primitiveType);
   }
 
   public static Builder builder() {
@@ -518,15 +624,49 @@ public class RenderableDefinition implements IRenderableDefinition{
   /** Factory class for {@link RenderableDefinition}. */
   public static final class Builder {
     @Nullable private List<Vertex> vertices;
-    @Nullable private List<Submesh> submeshes = new ArrayList<>();
+    @Nullable private List<SubGeometry> subGeometries = new ArrayList<>();
+    private RenderableManager.PrimitiveType primitiveType =
+        RenderableManager.PrimitiveType.TRIANGLES;
 
     public Builder setVertices(List<Vertex> vertices) {
       this.vertices = vertices;
       return this;
     }
 
+    /**
+     * 设置待构建定义包含的全部子几何。
+     *
+     * @param subGeometries 子几何列表，不能为空
+     * @return 当前 Builder
+     */
+    public Builder setSubGeometries(List<SubGeometry> subGeometries) {
+      this.subGeometries = subGeometries;
+      return this;
+    }
+
+    /**
+     * 设置待构建定义包含的旧版子网格列表。
+     *
+     * @param submeshes 旧版子网格列表
+     * @return 当前 Builder
+     * @deprecated 请使用 {@link #setSubGeometries(List)}。
+     */
+    @Deprecated
+    @SuppressWarnings("unchecked")
     public Builder setSubmeshes(List<Submesh> submeshes) {
-      this.submeshes = submeshes;
+      //desc- 旧 Builder 生成的元素实际为 SubGeometry，保留列表引用以兼容调用方后续修改。
+      subGeometries = (List<SubGeometry>) (List<?>) submeshes;
+      return this;
+    }
+
+    /**
+     * 设置 Renderable 的初始图元类型，默认值为 {@link RenderableManager.PrimitiveType#TRIANGLES}。
+     *
+     * @param primitiveType Filament 图元类型
+     * @return 当前 Builder
+     */
+    public Builder setPrimitiveType(RenderableManager.PrimitiveType primitiveType) {
+      this.primitiveType = Preconditions.checkNotNull(primitiveType);
       return this;
     }
 

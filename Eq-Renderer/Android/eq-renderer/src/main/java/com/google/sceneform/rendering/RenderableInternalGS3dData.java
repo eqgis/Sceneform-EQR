@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.eqgis.eqr.core.GaussianSorter;
 import com.eqgis.eqr.core.PlyGS3dLoader;
@@ -96,12 +95,12 @@ public class RenderableInternalGS3dData extends RenderableInternalData implement
         ArrayList<Vertex> vertices = getVertices(vertexCount);
 
         //虽不是Mesh，但是复用Mesh数据结构{顶点索引、材质实例}
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder()
                         .setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         renderableDefinition = new RenderableDefinitionGS();
-        renderableDefinition.setSubmeshes(Collections.singletonList(submesh));
+        renderableDefinition.setSubGeometries(Collections.singletonList(subGeometry));
         renderableDefinition.setVertices(vertices);
         renderableDefinition.setGaussianSplat(asset);
 

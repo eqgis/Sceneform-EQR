@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -25,7 +24,6 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -211,12 +209,12 @@ public class RenderableInternalSplatData extends RenderableInternalData implemen
         ArrayList<Vertex> vertices = getVertices(vertexCount);
 
         //虽不是Mesh，但是复用Mesh数据结构{顶点索引、材质实例}
-        RenderableDefinition.Submesh submesh =
-                RenderableDefinition.Submesh.builder()
+        RenderableDefinition.SubGeometry subGeometry =
+                RenderableDefinition.SubGeometry.builder()
                         .setTriangleIndices(triangleIndices).setMaterial(material).build();
 
         renderableDefinition = new RenderableDefinitionSplat();
-        renderableDefinition.setSubmeshes(Collections.singletonList(submesh));
+        renderableDefinition.setSubGeometries(Collections.singletonList(subGeometry));
         renderableDefinition.setVertices(vertices);
         if (renderableDefinition instanceof RenderableDefinitionSplat){
             ((RenderableDefinitionSplat) renderableDefinition).setGaussianSplat(asset);
