@@ -1,0 +1,717 @@
+# Sceneform-EQR
+
+> Sceneform-EQR is an Android-native 3D/XR renderer extended from Google Sceneform and powered by Filament. This file is a source-oriented guide for LLMs and coding agents. It indexes the current EQR public APIs, the runnable sample code, and the tutorial implementation patterns in this repository.
+
+Treat Java/Kotlin/C++ source and Gradle files as authoritative when this file and generated Javadoc differ.
+
+## Canonical project facts
+
+- Current EQR source/publishing version: `1.2.1`.
+- Filament runtime: `1.75.0`.
+- Android configuration: min SDK 24, compile SDK 34, target SDK 34.
+- Build configuration: JDK 17, Gradle 8.5, Android Gradle Plugin 8.1.0, Java/JVM target 1.8.
+- Native build configuration: NDK `27.3.13750724`, CMake `3.22.1`.
+- Enabled ABI in the current library and sample: `arm64-v8a`.
+- Optional XR runtimes used by the sample: ARCore `1.45.0`, Huawei AREngine `4.0.0.5`.
+- The `main` branch is Apache-2.0 and does not contain eq-slam. ORB-SLAM3/eq-slam code belongs to the GPLv3 branch.
+- The main implementation language is Java. The renderer also contains Kotlin and C++/JNI code.
+
+## Primary documentation
+
+- [English README](README.md): project capabilities, setup, examples, lifecycle rules, and license.
+- [中文 README](README_CN.md): 中文项目介绍、接入方式、示例和生命周期约束。
+- [Generated Javadoc](doc/javadoc/index.html): generated Sceneform/EQR API reference; it can lag behind current source.
+- [Sample catalog](SampleProj/app/src/main/java/com/eqgis/test/SampleCatalog.java): authoritative list of common samples and tutorial lessons.
+- [Fragment factory](SampleProj/app/src/main/java/com/eqgis/test/fragments/SampleFragmentFactory.java): lesson id to Fragment mapping.
+- [Library Gradle configuration](Eq-Renderer/Android/eq-renderer/build.gradle): library version, ABI, Native build, and publication settings.
+- [Sample Gradle configuration](SampleProj/app/build.gradle): application dependencies and optional AR runtimes.
+
+## Repository map
+
+- `Eq-Renderer/Android/eq-renderer`: EQR Android library, Sceneform fork/extensions, Filament Java/native libraries, JNI loaders, materials, IBL, and skybox assets.
+- `SampleProj/app`: runnable application, common samples, structured tutorials, GLB/PLY/video assets, and UI resources.
+- `Tool`: Windows Filament tools (`matc`, `cmgen`, `gltf_viewer`, `resgen`), source `.mat` files, IBL source assets, and `genfilamat-mobile.bat`.
+- `doc/javadoc`: generated API documentation.
+- `doc/img`: README preview images.
+
+Keep library implementations in `Eq-Renderer`, demonstrations in `SampleProj`, and material source/build inputs in `Tool`.
+
+## Build and dependency setup
+
+Open `SampleProj` in Android Studio or build on Windows:
+
+```powershell
+cd SampleProj
+.\gradlew.bat assembleDebug
+```
+
+The sample includes the library as a local Gradle module:
+
+```groovy
+implementation project(path: ':eq-renderer')
+```
+
+The library source declares Maven coordinates `com.eqgis:eq-renderer:1.2.1`. The configured repository is:
+
+```groovy
+maven {
+    allowInsecureProtocol = true
+    url "http://repo.eqgis.cn"
+}
+```
+
+When using AR, the application must add its selected runtime because the library declares ARCore and AREngine as `compileOnly`:
+
+```groovy
+implementation "com.google.ar:core:1.45.0"
+// Or, when Huawei AREngine is required:
+implementation "com.huawei.hms:arenginesdk:4.0.0.5"
+```
+
+## Runtime architecture and lifecycle
+
+### Scene ownership
+
+- `SceneLayout` owns one `SceneView` and one `RootNode` tree.
+- `ARSceneLayout` extends `SceneLayout` and additionally owns an AR session, AR configuration, plane renderer, and plane-tap helper.
+- A `Node` references a `RenderableInstance`; the renderable/material may share Filament resources with other nodes or scenes.
+- Scene-local resources must be detached before the scene is destroyed. Engine-wide shared resources are reclaimed only after the final active `SceneView` exits.
+- Do not call `Renderer.destroyAllResources()` or `SceneView.destroyAllResources()` from an individual Fragment or tab switch.
+
+### Required host lifecycle
+
+```java
+private SceneLayout sceneLayout;
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.your_scene);
+    sceneLayout = findViewById(R.id.scene_layout);
+    sceneLayout.init(this);
+    sceneLayout.addIndirectLight("enviroments/light/lightroom_ibl.ktx", 50);
+}
+
+@Override
+protected void onResume() {
+    super.onResume();
+    sceneLayout.resume();
+}
+
+@Override
+protected void onPause() {
+    sceneLayout.pause();
+    super.onPause();
+}
+
+@Override
+protected void onDestroy() {
+    sceneLayout.destroy();
+    super.onDestroy();
+}
+```
+
+Fragment tutorials implement the same order in [BaseSampleFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/BaseSampleFragment.java): pause the scene, remove the layout from its parent, let the lesson detach its resources, destroy the sample scene, then call `SceneLayout.destroy()`.
+
+### Safe async pattern
+
+Every asynchronous model/material callback must verify that its host and request are still current before attaching a resource:
+
+```java
+final int generation = requestGeneration;
+ModelRenderable.builder()
+        .setSource(requireContext(), Uri.parse("gltf/Fox.glb"), true)
+        .setIsFilamentGltf(true)
+        .build()
+        .thenAccept(renderable -> {
+            if (!isSceneActive() || generation != requestGeneration) {
+                return;
+            }
+            Node node = new Node();
+            node.setRenderable(renderable);
+            node.setParent(sceneLayout.getRootNode());
+        });
+```
+
+On destruction, invalidate the request generation and cancel/remove delayed tasks where possible. Never attach a late result to a destroyed Fragment scene.
+
+## Core EQR API index
+
+### Core status
+
+Source: [Eqr.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/core/Eqr.java)
+
+- `Eqr.getCoreVersion()` returns the EQR native core version.
+- `Eqr.getFilamentVersion()` returns the native Filament version.
+- `Eqr.getCoreStatus()` validates the native core.
+- Loading `Eqr` loads native library `eqr-core`.
+
+### SceneLayout
+
+Source: [SceneLayout.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/layout/SceneLayout.java)
+
+Important methods:
+
+- `SceneLayout init(Context context)` creates the selected SceneView and RootNode.
+- `SceneLayout setSceneViewType(SceneViewType type)` must be called before `init` for non-default views.
+- `SceneView getSceneView()`, `Camera getCamera()`, `RootNode getRootNode()` expose the scene primitives.
+- `void resume()`, `void pause()`, `void destroy()` forward and release lifecycle state.
+- `void removeNode(Node node)` recursively detaches a scene-owned subtree but preserves `RootNode` itself.
+- `void addDefaultIndirectLight()` loads the bundled default IBL.
+- `void addIndirectLight(String assetsFilePath, int intensity)` loads a KTX IBL from assets.
+- `void setIndirectLight(IndirectLight light)`, `IndirectLight getIndirectLight()` manage IBL.
+- `void setSkybox(String assetsPath)`, `void setSkybox(Skybox skybox)`, `Skybox getSkybox()` manage the skybox.
+- `void setTransparent(boolean transparent)` controls background transparency.
+- `Quaternion getLookRotation(Vector3 position)` computes a camera-facing orientation.
+- `void addSceneUpdateListener(Scene.OnUpdateListener listener)` and `removeSceneUpdateListener(...)` manage per-frame work.
+- `void captureScreen(String folderPath, boolean crop, CompleteCallback callback)` captures with PixelCopy.
+
+`SceneViewType` values:
+
+- `BASE`: normal `SceneView`.
+- `EXTENSION`: `ExSceneView`, used for a custom/video background.
+- `CAMERA`: `CameraSceneView`, used for Camera2 background rendering.
+- `VR`: `VrSceneView`, used for sensor-driven 3DoF VR.
+
+### ARSceneLayout
+
+Source: [ARSceneLayout.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/layout/ARSceneLayout.java)
+
+- Extends `SceneLayout` and creates `ArSceneView`.
+- `setOnSessionInitializationListener(...)` observes successful session creation.
+- `setOnTapPlaneListener(OnTapArPlaneListener)` receives detected plane taps.
+- `getSession()`, `getArConfig()`, `getArFrame()` expose AR state.
+- `setPlaneRendererEnabled(boolean)`, `isPlaneRendererEnabled()` control plane visualization.
+- `getTrackingState()` returns the current AR camera tracking state.
+- `resume()` checks camera permission and AR service availability, creates/configures the AR session, and resumes the AR camera.
+- `pause()` pauses the session; `destroy()` closes the session and destroys plane helpers before the base scene.
+- The current implementation requires an `Activity` context during session creation.
+- The app must request `android.permission.CAMERA` and handle unsupported/missing AR services.
+
+### MirrorSceneLayout
+
+Source: [MirrorSceneLayout.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/layout/MirrorSceneLayout.java)
+
+- Provides left/right `FrameLayout` containers for mirrored or stereoscopic display.
+- Lifecycle methods are `onResume()`, `onPause()`, and `onDestroy()`.
+- `make3DEffect(float offsetPixel)` applies the left/right view offset.
+- `getLeftLayout()`, `getRightLayout()`, and `getViewOffset()` expose display state.
+
+## Geometry and renderable APIs
+
+### GeometryUtils
+
+Source: [GeometryUtils.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/geometry/GeometryUtils.java)
+
+Procedural shapes:
+
+- `makeCylinder(float radius, float height, Vector3 center, Material material)`.
+- `makeCube(Vector3 size, Vector3 center, Material material)`.
+- `makeSphere(float radius, Vector3 center, Material material)`.
+- `makeInnerSphere(float radius, Vector3 center, Material material)` creates inward-facing geometry for panoramas.
+- `makePlane(Vector3 size, Vector3 center, Material material)` creates an XZ plane with upward normal.
+- `makeQuad(Vector3 size, Vector3 center, Material material)` creates a vertical XY quad. `size.x` is width, `size.y` is height, `size.z` is ignored, normal is `Vector3.back()`/positive Z, and UV is not flipped.
+
+Primitive builders accept only spatial `Vector3` positions plus a compatible material:
+
+- `makePoints(List<Vector3>, Material)` uses `POINTS`; at least one position.
+- `makeLines(List<Vector3>, Material)` consumes independent point pairs; position count must be even.
+- `makeLineStrip(List<Vector3>, Material)` connects consecutive points.
+- `makeTriangles(List<Vector3>, Material)` consumes independent triples; count must be a multiple of three.
+- `makeTriangleStrip(List<Vector3>, Material)` consumes at least three positions.
+
+The line helpers expand each line segment into triangles and populate `CUSTOM0` vertex data for screen-space width. Do not use a generic colored material for `makeLines`/`makeLineStrip`; create the material with `MaterialFactory.makeLinesWithColor`.
+
+### Primitive material example
+
+```java
+List<Vector3> positions = Arrays.asList(
+        new Vector3(-1.0f, 0.0f, -3.0f),
+        new Vector3(0.0f, 1.0f, -3.0f),
+        new Vector3(1.0f, 0.0f, -3.0f));
+
+MaterialFactory.makeLinesWithColor(context, new Color(0.0f, 0.48f, 1.0f), 8.0f)
+        .thenAccept(material -> {
+            ModelRenderable renderable = GeometryUtils.makeLineStrip(positions, material);
+            Node node = new Node();
+            node.setRenderable(renderable);
+            node.setParent(sceneLayout.getRootNode());
+        });
+```
+
+Runtime material parameters:
+
+- Point size: `material.setFloat(MaterialFactory.VERTEX_POINT_SIZE, pixels)`.
+- Wide-line width: `material.setFloat(MaterialFactory.LINE_WIDTH, pixels)`.
+- PBR color: `MaterialFactory.MATERIAL_COLOR`.
+- PBR parameters: `MATERIAL_METALLIC`, `MATERIAL_ROUGHNESS`, `MATERIAL_REFLECTANCE`.
+
+### RenderableDefinition and SubGeometry
+
+Source: [RenderableDefinition.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/google/sceneform/rendering/RenderableDefinition.java)
+
+```java
+RenderableDefinition.SubGeometry subGeometry =
+        RenderableDefinition.SubGeometry.builder()
+                .setTriangleIndices(indices)
+                .setMaterial(material)
+                .build();
+
+RenderableDefinition definition = RenderableDefinition.builder()
+        .setVertices(vertices)
+        .setSubGeometries(Collections.singletonList(subGeometry))
+        .setPrimitiveType(RenderableManager.PrimitiveType.TRIANGLES)
+        .build();
+```
+
+- Prefer `SubGeometry`, `setSubGeometries`, and `getSubGeometries`.
+- `Submesh`, `setSubmeshes`, and `getSubmeshes` remain only as deprecated compatibility APIs.
+- `RenderableInstance.changePrimitive(PrimitiveType)` changes the active primitive topology.
+- `ModelRenderable.updateFromDefinition(RenderableDefinition)` updates a dynamic renderable.
+- `ShapeFactory` is deprecated; use `GeometryUtils`.
+
+### Dynamic Mesh and Line3D
+
+Sources:
+
+- [MeshUtils.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/utils/MeshUtils.java)
+- [Line3D.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/geometry/Line3D.java)
+- [Line3DPipePointMode.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/geometry/Line3DPipePointMode.java)
+
+`MeshUtils.makeRenderableByCustomMesh(material, vertices, triangleIndices)` creates a custom Mesh. For repeated updates, reuse the Node, Material, and `RenderableDefinition`; update vertices and call `ModelRenderable.updateFromDefinition` rather than rebuilding every frame.
+
+`Line3D` is a Node that expands a path into a pipe Mesh:
+
+- `setMaterial(Material)`, `setRadius(float)`, `setEdgeNum(int)`, `setTextureMode(int)` configure the pipe.
+- `setPipePointMode(Line3DPipePointMode)` accepts `ORIGINAL` or `SIN_RESAMPLE`.
+- `addPoint(...)` or `setPointList(ArrayList<Vector3>)` changes the path.
+- `refresh()` builds or updates the Mesh.
+- `dispose()` releases the owned renderable and internal state; call it before dropping the final reference.
+
+## Model and data loading
+
+### GLTF/GLB
+
+Reference: [GltfSampleScene.java](SampleProj/app/src/main/java/com/eqgis/test/scene/GltfSampleScene.java)
+
+```java
+ModelRenderable.builder()
+        .setSource(context, Uri.parse("gltf/Fox.glb"))
+        .setIsFilamentGltf(true)
+        .build()
+        .thenAccept(renderable -> {
+            if (!isSceneActive()) {
+                return;
+            }
+            Node node = new Node();
+            node.setRenderable(renderable);
+            node.setLocalScale(Vector3.one().scaled(ScaleTool.calculateUnitsScale(renderable)));
+            node.setParent(sceneLayout.getRootNode());
+        });
+```
+
+- GLTF 2.0 `.gltf`/`.glb` is loaded through Filament `gltfio`.
+- `ScaleTool.calculateUnitsScale(renderable)` normalizes a model to unit scale.
+- Builder overload `setSource(context, uri, cache)` controls registry caching.
+- `setAsyncLoadEnabled(boolean)` selects asynchronous or synchronous resource loading.
+- Stop model animation and clear `Node.setRenderable(null)` before detaching a GLTF node.
+- GLTF materials/resource loaders are shared; never globally destroy them during a Fragment switch.
+
+### PLY and 3D Gaussian Splatting
+
+Reference: [PlyDataScene.java](SampleProj/app/src/main/java/com/eqgis/test/scene/PlyDataScene.java)
+
+```java
+ModelRenderable.builder()
+        .setSource(context, Uri.parse("ply/sofa.ply"))
+        .setDataFormat(Renderable.RenderableDataFormat.PLY)
+        .build()
+        .thenAccept(renderable -> {
+            Node node = new Node();
+            node.setRenderable(renderable);
+            node.setParent(sceneLayout.getRootNode());
+        });
+```
+
+- `PlyLoader.createAssets(byte[])` loads conventional PLY data; `destroyPlyAsset()` releases its native asset.
+- `PlyGS3dLoader.createAssets(byte[])` loads 3D Gaussian Splatting PLY data; `destroyPlyAsset()` releases its native asset.
+- `JPlyAsset` and `JPlyGS3dAsset` contain loader output consumed by renderable internals.
+- `GaussianSorter`/`SorterNative` sort splats for view-dependent alpha rendering.
+
+## Material, light, skybox, and camera APIs
+
+### MaterialFactory
+
+Source: [MaterialFactory.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/google/sceneform/rendering/MaterialFactory.java)
+
+- `makeOpaqueWithColor(Context, Color)` and `makeTransparentWithColor(Context, Color)` create standard PBR color materials.
+- `makeOpaqueWithTexture(...)` and `makeTransparentWithTexture(...)` create texture materials.
+- `makePointsWithColor(Context, Color, float pointSize)` creates the point primitive material.
+- `makeLinesWithColor(Context, Color, float lineWidth)` creates the screen-space wide-line material.
+- Use `Material.builder().setSource(context, R.raw.some_filamat).build()` for a custom compiled Filament material.
+- Use `material.makeCopy()` when separate renderable instances need independently bound parameters or external textures.
+
+### Lighting and camera
+
+- Build lights with `Light.builder(Light.Type.DIRECTIONAL|POINT|SPOTLIGHT)` and attach them using `Node.setLight`.
+- Shadow source: `Light.Builder.setShadowCastingEnabled(true)`.
+- Renderable controls: `setShadowCaster(boolean)` and `setShadowReceiver(boolean)`.
+- Camera projection: `setVerticalFovDegrees(float)`, `setNearClipPlane(float)`, `setFarClipPlane(float)`.
+- IBL: `SceneLayout.addIndirectLight(...)` or `setIndirectLight(...)`.
+- Skybox: `SceneLayout.setSkybox("enviroments/pillars_2k_skybox.ktx")`.
+
+## Android View rendering in 3D
+
+Reference: [BaseAndroidViewLessonFragment.java](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/BaseAndroidViewLessonFragment.java)
+
+```java
+ViewRenderable.builder()
+        .setView(context, androidView) // Or setView(context, R.layout.some_layout)
+        .setVerticalAlignment(ViewRenderable.VerticalAlignment.BOTTOM)
+        .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
+        .build()
+        .thenAccept(viewRenderable -> {
+            if (!isSceneActive()) {
+                return;
+            }
+            Node node = new Node();
+            node.setRenderable(viewRenderable);
+            node.setWorldScale(Vector3.one().scaled(0.25f));
+            node.setWorldPosition(position);
+            node.setWorldRotation(rotation);
+            node.setParent(sceneLayout.getRootNode());
+        });
+```
+
+- Sceneform's default ViewRenderable scale is approximately 250 dp per world meter.
+- A `ScrollView` must have a constrained rendered height; otherwise Android measures and displays all child content instead of scrolling.
+- ViewRenderable touch dispatch coexists with camera gestures because `CameraGestureController` does not consume touch events and blocks single-finger rotation when a ViewRenderable is hit.
+- Before scene destruction, set ViewRenderable nodes' renderables to null, detach nodes, and release WebView-specific resources/listeners.
+
+## Gesture and interaction APIs
+
+### CameraGestureController
+
+Source: [CameraGestureController.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/gesture/CameraGestureController.java)
+
+```java
+CameraGestureController controller =
+        new CameraGestureController(sceneLayout.getCamera())
+                .setRotationSensitivity(0.16f)
+                .setTranslationSensitivity(0.003f)
+                .setZoomSensitivity(0.006f)
+                .setPitchLimit(85.0f)
+                .attachTo(sceneLayout.getSceneView());
+```
+
+- One finger rotates the camera.
+- Two-finger focus movement translates the camera in its view plane.
+- Pinch span changes move the camera forward/back along its view direction.
+- `setEnabled`, `isEnabled`, `resetCamera`, and `detach` manage state.
+- Always call `detach()` before the touch view is destroyed.
+- The listener returns false so scene nodes and Android View controls can still receive touches.
+
+### NodeGestureController
+
+Source: [NodeGestureController.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/gesture/NodeGestureController.java)
+
+```java
+NodeGestureController gestures = NodeGestureController.getInstance()
+        .setCamera(sceneLayout.getCamera())
+        .init(context)
+        .setEnabled(true);
+
+float centerDistance = Vector3.subtract(
+        node.getWorldPosition(), sceneLayout.getCamera().getWorldPosition()).length();
+gestures.select(node, centerDistance);
+sceneLayout.getSceneView().getScene()
+        .addOnPeekTouchListener((hit, event) -> gestures.onTouch(event));
+```
+
+- Select one node with `select(Node, distance)`; call `unSelect()` on cleanup.
+- The distance must be camera-to-node-center distance, not the hit surface distance, otherwise translation can jump toward the camera.
+- `setFling(boolean)` toggles inertial rotation; `resetNode()` restores the selected node.
+- Do not simultaneously enable default camera gestures on a node-gesture lesson. `NodeGestureLessonFragment` overrides the default camera-gesture binding.
+
+### Tap, ray, and collision interaction
+
+```java
+node.setOnTapListener((hitTestResult, motionEvent) -> {
+    Vector3 hitPoint = hitTestResult.getPoint();
+    float distance = hitTestResult.getDistance();
+});
+```
+
+- `Node.setOnTapListener` is the preferred per-node selection callback.
+- `Scene.hitTest(MotionEvent)`/`Scene.hitTest(Ray)` return the nearest `HitTestResult` based on Renderable collision shapes.
+- `Scene.addOnPeekTouchListener` observes scene touches before normal dispatch; always remove it on destruction.
+- `ViewRenderable`/ViewNode picking maps a scene ray to Android View coordinates, allowing `Button`, `Switch`, `CheckBox`, and scroll gestures to work.
+
+## Animation APIs
+
+Sources: `Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/animation`.
+
+Shared lifecycle on `ARAnimation`: `play()`, `pause()`, `resume()`, `stop()`, `getObjectAnimator()`, and `setARAnimatorListener(...)`.
+
+`ARAnimationParameter` supports:
+
+- Duration, repeat count, repeat mode, and start delay.
+- Rotation axis and clockwise direction.
+- Start/end `Vector3` for translation.
+- Start/end `Location` where geographic values are required.
+- Bézier/path waypoints through `addWayPoint`, `getWayPoints`, and `clearWayPoints`.
+
+Repeat constants: `ARAnimationRepeatMode.INFINITE`, `RESTART`, and `REVERSE`.
+
+Animation types:
+
+- `ARAnimationModel(Node)`: plays embedded GLTF clips; select with `setCurrentIndex(int)` and query original clip duration with `getSourceDurationMillis()`.
+- `ARAnimationRotation(Node)`: animates local quaternion rotation; configure start/rotation angle and axis.
+- `ARAnimationTranslation(Node)`: interpolates local position between start and end vectors.
+- `ARAnimationPath(Node)`: moves local position through Bézier waypoints.
+
+Model animation pattern used by the tutorial:
+
+```java
+ARAnimationParameter parameter = new ARAnimationParameter();
+parameter.setDuration(6000L);
+parameter.setRepeatCount(ObjectAnimator.INFINITE);
+parameter.setRepeatMode(ARAnimationRepeatMode.RESTART);
+
+ARAnimationModel animation = new ARAnimationModel(modelNode);
+animation.setCurrentIndex(animationIndex);
+animation.createAnimation(parameter);
+
+long sourceDuration = animation.getSourceDurationMillis();
+animation.getObjectAnimator().setDuration(
+        useSourceDuration && sourceDuration > 0 ? sourceDuration : customDuration);
+animation.play();
+```
+
+Create a fresh `ARAnimationModel`/ObjectAnimator when switching a GLTF animation index. Stop and untrack all animators before clearing the model renderable.
+
+## Video, camera, and ExternalTexture
+
+Primary references:
+
+- [BaseVideoLessonFragment.java](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/BaseVideoLessonFragment.java)
+- [VideoBackgroundLessonFragment.java](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/VideoBackgroundLessonFragment.java)
+- [VideoTextureLessonFragment.java](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/VideoTextureLessonFragment.java)
+- [PanoramaVideoLessonFragment.java](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/PanoramaVideoLessonFragment.java)
+- [CameraStreamLessonFragment.java](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CameraStreamLessonFragment.java)
+
+Video texture sequence:
+
+1. Create and retain `ExternalTexture` before starting asynchronous material loading.
+2. Bind `MediaPlayer` output to `new Surface(externalTexture.getSurfaceTexture())`.
+3. Wait until the player is prepared and material loading has completed.
+4. Bind `material.setExternalTexture("videoTexture", texture)` only when the material is about to be attached to a live renderable.
+5. Use a separate material instance/copy for each independently attached Cube, Quad, or inner sphere.
+6. On pause, pause playback.
+7. On destruction, unbind UI/listeners, call `player.setSurface(null)`, release the player, clear renderables and parents from all video nodes, then drop the ExternalTexture reference.
+
+Never release or invalidate an ExternalTexture while it is still bound to a MaterialInstance used by a Renderable. Filament aborts with `Invalid texture still bound to MaterialInstance` when this order is violated.
+
+Geometry choices:
+
+- `GeometryUtils.makeQuad` for a correctly oriented vertical 2D video surface.
+- `GeometryUtils.makeCube` for video on a 3D object.
+- `GeometryUtils.makeInnerSphere` for 360° video viewed from inside the sphere.
+- `SceneViewType.EXTENSION` for 2D scene backgrounds.
+- `SceneViewType.CAMERA` for Camera2 live background rendering.
+- `SceneViewType.VR` for sensor-driven 3DoF VR.
+
+Bundled video material: `com.eqgis.eqr.R.raw.external_chroma_key_video_material`. Expected parameters include `videoTexture` and `keyColor`.
+
+## Screen coordinates, rays, measurement, and capture
+
+### ScreenPointTool
+
+Source: [ScreenPointTool.java](Eq-Renderer/Android/eq-renderer/src/main/java/com/eqgis/eqr/utils/ScreenPointTool.java)
+
+- `convertToPixel(Camera, List<Vector3>)` converts world points to screen pixels.
+- `convertToScreenPoint(Context, Camera, Vector3)` returns one screen point.
+- `generateBounds(...)` produces screen bounds from 3D vertices.
+- `screenPointToRay(Context, Camera, int x, int y)` creates a camera ray.
+- Screen density and size helpers expose dp, dpi, and pixel dimensions.
+- `Camera.worldToScreenPoint(Vector3)` performs reverse projection.
+
+Measurement chain used by the tutorial:
+
+```text
+screen pixel (x, y)
+  -> ScreenPointTool.screenPointToRay
+  -> Scene.hitTest / HitTestResult.getPoint
+  -> world-space point
+  -> Vector3 distance or Line3D visualization
+  -> Camera.worldToScreenPoint for reverse projection
+```
+
+### Scene capture
+
+`SceneLayout.captureScreen(outputDirectory, crop, CompleteCallback)` uses PixelCopy. The tutorial writes JPEG to app cache and shares it through FileProvider, so broad external-storage permission is unnecessary.
+
+## Secondary EQR APIs
+
+- `CoordinateUtils` and Native coordinate helpers: coordinate system conversion.
+- `PoseUtils`: pose/Euler/quaternion helpers.
+- `PolygonUtils`: polygon calculations.
+- `Bounds`: ViewRenderable/spatial bounds utilities.
+- `BitmapUtils`: bitmap conversion and processing helpers.
+- `PresetUtils`: preset rendering helpers; inspect deprecations before new use.
+- `SerializeUtils`, `XmlNode`, `XmlNodeParser`: serialization/XML utilities.
+- `ImageScanner`, `ImageDB`, `ARImageTrackListener`: AR image database scanning/tracking.
+- `ARCoreApkInstaller`: ARCore service installation/readiness helper.
+- `Location`: three-component longitude/latitude/height value object used by animation parameters.
+- `ResourceConfig`: shared renderer resource configuration, currently including `planeTextureId`.
+
+## Tutorial source index
+
+The developer tutorial has 8 topics and 44 lesson Fragments. Each lesson has its own Fragment. Tab navigation replaces/destroys the previous Fragment instead of only hiding it.
+
+### 1. 基础几何与 Mesh / Basic Geometry and Mesh
+
+- [PrimitiveLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/PrimitiveLessonFragment.java): POINTS, LINES, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, point size, and screen-space line width.
+- [TriangleLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/TriangleLessonFragment.java): minimal Vertex/index/SubGeometry/RenderableDefinition pipeline.
+- [PlaneLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/PlaneLessonFragment.java): plane geometry, material, and node attachment.
+- [CubeLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CubeLessonFragment.java): `GeometryUtils.makeCube`.
+- [GltfLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/GltfLessonFragment.java): GLTF/GLB loading through `GltfSampleScene`.
+- [PlyLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/PlyLessonFragment.java): PLY point cloud/Mesh loading through `PlyDataScene`.
+
+### 2. Android View 渲染到 3D / Android View Rendering in 3D
+
+- [AndroidTextViewLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AndroidTextViewLessonFragment.java): multiple TextView labels in world space.
+- [AndroidImageViewLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AndroidImageViewLessonFragment.java): Drawable/ImageView rendering.
+- [AndroidWebViewLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AndroidWebViewLessonFragment.java): local HTML WebView cards and WebView cleanup.
+- [AndroidWidgetLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AndroidWidgetLessonFragment.java): Button, Switch, CheckBox, and ProgressBar.
+- [AndroidLayoutLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AndroidLayoutLessonFragment.java): full XML Layout and constrained ScrollView in 3D.
+
+### 3. 材质、光照与相机 / Materials, Lighting, and Camera
+
+- [MaterialPropertiesLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/MaterialPropertiesLessonFragment.java): color, alpha, metallic, roughness, and reflectance.
+- [LightTypesLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/LightTypesLessonFragment.java): directional, point, and spotlight setup.
+- [IblLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/IblLessonFragment.java): indirect-light intensity and PBR reflections.
+- [SkyboxLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/SkyboxLessonFragment.java): KTX skybox plus matching IBL.
+- [CameraFovLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CameraFovLessonFragment.java): vertical FOV changes.
+- [CameraClipLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CameraClipLessonFragment.java): independent near/far clip SeekBars.
+- [ShadowLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ShadowLessonFragment.java): shadow-casting light, caster, and receiver.
+
+### 4. 动画篇 / Animation
+
+- [AnimationOverviewLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AnimationOverviewLessonFragment.java): GLTF, rotation, translation, and path animation in one scene.
+- [ModelAnimationLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ModelAnimationLessonFragment.java): GLTF animation index switching and source/custom duration modes.
+- [RotationAnimationLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/RotationAnimationLessonFragment.java): axis, angle, direction, and duration.
+- [TranslationAnimationLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/TranslationAnimationLessonFragment.java): start/end Vector3 interpolation and reverse mode.
+- [PathAnimationLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/PathAnimationLessonFragment.java): Bézier waypoints and path animation.
+
+### 5. 交互篇 / Interaction
+
+- [CameraGestureLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CameraGestureLessonFragment.java): camera rotate, pan, and pinch forward/back with skybox.
+- [NodeGestureLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/NodeGestureLessonFragment.java): selected-node gesture ownership with camera gestures disabled.
+- [CollisionClickLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CollisionClickLessonFragment.java): tap hit world point and distance.
+- [ViewPickingLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ViewPickingLessonFragment.java): ray-picked Android View controls and scrollable layout.
+- [NodePickingLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/NodePickingLessonFragment.java): multiple Cube nodes, ray hit-test, and material color change.
+
+### 6. 视频、相机与外部纹理 / Video, Camera, and External Textures
+
+- [VideoBackgroundLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/VideoBackgroundLessonFragment.java): 2D video background and playback timeline.
+- [VideoTextureLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/VideoTextureLessonFragment.java): one video stream mapped to Cube and Quad using separate MaterialInstances.
+- [PanoramaVideoLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/PanoramaVideoLessonFragment.java): 360° video on an inner sphere.
+- [CameraStreamLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CameraStreamLessonFragment.java): Camera2 live background plus 3D decorations.
+
+### 7. XR 篇 / XR
+
+- [ArEngineLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ArEngineLessonFragment.java): ARCore/AREngine support detection, 6DoF AR, and Camera2 3DoF fallback.
+- [ArPlaneDetectionLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ArPlaneDetectionLessonFragment.java): detected horizontal plane tap, anchor creation, and model placement; no 3DoF fallback.
+- [ArThreeDofLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ArThreeDofLessonFragment.java): Camera2 background and orientation-sensor rotation tracking.
+- [VrThreeDofLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/VrThreeDofLessonFragment.java): VrSceneView, orientation sensor, and skybox.
+- [OrbSlam3LessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/OrbSlam3LessonFragment.java): documentation-only GPL boundary and GPL branch integration links.
+
+### 8. 进阶专题 / Advanced Topics
+
+- [ResourceLifecycleLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ResourceLifecycleLessonFragment.java): Node, Renderable, SceneLayout, and global Filament cleanup order.
+- [AsyncResourceCacheLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/AsyncResourceCacheLessonFragment.java): async/sync GLB loading, registry cache, and late callback invalidation.
+- [RenderPerformanceLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/RenderPerformanceLessonFragment.java): FPS, object count, Java heap, shadows, debug mode, and instance multipliers.
+- [CustomFilamentMaterialLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/CustomFilamentMaterialLessonFragment.java): load `.filamat` and edit color/metallic/roughness/reflectance.
+- [DynamicMeshLineLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/DynamicMeshLineLessonFragment.java): animated custom vertices/indices, `updateFromDefinition`, and `Line3D.refresh/dispose`.
+- [SceneCaptureExportLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/SceneCaptureExportLessonFragment.java): PixelCopy capture, app cache, JPEG, and FileProvider sharing.
+- [ScreenRayMeasureLessonFragment](SampleProj/app/src/main/java/com/eqgis/test/fragments/tutorial/ScreenRayMeasureLessonFragment.java): screen ray, collision world point, reverse projection, Line3D, and two-point distance.
+
+## Common sample source index
+
+- [BaseSceneActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/BaseSceneActivity.java): normal 3D scene, GLTF, IBL, camera, and node gestures.
+- [PlyDataSceneActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/PlyDataSceneActivity.java): PLY and 3DGS data rendering.
+- [InteractiveActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/InteractiveActivity.java): node taps, ViewRenderable labels, and touch interaction.
+- [VideoActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/VideoActivity.java): ExternalTexture video background.
+- [ARSceneActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/ARSceneActivity.java): AR 3D scene.
+- [ARScenePlaneActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/ARScenePlaneActivity.java): plane detection, anchors, and GLTF placement.
+- [CameraActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/CameraActivity.java): Camera2 scene background and capture-related behavior.
+- [VRSceneActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/VRSceneActivity.java): virtual scene and device orientation.
+- [VRScene360Activity](SampleProj/app/src/main/java/com/eqgis/test/samples/VRScene360Activity.java): 360° video and ExternalTexture.
+- [EarthActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/EarthActivity.java): textured sphere and camera interaction.
+- [CoordinateConvertActivity](SampleProj/app/src/main/java/com/eqgis/test/samples/CoordinateConvertActivity.java): screen/world/model coordinate conversion.
+
+## Assets and material tooling
+
+Library assets:
+
+- `Eq-Renderer/Android/eq-renderer/src/main/assets/enviroments/light/lightroom_ibl.ktx`.
+- `Eq-Renderer/Android/eq-renderer/src/main/assets/enviroments/pillars_2k_skybox.ktx`.
+- Compiled renderer materials are in `Eq-Renderer/Android/eq-renderer/src/main/res/raw`.
+
+Important compiled materials:
+
+- `sceneform_primitive_point.filamat`.
+- `sceneform_primitive_line.filamat`.
+- `external_chroma_key_video_material.filamat`.
+- `camera_stream_base.filamat` and `camera_stream_depth.filamat`.
+- `sceneform_ply_base_material.filamat`.
+- `sceneform_gaussian_splat.filamat`, `sceneform_gaussian_splat_alpha.filamat`, and `sceneform_gaussian_dot.filamat`.
+- Standard opaque, transparent, textured, plane, shadow, and ViewRenderable materials.
+
+Material sources live in `Tool/assets/mat`. After changing a `.mat`, use `Tool/genfilamat-mobile.bat`/`matc.exe` and update the matching library `res/raw` output. Point materials use `gl_PointSize`; wide lines are implemented by geometry expansion and a `CUSTOM0` vertex attribute rather than `GLES30.glLineWidth`.
+
+Sample assets:
+
+- GLB: `bee.glb`, `Fox.glb`, `DamagedHelmet.glb`, `cube.glb`, `csys.glb`, `table.glb`.
+- PLY: `sofa.ply`, `test_sh_0.ply`.
+- Video: `assets/video/eq_test_video.mp4` and `res/raw/vr_video_city.mp4`.
+
+Large assets affect APK size and memory. Prefer streaming/asynchronous loading, reuse registry-cached renderables when appropriate, and keep temporary/export files in app cache.
+
+## API migration and correctness rules
+
+- Prefer `GeometryUtils`; `com.google.sceneform.rendering.ShapeFactory` is deprecated.
+- Prefer `RenderableDefinition.SubGeometry`; `Submesh` and `set/getSubmeshes` are deprecated compatibility APIs.
+- `Line3D.setPipePointMode` uses `Line3DPipePointMode`, not an integer.
+- Use `MaterialFactory.makePointsWithColor` for points and `makeLinesWithColor` for line helpers.
+- `makeQuad` is vertical and positive-Z-facing; `makePlane` is horizontal and upward-facing.
+- Use `makeInnerSphere`, not a normal sphere, for inside-view panorama rendering.
+- A GLTF animation index is valid only when `node.getRenderableInstance()` exists and `getAnimationCount() > index`.
+- Animation availability depends on the model. A model can report clips whose source data behaves incorrectly; verify with a known-good GLB such as `Fox.glb`.
+- When changing model animation index, create a new `ARAnimationModel`/ObjectAnimator and reset progress.
+- Use `getSourceDurationMillis()` only after the model animation has been created for a valid index; duration mode selection remains application logic.
+- Disable default camera gestures on pages that give the same gesture stream to `NodeGestureController`.
+- For node translation, calculate depth from camera to node center, not from camera to hit surface.
+- Remove all scene update, peek-touch, sensor, camera, media, and animation listeners before destroying their host.
+- Release scene-owned renderables by clearing Node references first. Do not directly destroy a shared MaterialInstance that is still referenced by another Renderable.
+- ExternalTexture teardown order is mandatory: detach listeners/timeline, detach player Surface, release player, clear renderables/nodes, then release/drop texture state.
+- AR pages must distinguish unsupported hardware, missing AR service, denied camera permission, and session/camera failure. Only pages that do not require plane tracking can fall back to Camera2 3DoF.
+- Main branch documentation may link to ORB-SLAM3, but GPL eq-slam code must not be copied into the Apache-2.0 main branch.
+
+## Guidance for coding agents
+
+- For a normal 3D feature, start from `BaseTutorialFragment` or `BaseSceneActivity` and use `SceneLayout`.
+- For tutorial lifecycle behavior, start from `BaseSampleFragment`; do not invent a parallel cleanup order.
+- For GLTF, start from `GltfSampleScene` and add late-callback guards.
+- For PLY/3DGS, start from `PlyDataScene` and inspect the corresponding native loader before changing data layout.
+- For Android UI in 3D, start from `BaseAndroidViewLessonFragment`.
+- For material/light/camera controls, start from `BaseMaterialCameraLessonFragment` and its seven lessons.
+- For animation, start from `BaseAnimationLessonFragment` and create fresh animators when parameters/indexes change.
+- For node/camera gestures, use the existing controllers and explicitly choose which controller owns the touch stream.
+- For video/external texture, start from `BaseVideoLessonFragment`; cleanup order is safety-critical.
+- For AR/XR, start from `BaseXrSceneLessonFragment` and `XrCapabilityStatus`; capability messaging and fallback rules are already centralized.
+- For dynamic resources/performance/capture/rays, start from `BaseAdvancedLessonFragment` and the relevant advanced lesson.
+- Before modifying Sceneform/Filament internals, trace creation, scene attachment, pause/resume, node detachment, renderable/material disposal, SceneView destruction, and final Engine cleanup.
+- Prefer minimal, Java-8-compatible changes. Keep public API changes backward-compatible when possible and mark old APIs deprecated with their replacement.
+
