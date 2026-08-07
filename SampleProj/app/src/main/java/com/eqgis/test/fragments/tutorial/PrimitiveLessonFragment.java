@@ -46,6 +46,8 @@ import java.util.List;
 public class PrimitiveLessonFragment extends BaseTutorialFragment {
     private static final String TAG = PrimitiveLessonFragment.class.getSimpleName();
     private static final float DEFAULT_POINT_SIZE = 18.0f;
+    private static final float DEFAULT_LINE_WIDTH = 6.0f;
+    private static final Color WHITE_VERTEX_COLOR = new Color(1.0f, 1.0f, 1.0f, 1.0f);
     private static final String[] PRIMITIVE_NAMES = {
             "POINTS（点）",
             "LINES（独立线段）",
@@ -63,12 +65,15 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
 
     private Node primitiveNode;
     private Material pointMaterial;
+    private Material lineMaterial;
     private Material coloredMaterial;
     private TextView statusView;
     private LinearLayout pointSizeContainer;
+    private LinearLayout lineWidthContainer;
     private RenderableManager.PrimitiveType selectedPrimitive =
             RenderableManager.PrimitiveType.POINTS;
     private float pointSize = DEFAULT_POINT_SIZE;
+    private float lineWidth = DEFAULT_LINE_WIDTH;
     private int renderGeneration;
 
     @Override
@@ -130,15 +135,21 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        lineWidthContainer = createLineWidthControls();
+        lineWidthContainer.setVisibility(View.GONE);
+        actionContainer.addView(lineWidthContainer, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
         TextView hintView = createPanelText(
-                "切换时会重建与目标拓扑匹配的索引。POINTS 仍必须提供 IndexBuffer；点尺寸单位为屏幕像素。"
+                "切换时会重建与目标拓扑匹配的索引。点尺寸和线宽均使用屏幕像素；宽线由专用材质在屏幕空间展开。"
         );
         hintView.setTextColor(0xff6e6e73);
         actionContainer.addView(hintView);
     }
 
     /**
-     * 加载点图元专用材质和普通颜色材质，并创建默认图元。
+     * 加载点、线图元专用材质和普通颜色材质，并创建默认图元。
      *
      * @param sceneLayout {@link SceneLayout} 当前 Fragment 独立持有的渲染布局
      */
@@ -148,16 +159,26 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
         MaterialFactory.makePointsWithColor(
                         requireContext(), new Color(0.0f, 0.48f, 1.0f), DEFAULT_POINT_SIZE)
                 .thenCombine(
+                        MaterialFactory.makeLinesWithColor(
+                                requireContext(),
+                                new Color(0.0f, 0.48f, 1.0f),
+                                DEFAULT_LINE_WIDTH),
+                        (points, lines) -> new Material[]{points, lines})
+                .thenCombine(
                         MaterialFactory.makeOpaqueWithColor(
                                 requireContext(), new Color(0.0f, 0.48f, 1.0f)),
-                        (points, colored) -> new Material[]{points, colored})
+                        (primitiveMaterials, colored) -> new Material[]{
+                                primitiveMaterials[0], primitiveMaterials[1], colored
+                        })
                 .thenAccept(materials -> {
                     if (!isSceneActive()) {
                         return;
                     }
                     pointMaterial = materials[0];
-                    coloredMaterial = materials[1];
+                    lineMaterial = materials[1];
+                    coloredMaterial = materials[2];
                     pointMaterial.setFloat(MaterialFactory.VERTEX_POINT_SIZE, pointSize);
+                    lineMaterial.setFloat(MaterialFactory.LINE_WIDTH, lineWidth);
                     renderSelectedPrimitive();
                 })
                 .exceptionally(error -> {
@@ -208,6 +229,47 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
     }
 
     /**
+     * 创建线宽控制区域。
+     *
+     * @return 仅在 LINES 和 LINE_STRIP 模式显示的控制区域
+     */
+    private LinearLayout createLineWidthControls() {
+        LinearLayout container = new LinearLayout(requireContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+
+        TextView lineWidthLabel = createPanelText("线宽：6 px");
+        container.addView(lineWidthLabel, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        SeekBar lineWidthBar = new SeekBar(requireContext());
+        lineWidthBar.setMax(29);
+        lineWidthBar.setProgress(5);
+        lineWidthBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                lineWidth = progress + 1.0f;
+                lineWidthLabel.setText("线宽：" + (int) lineWidth + " px");
+                if (lineMaterial != null) {
+                    lineMaterial.setFloat(MaterialFactory.LINE_WIDTH, lineWidth);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        container.addView(lineWidthBar, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        return container;
+    }
+
+    /**
      * 创建统一风格的面板文字。
      *
      * @param text 展示文案
@@ -223,7 +285,7 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
         return textView;
     }
 
-    /** 根据当前图元更新状态说明与点尺寸区域可见性。 */
+    /** 根据当前图元更新状态说明与点、线尺寸区域可见性。 */
     private void updatePanelForPrimitive() {
         if (statusView != null) {
             statusView.setText(getPrimitiveDescription(selectedPrimitive));
@@ -234,29 +296,49 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
                             ? View.VISIBLE
                             : View.GONE);
         }
+        if (lineWidthContainer != null) {
+            lineWidthContainer.setVisibility(isLinePrimitive(selectedPrimitive)
+                    ? View.VISIBLE
+                    : View.GONE);
+        }
     }
 
     /** 创建当前选中拓扑对应的 Renderable，并替换场景中的旧节点。 */
     private void renderSelectedPrimitive() {
-        if (!isSceneActive() || pointMaterial == null || coloredMaterial == null) {
+        if (!isSceneActive()
+                || pointMaterial == null
+                || lineMaterial == null
+                || coloredMaterial == null) {
             return;
         }
         final int generation = ++renderGeneration;
         final RenderableManager.PrimitiveType primitiveType = selectedPrimitive;
-        PrimitiveMesh mesh = createPrimitiveMesh(primitiveType);
-        Material material = primitiveType == RenderableManager.PrimitiveType.POINTS
-                ? pointMaterial
-                : coloredMaterial;
+        PrimitiveGeometryData sourceMesh = createPrimitive(primitiveType);
+        boolean linePrimitive = isLinePrimitive(primitiveType);
+        PrimitiveGeometryData renderMesh = linePrimitive
+                ? createWideLineMesh(sourceMesh, primitiveType)
+                : sourceMesh;
+        RenderableManager.PrimitiveType renderPrimitiveType = linePrimitive
+                ? RenderableManager.PrimitiveType.TRIANGLES
+                : primitiveType;
+        Material material;
+        if (primitiveType == RenderableManager.PrimitiveType.POINTS) {
+            material = pointMaterial;
+        } else if (linePrimitive) {
+            material = lineMaterial;
+        } else {
+            material = coloredMaterial;
+        }
 
         clearPrimitiveNode();
         RenderableDefinition.SubGeometry subGeometry = RenderableDefinition.SubGeometry.builder()
-                .setTriangleIndices(mesh.indices)
+                .setTriangleIndices(renderMesh.indices)
                 .setMaterial(material)
                 .build();
         RenderableDefinition definition = RenderableDefinition.builder()
-                .setVertices(mesh.vertices)
+                .setVertices(renderMesh.vertices)
                 .setSubGeometries(Collections.singletonList(subGeometry))
-                .setPrimitiveType(primitiveType)
+                .setPrimitiveType(renderPrimitiveType)
                 .build();
         ModelRenderable.builder()
                 .setSource(definition)
@@ -283,26 +365,26 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
      * @param primitiveType 目标 Filament 图元类型
      * @return 与目标图元拓扑匹配的 Mesh 数据
      */
-    private PrimitiveMesh createPrimitiveMesh(RenderableManager.PrimitiveType primitiveType) {
+    private PrimitiveGeometryData createPrimitive(RenderableManager.PrimitiveType primitiveType) {
         switch (primitiveType) {
             case POINTS:
-                return createPointsMesh();
+                return createPoints();
             case LINES:
-                return createLinesMesh();
+                return createLines();
             case LINE_STRIP:
-                return createLineStripMesh();
+                return createLineStrip();
             case TRIANGLES:
-                return createTrianglesMesh();
+                return createTriangles();
             case TRIANGLE_STRIP:
-                return createTriangleStripMesh();
+                return createTriangleStrip();
             default:
                 throw new IllegalArgumentException("Unsupported primitive type: " + primitiveType);
         }
     }
 
     /** @return 由独立点组成的波浪点阵 */
-    private PrimitiveMesh createPointsMesh() {
-        PrimitiveMesh mesh = new PrimitiveMesh();
+    private PrimitiveGeometryData createPoints() {
+        PrimitiveGeometryData mesh = new PrimitiveGeometryData();
         final int rows = 5;
         final int columns = 9;
         for (int row = 0; row < rows; row++) {
@@ -319,21 +401,21 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
     }
 
     /** @return 由互不相连的线段组成的网格 */
-    private PrimitiveMesh createLinesMesh() {
-        PrimitiveMesh mesh = new PrimitiveMesh();
-        addLineSegment(mesh, -1.1f, -0.65f, 1.1f, -0.65f);
-        addLineSegment(mesh, 1.1f, -0.65f, 1.1f, 0.65f);
-        addLineSegment(mesh, 1.1f, 0.65f, -1.1f, 0.65f);
-        addLineSegment(mesh, -1.1f, 0.65f, -1.1f, -0.65f);
-        addLineSegment(mesh, -1.1f, -0.65f, 1.1f, 0.65f);
-        addLineSegment(mesh, -1.1f, 0.65f, 1.1f, -0.65f);
-        addSequentialIndices(mesh);
-        return mesh;
+    private PrimitiveGeometryData createLines() {
+        PrimitiveGeometryData geometry = new PrimitiveGeometryData();
+        addLineSegment(geometry, -1.1f, -0.65f, 1.1f, -0.65f);
+        addLineSegment(geometry, 1.1f, -0.65f, 1.1f, 0.65f);
+        addLineSegment(geometry, 1.1f, 0.65f, -1.1f, 0.65f);
+        addLineSegment(geometry, -1.1f, 0.65f, -1.1f, -0.65f);
+        addLineSegment(geometry, -1.1f, -0.65f, 1.1f, 0.65f);
+        addLineSegment(geometry, -1.1f, 0.65f, 1.1f, -0.65f);
+        addSequentialIndices(geometry);
+        return geometry;
     }
 
     /** @return 由单条连续折线组成的网格 */
-    private PrimitiveMesh createLineStripMesh() {
-        PrimitiveMesh mesh = new PrimitiveMesh();
+    private PrimitiveGeometryData createLineStrip() {
+        PrimitiveGeometryData mesh = new PrimitiveGeometryData();
         final int count = 11;
         for (int index = 0; index < count; index++) {
             float x = -1.25f + index * 0.25f;
@@ -344,9 +426,76 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
         return mesh;
     }
 
+    /**
+     * 将 LINES 或 LINE_STRIP 输入拓扑展开为线材质需要的三角形。
+     *
+     * @param sourceMesh 原始线端点和索引
+     * @param primitiveType 原始线图元类型
+     * @return 包含 COLOR 与 CUSTOM0 顶点属性的三角形宽线
+     */
+    private PrimitiveGeometryData createWideLineMesh(
+            PrimitiveGeometryData sourceMesh, RenderableManager.PrimitiveType primitiveType) {
+        PrimitiveGeometryData result = new PrimitiveGeometryData();
+        if (primitiveType == RenderableManager.PrimitiveType.LINES) {
+            for (int index = 0; index + 1 < sourceMesh.indices.size(); index += 2) {
+                addWideLineSegment(
+                        result,
+                        sourceMesh.vertices.get(sourceMesh.indices.get(index)).getPosition(),
+                        sourceMesh.vertices.get(sourceMesh.indices.get(index + 1)).getPosition());
+            }
+        } else if (primitiveType == RenderableManager.PrimitiveType.LINE_STRIP) {
+            for (int index = 0; index + 1 < sourceMesh.indices.size(); index++) {
+                addWideLineSegment(
+                        result,
+                        sourceMesh.vertices.get(sourceMesh.indices.get(index)).getPosition(),
+                        sourceMesh.vertices.get(sourceMesh.indices.get(index + 1)).getPosition());
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported line primitive type: " + primitiveType);
+        }
+        return result;
+    }
+
+    /**
+     * 生成一条由两个三角形组成的屏幕空间宽线段。
+     * <p>
+     * 每个端点复制为左右两个顶点，CUSTOM0.xyz 保存另一端点，CUSTOM0.w 保存偏移符号。
+     * 终点观察方向与起点相反，因此终点的左右符号也需要反转。
+     * </p>
+     *
+     * @param mesh 目标 Mesh
+     * @param start 线段起点
+     * @param end 线段终点
+     */
+    private void addWideLineSegment(PrimitiveGeometryData mesh, Vector3 start, Vector3 end) {
+        int baseIndex = mesh.vertices.size();
+        addWideLineVertex(mesh, start, end, 1.0f);
+        addWideLineVertex(mesh, start, end, -1.0f);
+        addWideLineVertex(mesh, end, start, -1.0f);
+        addWideLineVertex(mesh, end, start, 1.0f);
+
+        mesh.indices.add(baseIndex);
+        mesh.indices.add(baseIndex + 1);
+        mesh.indices.add(baseIndex + 2);
+        mesh.indices.add(baseIndex + 2);
+        mesh.indices.add(baseIndex + 1);
+        mesh.indices.add(baseIndex + 3);
+    }
+
+    /** 添加线材质要求的单个顶点及 CUSTOM0 属性。 */
+    private void addWideLineVertex(
+            PrimitiveGeometryData mesh, Vector3 position, Vector3 otherEndpoint, float side) {
+        mesh.vertices.add(Vertex.builder()
+                .setPosition(position)
+                .setColor(WHITE_VERTEX_COLOR)
+                .setCustom0(new Vertex.Float4(
+                        otherEndpoint.x, otherEndpoint.y, otherEndpoint.z, side))
+                .build());
+    }
+
     /** @return 由三个互不共享顶点的三角形组成的网格 */
-    private PrimitiveMesh createTrianglesMesh() {
-        PrimitiveMesh mesh = new PrimitiveMesh();
+    private PrimitiveGeometryData createTriangles() {
+        PrimitiveGeometryData mesh = new PrimitiveGeometryData();
         addVertex(mesh, -1.15f, -0.6f, -3.0f);
         addVertex(mesh, -0.35f, -0.6f, -3.0f);
         addVertex(mesh, -0.75f, 0.55f, -3.0f);
@@ -361,8 +510,8 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
     }
 
     /** @return 由交替上下顶点构成的连续三角带网格 */
-    private PrimitiveMesh createTriangleStripMesh() {
-        PrimitiveMesh mesh = new PrimitiveMesh();
+    private PrimitiveGeometryData createTriangleStrip() {
+        PrimitiveGeometryData mesh = new PrimitiveGeometryData();
         final int columns = 6;
         for (int column = 0; column < columns; column++) {
             float x = -1.2f + column * 0.48f;
@@ -385,7 +534,7 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
      * @param endY 终点 Y
      */
     private void addLineSegment(
-            PrimitiveMesh mesh, float startX, float startY, float endX, float endY) {
+            PrimitiveGeometryData mesh, float startX, float startY, float endX, float endY) {
         addVertex(mesh, startX, startY, -3.0f);
         addVertex(mesh, endX, endY, -3.0f);
     }
@@ -398,7 +547,7 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
      * @param y 模型局部坐标 Y
      * @param z 模型局部坐标 Z
      */
-    private void addVertex(PrimitiveMesh mesh, float x, float y, float z) {
+    private void addVertex(PrimitiveGeometryData mesh, float x, float y, float z) {
         float u = Math.max(0.0f, Math.min(1.0f, (x + 1.4f) / 2.8f));
         float v = Math.max(0.0f, Math.min(1.0f, (y + 0.8f) / 1.6f));
         mesh.vertices.add(Vertex.builder()
@@ -414,7 +563,7 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
      *
      * @param mesh 目标 Mesh
      */
-    private void addSequentialIndices(PrimitiveMesh mesh) {
+    private void addSequentialIndices(PrimitiveGeometryData mesh) {
         for (int index = 0; index < mesh.vertices.size(); index++) {
             mesh.indices.add(index);
         }
@@ -431,9 +580,9 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
             case POINTS:
                 return "POINTS：每个索引绘制一个独立点。";
             case LINES:
-                return "LINES：每两个索引绘制一条独立线段。";
+                return "LINES：每两个索引定义一条独立线段，并由专用材质展开为可调宽线。";
             case LINE_STRIP:
-                return "LINE_STRIP：相邻索引首尾连接为一条连续折线。";
+                return "LINE_STRIP：相邻索引首尾连接，并由专用材质展开为连续宽线。";
             case TRIANGLES:
                 return "TRIANGLES：每三个索引绘制一个独立三角形。";
             case TRIANGLE_STRIP:
@@ -441,6 +590,12 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
             default:
                 return primitiveType.name();
         }
+    }
+
+    /** @return 当前类型是否为需要专用线材质的线图元 */
+    private boolean isLinePrimitive(RenderableManager.PrimitiveType primitiveType) {
+        return primitiveType == RenderableManager.PrimitiveType.LINES
+                || primitiveType == RenderableManager.PrimitiveType.LINE_STRIP;
     }
 
     /** 解除旧图元节点及 Renderable，避免切换时残留渲染实例。 */
@@ -459,13 +614,15 @@ public class PrimitiveLessonFragment extends BaseTutorialFragment {
         renderGeneration++;
         clearPrimitiveNode();
         pointMaterial = null;
+        lineMaterial = null;
         coloredMaterial = null;
         statusView = null;
         pointSizeContainer = null;
+        lineWidthContainer = null;
     }
 
     /** 基本图元构建所需的顶点与索引容器。 */
-    private static final class PrimitiveMesh {
+    private static final class PrimitiveGeometryData {
         final List<Vertex> vertices = new ArrayList<>();
         final List<Integer> indices = new ArrayList<>();
     }
